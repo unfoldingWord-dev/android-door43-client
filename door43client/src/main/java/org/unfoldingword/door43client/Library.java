@@ -5,7 +5,9 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.text.TextUtils;
 
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
+
 
 /**
  * Manages the indexed library content.
@@ -68,7 +70,9 @@ public class Library {
                 Cursor cursor = db.rawQuery("select id from " + table + " where " + uniqueWhere, uniqueValues);
                 if(cursor.moveToFirst()) {
                     id = cursor.getLong(0);
+                    cursor.close();
                 } else {
+                    cursor.close();
                     throw new Exception("Failed to find the row in " + table);
                 }
             }
@@ -114,9 +118,9 @@ public class Library {
         values.put("slug", language.slug);
         values.put("name", language.name);
         values.put("direction", language.direction);
-        values.put("anglicized_name", language.anglicized_name);
+        values.put("anglicized_name", language.anglicizedName);
         values.put("region", language.region);
-        values.put("is_gateway_language", language.is_gateway_language);
+        values.put("is_gateway_language", language.isGatewayLanguage ? 1: 0);
 
         long id = insertOrUpdate("target_language", values, new String[]{"slug"});
         return id > 0;
@@ -140,11 +144,46 @@ public class Library {
         values.put("slug", language.slug);
         values.put("name", language.name);
         values.put("direction", language.direction);
-        values.put("anglicized_name", language.anglicized_name);
+        values.put("anglicized_name", language.anglicizedName);
         values.put("region", language.region);
-        values.put("is_gateway_language", language.is_gateway_language);
+        values.put("is_gateway_language", language.isGatewayLanguage ? 1 : 0);
 
         long id = insertOrUpdate("temp_target_language", values, new String[]{"slug"});
         return id > 0;
+    }
+
+    /**
+     * Returns a list of every target language.
+     * The result may include temp target languages.
+     *
+     * Note: does not include the row id. You don't need it.
+     * And we are pulling from two tables so it would be confusing.
+     *
+     * @return
+     */
+    public List<DummyTargetLanguage> getTargetLanguages() {
+        Cursor cursor = db.rawQuery("select * from (" +
+                "  select slug, name, anglicized_name, direction, region, is_gateway_language from target_language" +
+                "  union" +
+                "  select slug, name, anglicized_name, direction, region, is_gateway_language from temp_target_language" +
+                "  where approved_target_language_slug is null" +
+                ") order by slug asc, name desc", new String[0]);
+
+        List<DummyTargetLanguage> languages = new ArrayList<>();
+        cursor.moveToFirst();
+        while(!cursor.isAfterLast()) {
+            String slug = cursor.getString(0);
+            String name = cursor.getString(1);
+            String angName = cursor.getString(2);
+            String dir = cursor.getString(3);
+            String region = cursor.getString(4);
+            boolean isGate = cursor.getInt(5) == 1;
+
+            DummyTargetLanguage newLang = new DummyTargetLanguage(slug, name, angName, dir, region, isGate);
+            languages.add(newLang);
+            cursor.moveToNext();
+        }
+        cursor.close();
+        return languages;
     }
 }
