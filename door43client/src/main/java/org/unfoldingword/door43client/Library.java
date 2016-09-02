@@ -22,6 +22,15 @@ public class Library {
     }
 
     /**
+     * Ensures a value is not null or empty
+     * @param value
+     * @throws Exception
+     */
+    private void validateNotEmpty(String value) throws Exception {
+        if(value == null || value.isEmpty()) throw new Exception("Invalid parameter value");
+    }
+
+    /**
      * Inserts or updates a source language in the library.
      *
      * @param language
@@ -29,9 +38,9 @@ public class Library {
      * @throws Exception
      */
     public long addSourceLanguage(DummySourceLanguage language) throws Exception {
-        if(language.slug == null || language.slug.isEmpty()
-                || language.name == null || language.name.isEmpty()
-                || language.direction == null || language.direction.isEmpty()) throw new Exception("Invalid source language parameters");
+        validateNotEmpty(language.slug);
+        validateNotEmpty(language.name);
+        validateNotEmpty(language.direction);
 
         ContentValues values = new ContentValues();
         values.put("slug", language.slug);
@@ -58,10 +67,19 @@ public class Library {
         return id;
     }
 
-    public boolean addTargetLanguage(DummyTargetLanguage language) throws Exception{
-        if(language.slug == null || language.slug.isEmpty()
-                || language.name == null || language.name.isEmpty()
-                || language.direction == null || language.direction.isEmpty()) throw new Exception("Invalid source language parameters");
+    /**
+     * Inserts or updates a target language in the library.
+     *
+     * Note: the result row id is always 0 since you don't need it. See getTargetLanguages for more information
+     *
+     * @param language
+     * @return Boolean 
+     * @throws Exception
+     */
+    public boolean addTargetLanguage(DummyTargetLanguage language) throws Exception {
+        validateNotEmpty(language.slug);
+        validateNotEmpty(language.name);
+        validateNotEmpty(language.direction);
 
         ContentValues values = new ContentValues();
         values.put("slug", language.slug);
@@ -88,5 +106,21 @@ public class Library {
         }
 
         return id > 0;
+    }
+
+    public boolean addTempTargetLanguage(DummyTargetLanguage language) throws Exception {
+        validateNotEmpty(language.slug);
+        validateNotEmpty(language.name);
+        validateNotEmpty(language.direction);
+
+        ContentValues values = new ContentValues();
+        values.put("slug", language.slug);
+        values.put("name", language.name);
+        values.put("direction", language.direction);
+        values.put("anglicized_name", language.anglicized_name);
+        values.put("region", language.region);
+        values.put("is_gateway_language", language.is_gateway_language);
+
+
     }
 }
