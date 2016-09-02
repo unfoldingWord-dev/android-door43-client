@@ -92,25 +92,8 @@ public class Library {
         values.put("slug", language.slug);
         values.put("name", language.name);
         values.put("direction", language.direction);
-        long id = db.insertWithOnConflict("source_language", null, values, SQLiteDatabase.CONFLICT_IGNORE);
-        if(id == -1) {
-            // update existing row
-            // TODO: 9/2/16 do we need to unset the unique columns i.e. slug?
-            int numRows = db.updateWithOnConflict("source_language", values, "slug=?", new String[]{language.slug}, SQLiteDatabase.CONFLICT_ROLLBACK);
-            if(numRows == 0) {
-                throw new Exception("Failed to update source language");
-            } else {
-                // retrieve row id
-                Cursor cursor = db.rawQuery("select id from source_language where slug=?", new String[]{language.slug});
-                if(cursor.moveToFirst()) {
-                    id = cursor.getLong(0);
-                } else {
-                    throw new Exception("Failed to find source language");
-                }
-            }
-        }
 
-        return id;
+        return insertOrUpdate("source_language", values, new String[]{"slug"});
     }
 
 
