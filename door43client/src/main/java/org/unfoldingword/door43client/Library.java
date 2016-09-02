@@ -28,7 +28,7 @@ public class Library {
      * @return the id of the source language row
      * @throws Exception
      */
-    public long addSourceLanguage(DummyLanguage language) throws Exception {
+    public long addSourceLanguage(DummySourceLanguage language) throws Exception {
         if(language.slug == null || language.slug.isEmpty()
                 || language.name == null || language.name.isEmpty()
                 || language.direction == null || language.direction.isEmpty()) throw new Exception("Invalid source language parameters");
@@ -58,5 +58,35 @@ public class Library {
         return id;
     }
 
+    public boolean addTargetLanguage(DummyTargetLanguage language) throws Exception{
+        if(language.slug == null || language.slug.isEmpty()
+                || language.name == null || language.name.isEmpty()
+                || language.direction == null || language.direction.isEmpty()) throw new Exception("Invalid source language parameters");
 
+        ContentValues values = new ContentValues();
+        values.put("slug", language.slug);
+        values.put("name", language.name);
+        values.put("direction", language.direction);
+        values.put("anglicized_name", language.anglicized_name);
+        values.put("region", language.region);
+        values.put("is_gateway_language", language.is_gateway_language);
+
+        long id = db.insertWithOnConflict("target_language", null, values, SQLiteDatabase.CONFLICT_IGNORE );
+        if(id == -1) {
+
+            int numRows = db.updateWithOnConflict("target_language", values, "slug=?", new String[]{language.slug}, SQLiteDatabase.CONFLICT_ROLLBACK);
+            if(numRows == 0) {
+                throw new Exception("Failed to update target language");
+            } else {
+                Cursor cursor = db.rawQuery("select id from target_language where slug=?", new String[]{language.slug});
+                if(cursor.moveToFirst()) {
+                    id = cursor.getLong(0);
+                } else {
+                    throw new Exception("Failed to find target language");
+                }
+            }
+        }
+
+        return id > 0;
+    }
 }
