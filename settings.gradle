@@ -1,1 +1,1 @@
-include ':app', ':door43client'
+include ':door43client'
