@@ -22,6 +22,15 @@ public class Library {
     }
 
     /**
+     * Ensures a value is not null or empty
+     * @param value
+     * @throws Exception
+     */
+    private void validateNotEmpty(String value) throws Exception {
+        if(value == null || value.isEmpty()) throw new Exception("Invalid parameter value");
+    }
+
+    /**
      * Inserts or updates a source language in the library.
      *
      * @param language
@@ -29,9 +38,9 @@ public class Library {
      * @throws Exception
      */
     public long addSourceLanguage(DummyLanguage language) throws Exception {
-        if(language.slug == null || language.slug.isEmpty()
-                || language.name == null || language.name.isEmpty()
-                || language.direction == null || language.direction.isEmpty()) throw new Exception("Invalid source language parameters");
+        validateNotEmpty(language.slug);
+        validateNotEmpty(language.name);
+        validateNotEmpty(language.direction);
 
         ContentValues values = new ContentValues();
         values.put("slug", language.slug);
