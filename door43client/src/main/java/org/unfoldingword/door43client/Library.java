@@ -5,6 +5,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.text.TextUtils;
 
+import java.security.spec.ECField;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -164,11 +165,89 @@ public class Library {
 
         int rowsAffected = db.updateWithOnConflict("temp_target_language", contentValues,
                 "slug=?", new String[]{tempTargetLanguageSlug}, SQLiteDatabase.CONFLICT_IGNORE );
-        if (rowsAffected > 0){
-            return true;
-        } else {
-            return false;
+
+        return rowsAffected > 0;
+    }
+
+    /**
+     * Inserts or updates a project in the library
+     *
+     * @param project
+     * @param categories this is the category branch that the project will attach to
+     * @param sourceLanguageId the parent source language row id
+     * @return the id of the project row
+     * @throws Exception
+     */
+    public long addProject(Project project, List<Category> categories, long sourceLanguageId) throws Exception {
+        validateNotEmpty(project.slug);
+        validateNotEmpty(project.name);
+
+        // add categories
+        long parentCategoryId = 0;
+        if(categories != null) {
+            // build categories
+            for(Category category:categories) {
+                ContentValues insertValues = new ContentValues();
+                insertValues.put("slug", category.slug);
+                insertValues.put("parent_id", parentCategoryId);
+
+                long id = db.insertWithOnConflict("category", null, insertValues, SQLiteDatabase.CONFLICT_IGNORE);
+                if(id > 0) {
+                    parentCategoryId = id;
+                } else {
+                    Cursor cursor = db.rawQuery("select id from category where slug=? and parent_id=" + parentCategoryId, new String[]{category.slug});
+                    if(cursor.moveToFirst()){
+                        parentCategoryId = cursor.getLong(0);
+                    } else {
+                        throw new Exception("Invalid category");
+                    }
+                }
+
+                ContentValues updateValues = new ContentValues();
+                updateValues.put("source_language_id", sourceLanguageId);
+                updateValues.put("category_id", parentCategoryId);
+                updateValues.put("name", category.name);
+
+                insertOrUpdate("category_name", updateValues, new String[]{"source_language_id", "category_id"});
+            }
         }
+        // add project
+        ContentValues updateProject = new ContentValues();
+        updateProject.put("slug", project.slug);
+        updateProject.put("name", project.name);
+        updateProject.put("desc", project.description);
+        updateProject.put("icon", project.icon);
+        updateProject.put("sort", project.sort);
+        updateProject.put("chunks_url", project.chunksUrl);
+        updateProject.put("source_language_id", sourceLanguageId);
+        updateProject.put("category_id", parentCategoryId);
+
+        return insertOrUpdate("project", updateProject, new String[]{"slug", "source_language_id"});
+    }
+
+    /**
+     * Inserts or updates a versification in the library.
+     *
+     * @param versification
+     * @param sourceLanguageId the parent source language row id
+     * @return the id of the versification or -1
+     * @throws Exception
+     */
+    public long addVersification(Versification versification, int sourceLanguageId) throws Exception{
+        validateNotEmpty(versification.name);
+
+        ContentValues values = new ContentValues();
+        values.put("slug", versification.slug);
+
+        long versificationId = db.insertWithOnConflict("versification", null, values, SQLiteDatabase.CONFLICT_IGNORE);
+        if(versificationId > 0) {
+            ContentValues cv = new ContentValues();
+            cv.put("source_language_id", sourceLanguageId);
+            cv.put("versification_id", versificationId);
+            cv.put("name", versification.name);
+            versificationId = insertOrUpdate("versification_name", cv, new String[]{"source_language_id", "versification_id"});
+        }
+        return versificationId;
     }
 
     /**
@@ -235,6 +314,8 @@ public class Library {
 
         return insertOrUpdate("question", values, new String[]{"td_id","language_slug"});
     }
+
+
 
     /**
      * Returns a list of every target language.
