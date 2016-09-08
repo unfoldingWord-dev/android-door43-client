@@ -153,6 +153,90 @@ public class Library {
     }
 
     /**
+     * Updates the target language assigned to a temporary target language
+     * @param tempTargetLanguageSlug the temporary target language that is being assigned a target language
+     * @param targetLanguageSlug the assigned target language
+     * @return indicates if the approved language was successfully set
+     */
+    public boolean setApprovedTargetLanguage(String tempTargetLanguageSlug, String targetLanguageSlug) {
+        ContentValues contentValues = new ContentValues();
+        contentValues.put("approved_target_language_slug", targetLanguageSlug);
+
+        int rowsAffected = db.updateWithOnConflict("temp_target_language", contentValues,
+                "slug=?", new String[]{tempTargetLanguageSlug}, SQLiteDatabase.CONFLICT_IGNORE );
+        if (rowsAffected > 0){
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * Inserts or updates a catalog in the library.
+     *
+     * @param catalog
+     * @return the id of the catalog
+     * @throws Exception
+     */
+    public long addCatalog(Catalog catalog) throws Exception{
+        validateNotEmpty(catalog.slug);
+        validateNotEmpty(catalog.url);
+
+        ContentValues values = new ContentValues();
+        values.put("slug", catalog.slug);
+        values.put("url", catalog.url);
+        values.put("modified_at", catalog.modifiedAt);
+
+        return insertOrUpdate("catalog", values, new String[]{"slug"});
+    }
+
+    /**
+     *Inserts or updates a questionnaire in the library.
+     *
+     * @param questionnaire the questionnaire to add
+     * @return the id of the questionnaire row
+     * @throws Exception
+     */
+    public long addQuestionaire(Questionnaire questionnaire) throws Exception {
+        validateNotEmpty(questionnaire.language_slug);
+        validateNotEmpty(questionnaire.language_name);
+        validateNotEmpty(questionnaire.language_direction);
+
+        ContentValues values = new ContentValues();
+        values.put("language_slug", questionnaire.language_slug);
+        values.put("language_name", questionnaire.language_name);
+        values.put("language_direction", questionnaire.language_direction);
+        values.put("td_id", questionnaire.td_id);
+
+        return insertOrUpdate("questionnaire", values, new String[]{"td_id","language_slug"});
+    }
+
+    /**
+     * Inserts or updates a question in the library.
+     *
+     * @param question the questionnaire to add
+     * @param questionnaireId the parent questionnaire row id
+     * @return the id of the question row
+     * @throws Exception
+     */
+    public long addQuestion(Question question, int questionnaireId) throws Exception {
+        validateNotEmpty(question.text);
+        validateNotEmpty(question.input_type);
+
+        ContentValues values = new ContentValues();
+        values.put("text", question.text);
+        values.put("help", question.help);
+        values.put("is_required", question.is_required);
+        values.put("input_type", question.input_type);
+        values.put("sort", question.sort);
+        values.put("depends_on", question.depends_on);
+        values.put("td_id", question.td_id);
+        values.put("questionnaire_id", questionnaireId);
+
+        return insertOrUpdate("question", values, new String[]{"td_id","language_slug"});
+    }
+
+    /**
      * Returns a list of every target language.
      * The result may include temp target languages.
      *
