@@ -1,11 +1,21 @@
-package org.unfoldingword.door43client;
+package org.unfoldingword.door43client.utils;
 
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.text.TextUtils;
 
-import java.security.spec.ECField;
+import org.unfoldingword.door43client.objects.Category;
+import org.unfoldingword.door43client.objects.Chunk;
+import org.unfoldingword.door43client.objects.DummySourceLanguage;
+import org.unfoldingword.door43client.objects.DummyTargetLanguage;
+import org.unfoldingword.door43client.objects.Project;
+import org.unfoldingword.door43client.objects.Question;
+import org.unfoldingword.door43client.objects.Resource;
+import org.unfoldingword.door43client.objects.Versification;
+import org.unfoldingword.door43client.objects.Catalog;
+import org.unfoldingword.door43client.objects.Questionnaire;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -251,6 +261,38 @@ public class Library {
     }
 
     /**
+     * Inserts a chunk marker in the library.
+     *
+     * @param chunk
+     * @param projectSlug the project that this marker exists in
+     * @param versificationId the versification this chunk is a member of
+     * @return the id of the chunk marker
+     * @throws Exception
+     */
+    public long addChunkMarker(Chunk chunk, String projectSlug, long versificationId) throws Exception {
+        validateNotEmpty(chunk.chapter);
+        validateNotEmpty(chunk.verse);
+        validateNotEmpty(projectSlug);
+
+        ContentValues chunkValues = new ContentValues();
+        chunkValues.put("chapter", chunk.chapter);
+        chunkValues.put("verse", chunk.verse);
+        chunkValues.put("project_slug", projectSlug);
+        chunkValues.put("versification_id", versificationId);
+
+        long id= db.insertWithOnConflict("chunk_marker", null, chunkValues, SQLiteDatabase.CONFLICT_IGNORE);
+        if(id == -1) {
+            Cursor cursor = db.rawQuery("select id from chunk_marker where project_slug=? and versification_id=" + versificationId, new String[]{projectSlug});
+            if(cursor.moveToFirst()){
+                id = cursor.getLong(0);
+            } else {
+                throw new Exception("Invalid Chunk Marker");
+            }
+        }
+        return id;
+    }
+
+    /**
      * Inserts or updates a catalog in the library.
      *
      * @param catalog
@@ -267,6 +309,13 @@ public class Library {
         values.put("modified_at", catalog.modifiedAt);
 
         return insertOrUpdate("catalog", values, new String[]{"slug"});
+    }
+
+    public long addResource(Resource resource, long project_id) throws Exception {
+        validateNotEmpty(resource.slug);
+        validateNotEmpty(resource.name);
+        validateNotEmpty(resource.type);
+        //TODO add more here!
     }
 
     /**
@@ -315,8 +364,7 @@ public class Library {
         return insertOrUpdate("question", values, new String[]{"td_id","language_slug"});
     }
 
-
-
+    public
     /**
      * Returns a list of every target language.
      * The result may include temp target languages.

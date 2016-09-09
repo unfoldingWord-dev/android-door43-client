@@ -1,4 +1,4 @@
-package org.unfoldingword.door43client;
+package org.unfoldingword.door43client.objects;
 
 /**
  * Created by Andrew on 9/2/2016.
