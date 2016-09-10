@@ -12,6 +12,7 @@ import org.unfoldingword.door43client.objects.DummyTargetLanguage;
 import org.unfoldingword.door43client.objects.Project;
 import org.unfoldingword.door43client.objects.Question;
 import org.unfoldingword.door43client.objects.Resource;
+import org.unfoldingword.door43client.objects.SourceLanguage;
 import org.unfoldingword.door43client.objects.Versification;
 import org.unfoldingword.door43client.objects.Catalog;
 import org.unfoldingword.door43client.objects.Questionnaire;
@@ -364,7 +365,53 @@ public class Library {
         return insertOrUpdate("question", values, new String[]{"td_id","language_slug"});
     }
 
-    public
+    public List<SourceLanguage> listSourceLanguagesLastModified() {
+
+    }
+
+    /**
+     * Returns a source language.
+     *
+     * @param slug
+     * @return the language object or null if it does not exist
+     */
+    public SourceLanguage getSourceLanguage(String slug) {
+        Cursor cursor = db.rawQuery("select * from source_language where slug=? limit 1", new String[]{slug});
+        if(cursor.moveToFirst()){
+            String name = cursor.getString(2);
+            String direction = cursor.getString(3);
+            SourceLanguage sourceLanguage = new SourceLanguage(slug, name, direction);
+            cursor.close();
+            return sourceLanguage;
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Returns a list of every source language.
+     *
+     * @return an array of source languages
+     */
+    public List<SourceLanguage> getSourceLanguages() {
+        Cursor cursor = db.rawQuery("select * from source_language order by slug desc", null);
+        cursor.moveToFirst();
+        List<SourceLanguage> sourceLanguages = new ArrayList<>();
+
+        while(!cursor.isAfterLast()) {
+            String slug = cursor.getString(1);
+            String name = cursor.getString(2);
+            String direction = cursor.getString(3);
+
+            SourceLanguage sourceLanguage = new SourceLanguage(slug, name, direction);
+
+            sourceLanguages.add(sourceLanguage);
+            cursor.moveToNext();
+        }
+        cursor.close();
+        return sourceLanguages;
+    }
+
     /**
      * Returns a list of every target language.
      * The result may include temp target languages.
