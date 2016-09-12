@@ -7,6 +7,7 @@ import android.text.TextUtils;
 
 import org.unfoldingword.door43client.objects.Category;
 import org.unfoldingword.door43client.objects.Chunk;
+import org.unfoldingword.door43client.objects.ChunkMarker;
 import org.unfoldingword.door43client.objects.DummySourceLanguage;
 import org.unfoldingword.door43client.objects.DummyTargetLanguage;
 import org.unfoldingword.door43client.objects.Project;
@@ -396,9 +397,9 @@ public class Library {
      */
     public List<SourceLanguage> getSourceLanguages() {
         Cursor cursor = db.rawQuery("select * from source_language order by slug desc", null);
-        cursor.moveToFirst();
-        List<SourceLanguage> sourceLanguages = new ArrayList<>();
 
+        List<SourceLanguage> sourceLanguages = new ArrayList<>();
+        cursor.moveToFirst();
         while(!cursor.isAfterLast()) {
             String slug = cursor.getString(1);
             String name = cursor.getString(2);
@@ -569,6 +570,7 @@ public class Library {
         Cursor cursor = db.rawQuery("select * from catalog", null);
 
         List<Catalog> catalogs = new ArrayList<>();
+        cursor.moveToFirst();
         while(!cursor.isAfterLast()) {
             String slug = cursor.getString(1);
             String url = cursor.getString(2);
@@ -580,5 +582,63 @@ public class Library {
         }
         cursor.close();
         return catalogs;
+    }
+
+    /**
+     * Returns a versification
+     *
+     * @param languageSlug
+     * @param versificationSlug
+     * @return versification or null
+     */
+    public Versification getVersification(String languageSlug, String versificationSlug) {
+        Cursor cursor = db.rawQuery("select vn.name, v.slug, v.id from versification_name as vn" +
+                " left join versification as v on v.id=vn.versification_id" +
+                " left join source_language as sl on sl.id=vn.source_language_id" +
+                " where sl.slug=? and v.slug=?", new String[]{languageSlug, versificationSlug});
+    }
+
+    /**
+     * Returns a list of versifications
+     *
+     * @param languageSlug
+     * @return
+     */
+    public List<Versification> getVersifications(String languageSlug) {
+        Cursor cursor = db.rawQuery("select vn.name, v.slug, v.id from versification_name as vn" +
+                " left join versification as v on v.id=vn.versification_id" +
+                " left join source_language as sl on sl.id=vn.source_language_id" +
+                " where sl.slug=? and v.slug=?", new String[]{languageSlug});
+
+        List<Versification> versifications = new ArrayList<>();
+
+    }
+
+    /**
+     * Returns a list of chunk markers for a project
+     *
+     * @param projectSlug
+     * @param versificationSlug
+     * @return
+     */
+    public List<ChunkMarker> getChunkMarkers(String projectSlug, String versificationSlug) {
+        Cursor cursor = db.rawQuery("select cm.* from chunk_marker as cm" +
+                " left join versification as v on v.id=cm.versification_id" +
+                " where v.slug=? and cm.project_slug=?", new String[]{versificationSlug, projectSlug});
+
+        List<ChunkMarker> chunkMarkers = new ArrayList<>();
+        cursor.moveToFirst();
+        while(!cursor.isAfterLast()) {
+            String chapter = cursor.getString(1);
+            String verse = cursor.getString(2);
+            String slug = cursor.getString(3);
+            int versificationId = cursor.getInt(4);
+
+            ChunkMarker chunkMarker = new ChunkMarker(chapter, verse, slug, versificationId);
+            chunkMarkers.add(chunkMarker);
+            cursor.moveToNext();
+        }
+        cursor.close();
+        return chunkMarkers;
     }
 }
