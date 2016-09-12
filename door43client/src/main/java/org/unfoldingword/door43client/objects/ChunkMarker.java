@@ -9,7 +9,7 @@ public class ChunkMarker {
     public static String project_slug;
     public static int versification_id;
 
-    public ChunkMarker (String chapter, String verse, String projectSlug, int versificationId) {
+    public ChunkMarker(String chapter, String verse, String projectSlug, int versificationId) {
         this.chapter = chapter;
         this.verse = verse;
         this.project_slug = projectSlug;

@@ -641,4 +641,26 @@ public class Library {
         cursor.close();
         return chunkMarkers;
     }
+
+    /**
+     * Returns a list of questionnaires
+     *
+     * @return a list of questionnaires
+     */
+    public List<Questionnaire> getQuestionnaires() {
+        Cursor cursor = db.rawQuery("select * from questionnaire", null);
+
+        List<Questionnaire> questionnaires = new ArrayList<>();
+        cursor.moveToFirst();
+        while(!cursor.isAfterLast()){
+            String slug = cursor.getString(1);
+            String name = cursor.getString(2);
+            String direction = cursor.getString(3);
+            int td_id = cursor.getInt(4);
+
+            Questionnaire questionnaire = new Questionnaire(slug, name, direction, td_id);
+            questionnaires.add(questionnaire);
+        }
+        return questionnaires;
+    }
 }
