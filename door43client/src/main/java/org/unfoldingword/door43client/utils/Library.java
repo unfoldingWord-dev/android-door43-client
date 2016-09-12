@@ -17,6 +17,7 @@ import org.unfoldingword.door43client.objects.Versification;
 import org.unfoldingword.door43client.objects.Catalog;
 import org.unfoldingword.door43client.objects.Questionnaire;
 
+import java.lang.annotation.Target;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -312,12 +313,12 @@ public class Library {
         return insertOrUpdate("catalog", values, new String[]{"slug"});
     }
 
-    public long addResource(Resource resource, long project_id) throws Exception {
-        validateNotEmpty(resource.slug);
-        validateNotEmpty(resource.name);
-        validateNotEmpty(resource.type);
-        //TODO add more here!
-    }
+//    public long addResource(Resource resource, long project_id) throws Exception {
+//        validateNotEmpty(resource.slug);
+//        validateNotEmpty(resource.name);
+//        validateNotEmpty(resource.type);
+//        //TODO add more here!
+//    }
 
     /**
      *Inserts or updates a questionnaire in the library.
@@ -365,9 +366,9 @@ public class Library {
         return insertOrUpdate("question", values, new String[]{"td_id","language_slug"});
     }
 
-    public List<SourceLanguage> listSourceLanguagesLastModified() {
-
-    }
+//    public List<SourceLanguage> listSourceLanguagesLastModified() {
+//
+//    }
 
     /**
      * Returns a source language.
@@ -413,6 +414,38 @@ public class Library {
     }
 
     /**
+     * Returns a target language.
+     * The result may be a temp target language.
+     *
+     * Note: does not include the row id. You don't need it
+     *
+     * @param slug
+     * @return the language object or null if it does not exist
+     */
+    public DummyTargetLanguage getTargetLanguage(String slug) {
+        Cursor cursor = db.rawQuery("select * from (" +
+                "  select slug, name, anglicized_name, direction, region, is_gateway_language from target_language" +
+                "  union" +
+                "  select slug, name, anglicized_name, direction, region, is_gateway_language from temp_target_language" +
+                "  where approved_target_language_slug is null" +
+                ") where slug=? limit 1", new String[]{slug});
+
+        if(cursor.moveToFirst()) {
+            String name = cursor.getString(2);
+            String anglicized = cursor.getString(3);
+            String direction = cursor.getString(4);
+            String region = cursor.getString(5);
+            boolean isGateWay = cursor.getInt(6) == 1;
+
+            DummyTargetLanguage dummyTargetLanguage = new DummyTargetLanguage(slug, name, anglicized, direction, region, isGateWay);
+            cursor.close();
+            return dummyTargetLanguage;
+        } else {
+            return null;
+        }
+    }
+
+    /**
      * Returns a list of every target language.
      * The result may include temp target languages.
      *
@@ -445,5 +478,68 @@ public class Library {
         }
         cursor.close();
         return languages;
+    }
+
+    /**
+     * Returns the target language that has been assigned to a temporary target language.
+     *
+     * Note: does not include the row id. You don't need it
+     *
+     * @param slug the temporary target language with the assignment
+     * @return the language object or null if it does not exist
+     */
+    public DummyTargetLanguage getApprovedTargetLanguage(String slug) {
+        DummyTargetLanguage language = null;
+
+        Cursor cursor = db.rawQuery("select tl.* from target_language as tl" +
+                " left join temp_target_language as ttl on ttl.approved_target_language_slug=tl.slug" +
+                " where ttl.slug=?", new String[]{slug});
+
+        if(cursor.moveToFirst()) {
+            String name = cursor.getString(2);
+            String angName = cursor.getString(3);
+            String dir = cursor.getString(4);
+            String region = cursor.getString(5);
+            boolean isGate = cursor.getInt(6) == 1;
+
+            language = new DummyTargetLanguage(slug, name, angName, dir, region, isGate);
+            cursor.close();
+        }
+        return language;
+    }
+
+//    public getProject(String languageSlug, String projectSlug) {
+//
+//    }
+
+    /**
+     * Returns a list of projects available in the given language.
+     *
+     * @param languageSlug
+     * @return an array of projects
+     */
+    public List<Project> getProjects(String languageSlug) {
+        Cursor cursor = db.rawQuery("select * from project" +
+                " where source_language_id in (select id from source_language where slug=?)" +
+                " order by sort asc", new String[]{languageSlug});
+
+        List<Project> projects = new ArrayList<>();
+        cursor.moveToFirst();
+        while(!cursor.isAfterLast()) {
+            String slug = cursor.getString(1);
+            String name = cursor.getString(2);
+            String desc = cursor.getString(3);
+            String icon = cursor.getString(4);
+            int sort = cursor.getInt(5);
+            String chunksUrl = cursor.getString(6);
+            int sourceLanguageId = cursor.getInt(7);
+            int categoryId = cursor.getInt(8);
+
+            Project project = new Project(slug, name, desc, icon, sort, chunksUrl, sourceLanguageId, categoryId);
+            projects.add(project);
+            cursor.moveToNext();
+        }
+        cursor.close();
+        return projects;
     }
 }
