@@ -559,4 +559,26 @@ public class Library {
         }
         return catalog;
     }
+
+    /**
+     * Returns a list of catalogs
+     *
+     * @return
+     */
+    public List<Catalog> getCatalogs() {
+        Cursor cursor = db.rawQuery("select * from catalog", null);
+
+        List<Catalog> catalogs = new ArrayList<>();
+        while(!cursor.isAfterLast()) {
+            String slug = cursor.getString(1);
+            String url = cursor.getString(2);
+            int modifiedAt = cursor.getInt(3);
+
+            Catalog catalog = new Catalog(slug, url, modifiedAt);
+            catalogs.add(catalog);
+            cursor.moveToNext();
+        }
+        cursor.close();
+        return catalogs;
+    }
 }
