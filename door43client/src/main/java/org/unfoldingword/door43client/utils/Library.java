@@ -542,4 +542,21 @@ public class Library {
         cursor.close();
         return projects;
     }
+
+    /**
+     * Returns a catalog
+     *
+     * @param slug
+     * @return the catalog object or null if it does not exist
+     */
+    public Catalog getCatalog(String slug) {
+        Catalog catalog = null;
+        Cursor cursor = db.rawQuery("select * from catalog where slug=?", new String[]{slug});
+        if(cursor.moveToFirst()) {
+            String url = cursor.getString(2);
+            int modifiedAt = cursor.getInt(3);
+            catalog = new Catalog(slug, url, modifiedAt);
+        }
+        return catalog;
+    }
 }
