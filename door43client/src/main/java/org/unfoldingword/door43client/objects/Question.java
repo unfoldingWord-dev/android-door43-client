@@ -12,4 +12,15 @@ public class Question {
     public static int depends_on;
     public static int td_id;
     public static int questionnaire_id;
+
+    public Question(String text, String help, int is_required, String input_type, int sort, int depends_on, int td_id, int questionnaire_id) {
+        this.text = text;
+        this.help = help;
+        this.is_required = is_required;
+        this.input_type = input_type;
+        this.sort = sort;
+        this.depends_on = depends_on;
+        this.td_id = td_id;
+        this.questionnaire_id = questionnaire_id;
+    }
 }

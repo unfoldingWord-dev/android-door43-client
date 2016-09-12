@@ -652,7 +652,7 @@ public class Library {
 
         List<Questionnaire> questionnaires = new ArrayList<>();
         cursor.moveToFirst();
-        while(!cursor.isAfterLast()){
+        while(!cursor.isAfterLast()) {
             String slug = cursor.getString(1);
             String name = cursor.getString(2);
             String direction = cursor.getString(3);
@@ -662,5 +662,34 @@ public class Library {
             questionnaires.add(questionnaire);
         }
         return questionnaires;
+    }
+
+    /**
+     * Returns a list of questions.
+     *
+     * @param questionnaireId the parent questionnaire row id
+     * @return a list of questions
+     */
+    public List<Question> getQuestions(int questionnaireId) {
+        Cursor cursor = db.rawQuery("select question where questionnaire_id=?", new String[]{String.valueOf(questionnaireId)});
+
+        List<Question> questions = new ArrayList<>();
+        cursor.moveToFirst();
+        while(!cursor.isAfterLast()) {
+            String text = cursor.getString(1);
+            String help = cursor.getString(2);
+            int is_required = cursor.getInt(3);
+            String input_type = cursor.getString(4);
+            int sort = cursor.getInt(5);
+            int depends_on = cursor.getInt(6);
+            int td_id = cursor.getInt(7);
+            int questionnaire_id = cursor.getInt(8);
+
+            Question question = new Question(text, help, is_required, input_type, sort, depends_on, td_id, questionnaire_id);
+            questions.add(question);
+            cursor.moveToNext();
+        }
+        cursor.close();
+        return questions;
     }
 }
