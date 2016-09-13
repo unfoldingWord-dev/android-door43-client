@@ -642,9 +642,18 @@ public class Library {
 //
 //    }
 
-//    public Resource getResource(String languageSlug, String projectSlug, String resourceSlug) {
-//
-//    }
+    public Resource getResource(String languageSlug, String projectSlug, String resourceSlug) {
+        Cursor cursor = db.rawQuery("select r.*, lri.translation_words_assignments_url from resource as r" +
+                "  left join legacy_resource_info as lri on lri.resource_id=r.id" +
+                "  where r.slug=? and r.project_id in (" +
+                "  select id from project where slug=? and source_language_id in (" +
+                "  select id from source_language where slug=?)" +
+                " ) limit 1", new String[]{resourceSlug, projectSlug, languageSlug});
+
+        if(cursor.moveToFirst()) {
+
+        }
+    }
 
 //    public List<Resource> getResources(String languageSlug, String projectSlug) {
 //
