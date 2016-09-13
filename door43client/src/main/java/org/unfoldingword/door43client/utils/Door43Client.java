@@ -2,6 +2,11 @@ package org.unfoldingword.door43client.utils;
 
 import android.content.Context;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.unfoldingword.door43client.objects.Project;
+import org.unfoldingword.door43client.objects.Resource;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -37,6 +42,7 @@ public class Door43Client {
         SQLiteHelper helper = new SQLiteHelper(context, sb.toString(), databaseName);
         this.library = new Library(helper);
     }
+
 
     // TODO: 9/2/16 write all the methods!
 }

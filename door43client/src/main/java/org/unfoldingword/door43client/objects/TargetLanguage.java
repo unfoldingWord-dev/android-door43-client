@@ -3,7 +3,7 @@ package org.unfoldingword.door43client.objects;
 /**
  * Created by Andrew on 9/2/2016.
  */
-public class DummyTargetLanguage {
+public class TargetLanguage {
     public static String slug;
     public static String name;
     public final String anglicizedName;
@@ -20,7 +20,7 @@ public class DummyTargetLanguage {
      * @param region the region in which the language belongs
      * @param isGatewayLanguage
      */
-    public DummyTargetLanguage(String slug, String name, String anglicizedName, String direction, String region, boolean isGatewayLanguage) {
+    public TargetLanguage(String slug, String name, String anglicizedName, String direction, String region, boolean isGatewayLanguage) {
 
         this.slug = slug;
         this.name = name;

@@ -4,13 +4,11 @@ import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.text.TextUtils;
-import android.util.Log;
 
 import org.unfoldingword.door43client.objects.Category;
 import org.unfoldingword.door43client.objects.Chunk;
 import org.unfoldingword.door43client.objects.ChunkMarker;
-import org.unfoldingword.door43client.objects.DummySourceLanguage;
-import org.unfoldingword.door43client.objects.DummyTargetLanguage;
+import org.unfoldingword.door43client.objects.TargetLanguage;
 import org.unfoldingword.door43client.objects.Project;
 import org.unfoldingword.door43client.objects.Question;
 import org.unfoldingword.door43client.objects.Resource;
@@ -19,12 +17,9 @@ import org.unfoldingword.door43client.objects.Versification;
 import org.unfoldingword.door43client.objects.Catalog;
 import org.unfoldingword.door43client.objects.Questionnaire;
 
-import java.lang.annotation.Target;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 
 /**
@@ -105,7 +100,7 @@ public class Library {
      * @return the id of the source language row
      * @throws Exception
      */
-    public long addSourceLanguage(DummySourceLanguage language) throws Exception {
+    public long addSourceLanguage(SourceLanguage language) throws Exception {
         validateNotEmpty(language.slug);
         validateNotEmpty(language.name);
         validateNotEmpty(language.direction);
@@ -127,7 +122,7 @@ public class Library {
      * @return
      * @throws Exception
      */
-    public boolean addTargetLanguage(DummyTargetLanguage language) throws Exception {
+    public boolean addTargetLanguage(TargetLanguage language) throws Exception {
         validateNotEmpty(language.slug);
         validateNotEmpty(language.name);
         validateNotEmpty(language.direction);
@@ -153,7 +148,7 @@ public class Library {
      * @return
      * @throws Exception
      */
-    public boolean addTempTargetLanguage(DummyTargetLanguage language) throws Exception {
+    public boolean addTempTargetLanguage(TargetLanguage language) throws Exception {
         validateNotEmpty(language.slug);
         validateNotEmpty(language.name);
         validateNotEmpty(language.direction);
@@ -318,12 +313,17 @@ public class Library {
         return insertOrUpdate("catalog", values, new String[]{"slug"});
     }
 
-//    public long addResource(Resource resource, long project_id) throws Exception {
-//        validateNotEmpty(resource.slug);
-//        validateNotEmpty(resource.name);
-//        validateNotEmpty(resource.type);
-//        //TODO add more here
-//    }
+    public long addResource(Resource resource, long projectId) throws Exception {
+        validateNotEmpty(resource.slug);
+        validateNotEmpty(resource.name);
+        validateNotEmpty(resource.type);
+        validateNotEmpty((String)resource.status.get("translate_mode"));
+        validateNotEmpty((String)resource.status.get("checking_level"));
+        validateNotEmpty((String)resource.status.get("version"));
+
+        //TODO add more here
+        return -1;
+    }
 
     /**
      *Inserts or updates a questionnaire in the library.
@@ -333,17 +333,17 @@ public class Library {
      * @throws Exception
      */
     public long addQuestionaire(Questionnaire questionnaire) throws Exception {
-        validateNotEmpty(questionnaire.language_slug);
-        validateNotEmpty(questionnaire.language_name);
-        validateNotEmpty(questionnaire.language_direction);
+        validateNotEmpty(questionnaire.languageSlug);
+        validateNotEmpty(questionnaire.languageName);
+        validateNotEmpty(questionnaire.languageDirection);
 
         ContentValues values = new ContentValues();
-        values.put("language_slug", questionnaire.language_slug);
-        values.put("language_name", questionnaire.language_name);
-        values.put("language_direction", questionnaire.language_direction);
-        values.put("td_id", questionnaire.td_id);
+        values.put("language_slug", questionnaire.languageSlug);
+        values.put("language_name", questionnaire.languageName);
+        values.put("language_direction", questionnaire.languageDirection);
+        values.put("td_id", questionnaire.tdId);
 
-        return insertOrUpdate("questionnaire", values, new String[]{"td_id","language_slug"});
+        return insertOrUpdate("questionnaire", values, new String[]{"td_id", "language_slug"});
     }
 
     /**
@@ -368,7 +368,7 @@ public class Library {
         values.put("td_id", question.td_id);
         values.put("questionnaire_id", questionnaireId);
 
-        return insertOrUpdate("question", values, new String[]{"td_id","language_slug"});
+        return insertOrUpdate("question", values, new String[]{"td_id", "language_slug"});
     }
 
     /**
@@ -394,6 +394,7 @@ public class Library {
             sourceLanguageMap.put(slug, modifiedAt);
             langsLastModifiedList.add(sourceLanguageMap);
         }
+        cursor.close();
         return langsLastModifiedList;
     }
 
@@ -431,6 +432,7 @@ public class Library {
             projectMap.put(slug, modifiedAt);
             projectsLastModifiedList.add(projectMap);
         }
+        cursor.close();
         return projectsLastModifiedList;
     }
 
@@ -449,6 +451,7 @@ public class Library {
             cursor.close();
             return sourceLanguage;
         } else {
+            cursor.close();
             return null;
         }
     }
@@ -486,7 +489,7 @@ public class Library {
      * @param slug
      * @return the language object or null if it does not exist
      */
-    public DummyTargetLanguage getTargetLanguage(String slug) {
+    public TargetLanguage getTargetLanguage(String slug) {
         Cursor cursor = db.rawQuery("select * from (" +
                 "  select slug, name, anglicized_name, direction, region, is_gateway_language from target_language" +
                 "  union" +
@@ -501,10 +504,11 @@ public class Library {
             String region = cursor.getString(5);
             boolean isGateWay = cursor.getInt(6) == 1;
 
-            DummyTargetLanguage dummyTargetLanguage = new DummyTargetLanguage(slug, name, anglicized, direction, region, isGateWay);
+            TargetLanguage dummyTargetLanguage = new TargetLanguage(slug, name, anglicized, direction, region, isGateWay);
             cursor.close();
             return dummyTargetLanguage;
         } else {
+            cursor.close();
             return null;
         }
     }
@@ -518,7 +522,7 @@ public class Library {
      *
      * @return
      */
-    public List<DummyTargetLanguage> getTargetLanguages() {
+    public List<TargetLanguage> getTargetLanguages() {
         Cursor cursor = db.rawQuery("select * from (" +
                 "  select slug, name, anglicized_name, direction, region, is_gateway_language from target_language" +
                 "  union" +
@@ -526,7 +530,7 @@ public class Library {
                 "  where approved_target_language_slug is null" +
                 ") order by slug asc, name desc", new String[0]);
 
-        List<DummyTargetLanguage> languages = new ArrayList<>();
+        List<TargetLanguage> languages = new ArrayList<>();
         cursor.moveToFirst();
         while(!cursor.isAfterLast()) {
             String slug = cursor.getString(0);
@@ -536,7 +540,7 @@ public class Library {
             String region = cursor.getString(4);
             boolean isGate = cursor.getInt(5) == 1;
 
-            DummyTargetLanguage newLang = new DummyTargetLanguage(slug, name, angName, dir, region, isGate);
+            TargetLanguage newLang = new TargetLanguage(slug, name, angName, dir, region, isGate);
             languages.add(newLang);
             cursor.moveToNext();
         }
@@ -552,8 +556,8 @@ public class Library {
      * @param slug the temporary target language with the assignment
      * @return the language object or null if it does not exist
      */
-    public DummyTargetLanguage getApprovedTargetLanguage(String slug) {
-        DummyTargetLanguage language = null;
+    public TargetLanguage getApprovedTargetLanguage(String slug) {
+        TargetLanguage language = null;
 
         Cursor cursor = db.rawQuery("select tl.* from target_language as tl" +
                 " left join temp_target_language as ttl on ttl.approved_target_language_slug=tl.slug" +
@@ -566,7 +570,7 @@ public class Library {
             String region = cursor.getString(5);
             boolean isGate = cursor.getInt(6) == 1;
 
-            language = new DummyTargetLanguage(slug, name, angName, dir, region, isGate);
+            language = new TargetLanguage(slug, name, angName, dir, region, isGate);
             cursor.close();
         }
         return language;
@@ -579,17 +583,12 @@ public class Library {
      * @param projectSlug
      * @return the project object or null
      */
-    public Project getProject(Object languageSlug, String projectSlug) {
-        if (languageSlug != null && languageSlug instanceof SourceLanguage) {
-            projectSlug = ((SourceLanguage)languageSlug).project_slug;
-            languageSlug = ((SourceLanguage)languageSlug).slug;
-        }
-
+    public Project getProject(String languageSlug, String projectSlug) {
         Project project = null;
         Cursor cursor = db.rawQuery("select * from project" +
                 " where slug=? and source_language_id in (" +
                 " select id from source_language where slug=?)" +
-                " limit 1", new String[]{projectSlug, (String)languageSlug});
+                " limit 1", new String[]{projectSlug, languageSlug});
 
         if(cursor.moveToFirst()) {
             String slug = cursor.getString(1);
@@ -604,6 +603,7 @@ public class Library {
             project = new Project(slug, name, desc, icon, sort, chunksUrl, sourceLanguageId, categoryId);
             //TODO: store the language slug for convenience
         }
+        cursor.close();
         return project;
     }
 
@@ -651,8 +651,13 @@ public class Library {
                 " ) limit 1", new String[]{resourceSlug, projectSlug, languageSlug});
 
         if(cursor.moveToFirst()) {
+            // load resource object
 
+            // load formats and add to resource
         }
+
+        cursor.close();
+        return null;
     }
 
 //    public List<Resource> getResources(String languageSlug, String projectSlug) {
@@ -673,6 +678,7 @@ public class Library {
             int modifiedAt = cursor.getInt(3);
             catalog = new Catalog(slug, url, modifiedAt);
         }
+        cursor.close();
         return catalog;
     }
 
@@ -718,6 +724,7 @@ public class Library {
             String name = cursor.getString(cursor.getColumnIndex("name"));
             versification = new Versification(slug, name);
         }
+        cursor.close();
         return versification;
     }
 
@@ -792,6 +799,7 @@ public class Library {
             Questionnaire questionnaire = new Questionnaire(slug, name, direction, td_id);
             questionnaires.add(questionnaire);
         }
+        cursor.close();
         return questionnaires;
     }
 

@@ -13,6 +13,12 @@ public class SQLiteHelper extends SQLiteOpenHelper {
     private final String schema;
     private final String name;
 
+    /**
+     *
+     * @param context
+     * @param schema The sqlite schema
+     * @param name the db name
+     */
     public SQLiteHelper(Context context, String schema, String name) {
         super(context, name, null, DATABASE_VERSION);
         this.schema = schema;
