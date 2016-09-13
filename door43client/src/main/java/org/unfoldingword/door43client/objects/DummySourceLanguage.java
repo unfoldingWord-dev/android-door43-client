@@ -1,4 +1,4 @@
-package org.unfoldingword.door43client;
+package org.unfoldingword.door43client.objects;
 
 /**
  * This is a dummy placeholder
