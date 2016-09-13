@@ -375,9 +375,9 @@ public class Library {
      * Returns a list of source languages and when they were last modified.
      * The value is taken from the max modified resource format date within the language
      *
-     * @return
+     * @return {slug, modified_at}
      */
-    public List listSourceLanguagesLastModified() {
+    public List<HashMap> listSourceLanguagesLastModified() {
         Cursor cursor = db.rawQuery("select sl.slug, max(rf.modified_at) as modified_at from resource_format as rf"
                 + " left join resource  as r on r.id=rf.resource_id"
                 + " left join project as p on p.id=r.project_id"
@@ -385,22 +385,54 @@ public class Library {
                 + " where rf.mime_type like(\"application/ts+%\")"
                 + " group by sl.slug", null);
         cursor.moveToFirst();
-
-        ArrayList list = new ArrayList<>();
+        List<HashMap> langsLastModifiedList = new ArrayList<>();
         while(!cursor.isAfterLast()) {
             String slug = cursor.getString(cursor.getColumnIndex("slug"));
             int modifiedAt = cursor.getInt(cursor.getColumnIndex("modified_at"));
 
             HashMap sourceLanguageMap = new HashMap();
             sourceLanguageMap.put(slug, modifiedAt);
-            list.add(sourceLanguageMap);
+            langsLastModifiedList.add(sourceLanguageMap);
         }
-        return list;
+        return langsLastModifiedList;
     }
 
-//    public List listProjectsLastModified() {
-//        //TODO add more here
-//    }
+    /**
+     * Returns a list of projects and when they were last modified
+     * The value is taken from the max modified resource format date within the project
+     *
+     * @param languageSlug the source language who's projects will be selected. If left empty the results will include all projects in all languages.
+     * @return
+     */
+    public List<HashMap> listProjectsLastModified(String languageSlug) {
+        Cursor cursor = null;
+        if(languageSlug != null || languageSlug != ""){
+            cursor = db.rawQuery("select p.slug, max(rf.modified_at) as modified_at from resource_format as rf"
+                + " left join resource  as r on r.id=rf.resource_id"
+                + " left join project as p on p.id=r.project_id"
+                + " left join source_language as sl on sl.id=p.source_language_id"
+                + " where rf.mime_type like(\"application/ts+%\") and sl.slug=?"
+                + " group by p.slug", new String[]{languageSlug});
+        } else {
+            cursor = db.rawQuery("select p.slug, max(rf.modified_at) as modified_at from resource_format as rf"
+                + " left join resource  as r on r.id=rf.resource_id"
+                + " left join project as p on p.id=r.project_id"
+                + " left join source_language as sl on sl.id=p.source_language_id"
+                + " where rf.mime_type like(\"application/ts+%\") and sl.slug=?"
+                + " group by p.slug", null);
+        }
+        cursor.moveToFirst();
+        List<HashMap> projectsLastModifiedList = new ArrayList<>();
+        while(!cursor.isAfterLast()) {
+            String slug = cursor.getString(cursor.getColumnIndex("slug"));
+            int modifiedAt = cursor.getInt(cursor.getColumnIndex("modified_at"));
+
+            HashMap projectMap = new HashMap();
+            projectMap.put(slug, modifiedAt);
+            projectsLastModifiedList.add(projectMap);
+        }
+        return projectsLastModifiedList;
+    }
 
     /**
      * Returns a source language.
