@@ -672,7 +672,7 @@ public class Library {
                 " left join source_language as sl on sl.id=vn.source_language_id" +
                 " where sl.slug=? and v.slug=?", new String[]{languageSlug, versificationSlug});
 
-        if(cursor.moveToFirst()){
+        if(cursor.moveToFirst()) {
             String slug = cursor.getString(cursor.getColumnIndex("slug"));
             String name = cursor.getString(cursor.getColumnIndex("name"));
             versification = new Versification(slug, name);
@@ -680,21 +680,29 @@ public class Library {
         return versification;
     }
 
-//    /**
-//     * Returns a list of versifications
-//     *
-//     * @param languageSlug
-//     * @return
-//     */
-//    public List<Versification> getVersifications(String languageSlug) {
-//        Cursor cursor = db.rawQuery("select vn.name, v.slug, v.id from versification_name as vn" +
-//                " left join versification as v on v.id=vn.versification_id" +
-//                " left join source_language as sl on sl.id=vn.source_language_id" +
-//                " where sl.slug=? and v.slug=?", new String[]{languageSlug});
-//
-//        List<Versification> versifications = new ArrayList<>();
-//
-//    }
+    /**
+     * Returns a list of versifications
+     *
+     * @param languageSlug
+     * @return
+     */
+    public List<Versification> getVersifications(String languageSlug) {
+        Cursor cursor = db.rawQuery("select vn.name, v.slug, v.id from versification_name as vn" +
+                " left join versification as v on v.id=vn.versification_id" +
+                " left join source_language as sl on sl.id=vn.source_language_id" +
+                " where sl.slug=? and v.slug=?", new String[]{languageSlug});
+
+        List<Versification> versifications = new ArrayList<>();
+        while(!cursor.isAfterLast()) {
+            String slug = cursor.getString(cursor.getColumnIndex("slug"));
+            String name = cursor.getString(cursor.getColumnIndex("name"));
+            Versification versification = new Versification(slug, name);
+            versifications.add(versification);
+            cursor.moveToNext();
+        }
+        cursor.close();
+        return versifications;
+    }
 
     /**
      * Returns a list of chunk markers for a project
