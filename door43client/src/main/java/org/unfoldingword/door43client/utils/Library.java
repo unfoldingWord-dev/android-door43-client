@@ -4,6 +4,7 @@ import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.text.TextUtils;
+import android.util.Log;
 
 import org.unfoldingword.door43client.objects.Category;
 import org.unfoldingword.door43client.objects.Chunk;
@@ -19,8 +20,11 @@ import org.unfoldingword.door43client.objects.Catalog;
 import org.unfoldingword.door43client.objects.Questionnaire;
 
 import java.lang.annotation.Target;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 
 /**
@@ -318,7 +322,7 @@ public class Library {
 //        validateNotEmpty(resource.slug);
 //        validateNotEmpty(resource.name);
 //        validateNotEmpty(resource.type);
-//        //TODO add more here!
+//        //TODO add more here
 //    }
 
     /**
@@ -367,8 +371,35 @@ public class Library {
         return insertOrUpdate("question", values, new String[]{"td_id","language_slug"});
     }
 
-//    public List<SourceLanguage> listSourceLanguagesLastModified() {
-//
+    /**
+     * Returns a list of source languages and when they were last modified.
+     * The value is taken from the max modified resource format date within the language
+     *
+     * @return
+     */
+    public List listSourceLanguagesLastModified() {
+        Cursor cursor = db.rawQuery("select sl.slug, max(rf.modified_at) as modified_at from resource_format as rf"
+                + " left join resource  as r on r.id=rf.resource_id"
+                + " left join project as p on p.id=r.project_id"
+                + " left join source_language as sl on sl.id=p.source_language_id"
+                + " where rf.mime_type like(\"application/ts+%\")"
+                + " group by sl.slug", null);
+        cursor.moveToFirst();
+
+        ArrayList list = new ArrayList<>();
+        while(!cursor.isAfterLast()) {
+            String slug = cursor.getString(cursor.getColumnIndex("slug"));
+            int modifiedAt = cursor.getInt(cursor.getColumnIndex("modified_at"));
+
+            HashMap sourceLanguageMap = new HashMap();
+            sourceLanguageMap.put(slug, modifiedAt);
+            list.add(sourceLanguageMap);
+        }
+        return list;
+    }
+
+//    public List listProjectsLastModified() {
+//        //TODO add more here
 //    }
 
     /**
@@ -509,9 +540,40 @@ public class Library {
         return language;
     }
 
-//    public getProject(String languageSlug, String projectSlug) {
-//
-//    }
+    /**
+     * Returns a project
+     *
+     * @param languageSlug
+     * @param projectSlug
+     * @return the project object or null
+     */
+    public Project getProject(Object languageSlug, String projectSlug) {
+        if (languageSlug != null && languageSlug instanceof SourceLanguage) {
+            projectSlug = ((SourceLanguage)languageSlug).project_slug;
+            languageSlug = ((SourceLanguage)languageSlug).slug;
+        }
+
+        Project project = null;
+        Cursor cursor = db.rawQuery("select * from project" +
+                " where slug=? and source_language_id in (" +
+                " select id from source_language where slug=?)" +
+                " limit 1", new String[]{projectSlug, (String)languageSlug});
+
+        if(cursor.moveToFirst()) {
+            String slug = cursor.getString(1);
+            String name = cursor.getString(2);
+            String desc = cursor.getString(3);
+            String icon = cursor.getString(4);
+            int sort = cursor.getInt(5);
+            String chunksUrl = cursor.getString(6);
+            int sourceLanguageId = cursor.getInt(7);
+            int categoryId = cursor.getInt(8);
+
+            project = new Project(slug, name, desc, icon, sort, chunksUrl, sourceLanguageId, categoryId);
+            //TODO: store the language slug for convenience
+        }
+        return project;
+    }
 
     /**
      * Returns a list of projects available in the given language.
@@ -543,6 +605,18 @@ public class Library {
         cursor.close();
         return projects;
     }
+
+//    public getProjectCategories(int parentCategoryId, String languageSlug, String translateMode) {
+//
+//    }
+
+//    public Resource getResource(String languageSlug, String projectSlug, String resourceSlug) {
+//
+//    }
+
+//    public List<Resource> getResources(String languageSlug, String projectSlug) {
+//
+//    }
 
     /**
      * Returns a catalog
@@ -592,27 +666,35 @@ public class Library {
      * @return versification or null
      */
     public Versification getVersification(String languageSlug, String versificationSlug) {
+        Versification versification = null;
         Cursor cursor = db.rawQuery("select vn.name, v.slug, v.id from versification_name as vn" +
                 " left join versification as v on v.id=vn.versification_id" +
                 " left join source_language as sl on sl.id=vn.source_language_id" +
                 " where sl.slug=? and v.slug=?", new String[]{languageSlug, versificationSlug});
+
+        if(cursor.moveToFirst()){
+            String slug = cursor.getString(cursor.getColumnIndex("slug"));
+            String name = cursor.getString(cursor.getColumnIndex("name"));
+            versification = new Versification(slug, name);
+        }
+        return versification;
     }
 
-    /**
-     * Returns a list of versifications
-     *
-     * @param languageSlug
-     * @return
-     */
-    public List<Versification> getVersifications(String languageSlug) {
-        Cursor cursor = db.rawQuery("select vn.name, v.slug, v.id from versification_name as vn" +
-                " left join versification as v on v.id=vn.versification_id" +
-                " left join source_language as sl on sl.id=vn.source_language_id" +
-                " where sl.slug=? and v.slug=?", new String[]{languageSlug});
-
-        List<Versification> versifications = new ArrayList<>();
-
-    }
+//    /**
+//     * Returns a list of versifications
+//     *
+//     * @param languageSlug
+//     * @return
+//     */
+//    public List<Versification> getVersifications(String languageSlug) {
+//        Cursor cursor = db.rawQuery("select vn.name, v.slug, v.id from versification_name as vn" +
+//                " left join versification as v on v.id=vn.versification_id" +
+//                " left join source_language as sl on sl.id=vn.source_language_id" +
+//                " where sl.slug=? and v.slug=?", new String[]{languageSlug});
+//
+//        List<Versification> versifications = new ArrayList<>();
+//
+//    }
 
     /**
      * Returns a list of chunk markers for a project

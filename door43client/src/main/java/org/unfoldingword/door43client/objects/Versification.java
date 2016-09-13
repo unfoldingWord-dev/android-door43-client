@@ -6,4 +6,9 @@ package org.unfoldingword.door43client.objects;
 public class Versification {
     public static String slug;
     public static String name;
+
+    public Versification(String slug, String name) {
+        this.slug = slug;
+        this.name = name;
+    }
 }
