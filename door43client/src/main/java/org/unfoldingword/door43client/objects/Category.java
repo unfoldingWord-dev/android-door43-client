@@ -1,9 +1,14 @@
 package org.unfoldingword.door43client.objects;
 
 /**
- * Created by Andrew on 9/8/2016.
+ * Represents a project category. e.g. a group of projects.
  */
 public class Category {
-    public static String slug;
-    public static String name;
+    public final String slug;
+    public final String name;
+
+    public Category(String slug, String name) {
+        this.name = name;
+        this.slug = slug;
+    }
 }

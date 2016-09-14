@@ -1,26 +1,24 @@
 package org.unfoldingword.door43client.objects;
 
 /**
- * Created by Andrew on 9/8/2016.
+ * Represents a single question in a questionnaire
  */
 public class Question {
-    public static String text;
-    public static String help;
-    public static int is_required;
-    public static String input_type;
-    public static int sort;
-    public static int depends_on;
-    public static int td_id;
-    public static int questionnaire_id;
+    public final String text;
+    public final String help;
+    public final boolean isRequired;
+    public final String inputType;
+    public final int sort;
+    public final int dependsOn;
+    public final int tdId;
 
-    public Question(String text, String help, int is_required, String input_type, int sort, int depends_on, int td_id, int questionnaire_id) {
+    public Question(String text, String help, boolean isRequired, String inputType, int sort, int dependsOn, int tdId) {
         this.text = text;
         this.help = help;
-        this.is_required = is_required;
-        this.input_type = input_type;
+        this.isRequired = isRequired;
+        this.inputType = inputType;
         this.sort = sort;
-        this.depends_on = depends_on;
-        this.td_id = td_id;
-        this.questionnaire_id = questionnaire_id;
+        this.dependsOn = dependsOn;
+        this.tdId = tdId;
     }
 }

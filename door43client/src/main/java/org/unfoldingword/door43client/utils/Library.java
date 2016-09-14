@@ -6,7 +6,6 @@ import android.database.sqlite.SQLiteDatabase;
 import android.text.TextUtils;
 
 import org.unfoldingword.door43client.objects.Category;
-import org.unfoldingword.door43client.objects.Chunk;
 import org.unfoldingword.door43client.objects.ChunkMarker;
 import org.unfoldingword.door43client.objects.TargetLanguage;
 import org.unfoldingword.door43client.objects.Project;
@@ -45,7 +44,16 @@ public class Library {
      * @throws Exception
      */
     private void validateNotEmpty(String value) throws Exception {
-        if(value == null || value.isEmpty()) throw new Exception("Invalid parameter value");
+        if(value == null || value.trim().isEmpty()) throw new Exception("Invalid parameter value");
+    }
+
+    /**
+     * Converts null strings to empty strings
+     * @param value
+     * @return
+     */
+    private String deNull(String value) {
+        return value == null ? "" : value;
     }
 
     /**
@@ -131,8 +139,8 @@ public class Library {
         values.put("slug", language.slug);
         values.put("name", language.name);
         values.put("direction", language.direction);
-        values.put("anglicized_name", language.anglicizedName);
-        values.put("region", language.region);
+        values.put("anglicized_name", deNull(language.anglicizedName));
+        values.put("region", deNull(language.region));
         values.put("is_gateway_language", language.isGatewayLanguage ? 1: 0);
 
         long id = insertOrUpdate("target_language", values, new String[]{"slug"});
@@ -157,8 +165,8 @@ public class Library {
         values.put("slug", language.slug);
         values.put("name", language.name);
         values.put("direction", language.direction);
-        values.put("anglicized_name", language.anglicizedName);
-        values.put("region", language.region);
+        values.put("anglicized_name", deNull(language.anglicizedName));
+        values.put("region", deNull(language.region));
         values.put("is_gateway_language", language.isGatewayLanguage ? 1 : 0);
 
         long id = insertOrUpdate("temp_target_language", values, new String[]{"slug"});
@@ -171,7 +179,10 @@ public class Library {
      * @param targetLanguageSlug the assigned target language
      * @return indicates if the approved language was successfully set
      */
-    public boolean setApprovedTargetLanguage(String tempTargetLanguageSlug, String targetLanguageSlug) {
+    public boolean setApprovedTargetLanguage(String tempTargetLanguageSlug, String targetLanguageSlug) throws Exception {
+        validateNotEmpty(tempTargetLanguageSlug);
+        validateNotEmpty(targetLanguageSlug);
+
         ContentValues contentValues = new ContentValues();
         contentValues.put("approved_target_language_slug", targetLanguageSlug);
 
@@ -199,6 +210,9 @@ public class Library {
         if(categories != null) {
             // build categories
             for(Category category:categories) {
+                validateNotEmpty(category.slug);
+                validateNotEmpty(category.name);
+
                 ContentValues insertValues = new ContentValues();
                 insertValues.put("slug", category.slug);
                 insertValues.put("parent_id", parentCategoryId);
@@ -227,10 +241,10 @@ public class Library {
         ContentValues updateProject = new ContentValues();
         updateProject.put("slug", project.slug);
         updateProject.put("name", project.name);
-        updateProject.put("desc", project.description);
-        updateProject.put("icon", project.icon);
+        updateProject.put("desc", deNull(project.description));
+        updateProject.put("icon", deNull(project.icon));
         updateProject.put("sort", project.sort);
-        updateProject.put("chunks_url", project.chunksUrl);
+        updateProject.put("chunks_url", deNull(project.chunksUrl));
         updateProject.put("source_language_id", sourceLanguageId);
         updateProject.put("category_id", parentCategoryId);
 
@@ -245,7 +259,8 @@ public class Library {
      * @return the id of the versification or -1
      * @throws Exception
      */
-    public long addVersification(Versification versification, int sourceLanguageId) throws Exception{
+    public long addVersification(Versification versification, long sourceLanguageId) throws Exception{
+        validateNotEmpty(versification.slug);
         validateNotEmpty(versification.name);
 
         ContentValues values = new ContentValues();
@@ -271,7 +286,7 @@ public class Library {
      * @return the id of the chunk marker
      * @throws Exception
      */
-    public long addChunkMarker(Chunk chunk, String projectSlug, long versificationId) throws Exception {
+    public long addChunkMarker(ChunkMarker chunk, String projectSlug, long versificationId) throws Exception {
         validateNotEmpty(chunk.chapter);
         validateNotEmpty(chunk.verse);
         validateNotEmpty(projectSlug);
@@ -356,16 +371,16 @@ public class Library {
      */
     public long addQuestion(Question question, int questionnaireId) throws Exception {
         validateNotEmpty(question.text);
-        validateNotEmpty(question.input_type);
+        validateNotEmpty(question.inputType);
 
         ContentValues values = new ContentValues();
         values.put("text", question.text);
-        values.put("help", question.help);
-        values.put("is_required", question.is_required);
-        values.put("input_type", question.input_type);
+        values.put("help", deNull(question.help));
+        values.put("is_required", question.isRequired ? 1 : 0);
+        values.put("input_type", question.inputType);
         values.put("sort", question.sort);
-        values.put("depends_on", question.depends_on);
-        values.put("td_id", question.td_id);
+        values.put("depends_on", question.dependsOn);
+        values.put("td_id", question.tdId);
         values.put("questionnaire_id", questionnaireId);
 
         return insertOrUpdate("question", values, new String[]{"td_id", "language_slug"});
@@ -498,11 +513,11 @@ public class Library {
                 ") where slug=? limit 1", new String[]{slug});
 
         if(cursor.moveToFirst()) {
-            String name = cursor.getString(2);
-            String anglicized = cursor.getString(3);
-            String direction = cursor.getString(4);
-            String region = cursor.getString(5);
-            boolean isGateWay = cursor.getInt(6) == 1;
+            String name = cursor.getString(1);
+            String anglicized = cursor.getString(2);
+            String direction = cursor.getString(3);
+            String region = cursor.getString(4);
+            boolean isGateWay = cursor.getInt(5) == 1;
 
             TargetLanguage dummyTargetLanguage = new TargetLanguage(slug, name, anglicized, direction, region, isGateWay);
             cursor.close();
@@ -597,10 +612,8 @@ public class Library {
             String icon = cursor.getString(4);
             int sort = cursor.getInt(5);
             String chunksUrl = cursor.getString(6);
-            int sourceLanguageId = cursor.getInt(7);
-            int categoryId = cursor.getInt(8);
 
-            project = new Project(slug, name, desc, icon, sort, chunksUrl, sourceLanguageId, categoryId);
+            project = new Project(slug, name, desc, icon, sort, chunksUrl);
             //TODO: store the language slug for convenience
         }
         cursor.close();
@@ -627,10 +640,8 @@ public class Library {
             String icon = cursor.getString(4);
             int sort = cursor.getInt(5);
             String chunksUrl = cursor.getString(6);
-            int sourceLanguageId = cursor.getInt(7);
-            int categoryId = cursor.getInt(8);
 
-            Project project = new Project(slug, name, desc, icon, sort, chunksUrl, sourceLanguageId, categoryId);
+            Project project = new Project(slug, name, desc, icon, sort, chunksUrl);
             projects.add(project);
             cursor.moveToNext();
         }
@@ -770,9 +781,8 @@ public class Library {
             String chapter = cursor.getString(1);
             String verse = cursor.getString(2);
             String slug = cursor.getString(3);
-            int versificationId = cursor.getInt(4);
 
-            ChunkMarker chunkMarker = new ChunkMarker(chapter, verse, slug, versificationId);
+            ChunkMarker chunkMarker = new ChunkMarker(chapter, verse);
             chunkMarkers.add(chunkMarker);
             cursor.moveToNext();
         }
@@ -794,9 +804,9 @@ public class Library {
             String slug = cursor.getString(1);
             String name = cursor.getString(2);
             String direction = cursor.getString(3);
-            int td_id = cursor.getInt(4);
+            long tdId = cursor.getLong(4);
 
-            Questionnaire questionnaire = new Questionnaire(slug, name, direction, td_id);
+            Questionnaire questionnaire = new Questionnaire(slug, name, direction, tdId);
             questionnaires.add(questionnaire);
         }
         cursor.close();
@@ -817,14 +827,13 @@ public class Library {
         while(!cursor.isAfterLast()) {
             String text = cursor.getString(1);
             String help = cursor.getString(2);
-            int is_required = cursor.getInt(3);
-            String input_type = cursor.getString(4);
+            boolean isRequired = cursor.getInt(3) > 0;
+            String inputType = cursor.getString(4);
             int sort = cursor.getInt(5);
-            int depends_on = cursor.getInt(6);
-            int td_id = cursor.getInt(7);
-            int questionnaire_id = cursor.getInt(8);
+            int dependsOn = cursor.getInt(6);
+            int tdId = cursor.getInt(7);
 
-            Question question = new Question(text, help, is_required, input_type, sort, depends_on, td_id, questionnaire_id);
+            Question question = new Question(text, help, isRequired, inputType, sort, dependsOn, tdId);
             questions.add(question);
             cursor.moveToNext();
         }

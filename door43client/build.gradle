@@ -1,14 +1,38 @@
 apply plugin: 'com.android.library'
 
+ext {
+    bintrayRepo = 'maven'
+    bintrayName = 'door43-client'
+
+    publishedGroupId = 'org.unfoldingword.tools'
+    libraryName = 'Door43 Client'
+    artifact = 'door43-client'
+
+    libraryDescription = 'A library for interacting with the Door43 Resourcd API'
+
+    siteUrl = 'https://github.com/unfoldingWord-dev/android-door43-client'
+    gitUrl = 'https://github.com/unfoldingWord-dev/android-door43-client.git'
+
+    libraryVersion = '0.1.0'
+
+    developerId = 'neutrinog'
+    developerName = 'Joel Lonbeck'
+    developerEmail = 'joel@neutrinographics.com'
+
+    licenseName = 'The MIT License (MIT)'
+    licenseUrl = 'https://opensource.org/licenses/mit-license.php'
+    allLicenses = ["MIT"]
+}
+
 android {
-    compileSdkVersion 23
+    compileSdkVersion 22
     buildToolsVersion "23.0.3"
 
     defaultConfig {
         minSdkVersion 15
-        targetSdkVersion 23
+        targetSdkVersion 22
         versionCode 1
-        versionName "1.0"
+        versionName "0.1.0"
     }
     buildTypes {
         release {
@@ -21,7 +45,11 @@ android {
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
     testCompile 'junit:junit:4.12'
+    testCompile 'org.mockito:mockito-core:1.+'
     testCompile 'org.robolectric:robolectric:3.1.2'
-    compile 'com.android.support:appcompat-v7:23.4.0'
-    compile 'junit:junit:4.12'
+}
+
+if (System.env.TRAVIS != 'true') {
+    apply from: 'https://raw.githubusercontent.com/nuuneoi/JCenter/master/installv1.gradle'
+    apply from: 'https://raw.githubusercontent.com/nuuneoi/JCenter/master/bintrayv1.gradle'
 }
