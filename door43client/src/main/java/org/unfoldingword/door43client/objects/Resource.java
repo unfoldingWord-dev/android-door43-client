@@ -11,13 +11,13 @@ public class Resource {
     public String slug;
     public String name;
     public String type;
-    public String translate_mode;
-    public String checking_level;
+    public String translateMode;
+    public String checkingLevel;
     public String comments;
-    public String pub_date;  // long??
+    public long pubDate;
     public String license;
     public String version;
-    public String project_id;
+    public String projectId;
     public Map status;
     public List<Format> formats = new ArrayList<>();
 
@@ -31,7 +31,10 @@ public class Resource {
 
 
     public static class Format {
-
-        // todo add properties
+        public int packageVersion;
+        public String mimeType;
+        public int modifiedAt;
+        public String url;
+        public int resourceId;
     }
 }
