@@ -69,38 +69,15 @@ public class Library {
      */
     private long insertOrIgnore(String table, ContentValues values, String[] uniqueColumns) {
         // try to insert
+        Exception error = null;
         try {
             return db.insertOrThrow(table, null, values);
-        } catch (SQLException e) {}
+        } catch (SQLException e) {
+            error = e;
+        }
 
         WhereClause where = WhereClause.prepare(values, uniqueColumns);
 
-//        List<String> stringColumns = new ArrayList<>();
-//        List<String> numberColumns = new ArrayList<>();
-//
-//        for(String key:uniqueColumns) {
-//            if(values.get(key) instanceof String) {
-//                stringColumns.add(key);
-//            } else {
-//                numberColumns.add(key);
-//            }
-//        }
-//
-//        // try to select
-//        String uniqueWhere = "";
-//        if(stringColumns.size() > 0) {
-//            uniqueWhere = TextUtils.join("=? and ", stringColumns) + "=?";
-//        }
-//        if(numberColumns.size() > 0) {
-//            if (!uniqueWhere.isEmpty()) uniqueWhere += " and ";
-//            for(String key:numberColumns) {
-//                uniqueWhere += key + "=" + values.get(key);
-//            }
-//        }
-//        String[] uniqueValues = new String[stringColumns.size()];
-//        for(int i = 0; i < stringColumns.size(); i ++) {
-//            uniqueValues[i] = String.valueOf(values.get(stringColumns.get(i)));
-//        }
         Cursor cursor = db.rawQuery("select id from " + table + " where " + where.statement, where.arguments);
         if(cursor.moveToFirst()) {
             long id = cursor.getLong(0);
@@ -109,6 +86,7 @@ public class Library {
         } else {
             cursor.close();
         }
+        if(error != null) error.printStackTrace();
         return -1;
     }
 
@@ -127,13 +105,6 @@ public class Library {
         long id = insertOrIgnore(table, values, uniqueColumns);
         if(id == -1) {
             WhereClause where = WhereClause.prepare(values, uniqueColumns);
-
-            // prepare unique columns
-//            String uniqueWhere = TextUtils.join("=? and ", uniqueColumns) + "=?";
-//            String[] uniqueValues = new String[uniqueColumns.length];
-//            for(int i = 0; i < uniqueColumns.length; i ++) {
-//                uniqueValues[i] = String.valueOf(values.get(uniqueColumns[i]));
-//            }
 
             // clean values
             for(String key:uniqueColumns) {
@@ -325,7 +296,7 @@ public class Library {
             cv.put("source_language_id", sourceLanguageId);
             cv.put("versification_id", versificationId);
             cv.put("name", versification.name);
-            versificationId = insertOrUpdate("versification_name", cv, new String[]{"source_language_id", "versification_id"});
+            insertOrUpdate("versification_name", cv, new String[]{"source_language_id", "versification_id"});
         } else {
             throw new Exception("Invalid versification");
         }
