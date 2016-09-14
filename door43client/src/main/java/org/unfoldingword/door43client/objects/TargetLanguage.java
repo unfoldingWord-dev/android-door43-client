@@ -1,7 +1,7 @@
 package org.unfoldingword.door43client.objects;
 
 /**
- * Created by Andrew on 9/2/2016.
+ * Represents a language that a resource will be translated into
  */
 public class TargetLanguage {
     public final String slug;
@@ -13,12 +13,12 @@ public class TargetLanguage {
 
     /**
      *
-     * @param slug
-     * @param name
+     * @param slug the language code
+     * @param name the name of the language
      * @param anglicizedName the english form of the language name
-     * @param direction
+     * @param direction the writen direction of the language
      * @param region the region in which the language belongs
-     * @param isGatewayLanguage
+     * @param isGatewayLanguage indicates if this target language is a gateway language
      */
     public TargetLanguage(String slug, String name, String anglicizedName, String direction, String region, boolean isGatewayLanguage) {
 

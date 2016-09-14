@@ -1,13 +1,19 @@
 package org.unfoldingword.door43client.objects;
 
 /**
- * Created by Andrew on 9/7/2016.
+ * Represents a global catalog
  */
 public class Catalog {
-    public static String slug;
-    public static String url;
-    public static int modifiedAt;
+    public final String slug;
+    public final String url;
+    public final int modifiedAt;
 
+    /**
+     *
+     * @param slug the catalog code
+     * @param url the url where the catalog exists
+     * @param modifiedAt when the catalog was last modified
+     */
     public Catalog(String slug, String url, int modifiedAt) {
         this.slug = slug;
         this.url = url;

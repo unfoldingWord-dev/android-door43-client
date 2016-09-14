@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Created by Andrew on 9/8/2016.
+ * Represents a resource that can be translated
  */
 public class Resource {
     public String slug;

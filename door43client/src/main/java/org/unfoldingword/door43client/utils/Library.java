@@ -342,19 +342,20 @@ public class Library {
         values.put("type", resource.type);
         values.put("translate_mode", (String)resource.status.get("translate_mode"));
         values.put("checking_level", (String)resource.status.get("checking_level"));
-        values.put("comments", resource.status.get("comments") != null ? (String)resource.status.get("comments") : "");
+        values.put("comments", deNull((String)resource.status.get("comments")));
         values.put("pub_date", resource.status.get("pub_date") != null ? (long)resource.status.get("pub_date") : 0);
-        values.put("license", resource.status.get("license") != null ? (String)resource.status.get("license") : "");
+        values.put("license", deNull((String)resource.status.get("license")));
         values.put("version", (String)resource.status.get("version"));
 
         long rowId = insertOrUpdate("resource", values, new String[]{"slug", "resource_id"});
 
         for(Resource.Format format : resource.formats) {
+            validateNotEmpty(format.mimeType);
             ContentValues formatValues = new ContentValues();
             formatValues.put("package_version", format.packageVersion);
             formatValues.put("mime_type", format.mimeType);
             formatValues.put("modified_at", format.modifiedAt);
-            formatValues.put("url", format.url);
+            formatValues.put("url", deNull(format.url));
             formatValues.put("resource_id", format.resourceId);
 
             insertOrUpdate("resource_format", formatValues, new String[]{"mime_type", "resource_id"});

@@ -12,6 +12,16 @@ public class Question {
     public final int dependsOn;
     public final int tdId;
 
+    /**
+     *
+     * @param text the question
+     * @param help optional help text
+     * @param isRequired indicates if this question requires an answer
+     * @param inputType the type of form input used to display this question e.g. input text, boolean
+     * @param sort the sorting order of this question
+     * @param dependsOn the translation database id of the question that this question depends on.
+     * @param tdId the translation database id of this question (server side)
+     */
     public Question(String text, String help, boolean isRequired, String inputType, int sort, int dependsOn, int tdId) {
         this.text = text;
         this.help = help;

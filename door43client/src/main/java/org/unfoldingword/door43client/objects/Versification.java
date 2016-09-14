@@ -1,7 +1,8 @@
 package org.unfoldingword.door43client.objects;
 
 /**
- * Created by Andrew on 9/8/2016.
+ * Represents a versification system.
+ * This is what chunk markers are based on.
  */
 public class Versification {
     public static String slug;
