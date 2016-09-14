@@ -2,6 +2,7 @@ package org.unfoldingword.door43client.utils;
 
 import android.content.ContentValues;
 import android.database.Cursor;
+import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.text.TextUtils;
 
@@ -57,6 +58,61 @@ public class Library {
     }
 
     /**
+     * Attepts to insert a row.
+     *
+     * There is a bug in the SQLiteDatabase API that prevents us from using insertWithOnConflict + CONFLICT_IGNORE
+     * https://code.google.com/p/android/issues/detail?id=13045
+     * @param table
+     * @param values
+     * @param uniqueColumns
+     * @return the id of the inserted row or the id of the existing row.
+     */
+    private long insertOrIgnore(String table, ContentValues values, String[] uniqueColumns) {
+        // try to insert
+        try {
+            return db.insertOrThrow(table, null, values);
+        } catch (SQLException e) {}
+
+        WhereClause where = WhereClause.prepare(values, uniqueColumns);
+
+//        List<String> stringColumns = new ArrayList<>();
+//        List<String> numberColumns = new ArrayList<>();
+//
+//        for(String key:uniqueColumns) {
+//            if(values.get(key) instanceof String) {
+//                stringColumns.add(key);
+//            } else {
+//                numberColumns.add(key);
+//            }
+//        }
+//
+//        // try to select
+//        String uniqueWhere = "";
+//        if(stringColumns.size() > 0) {
+//            uniqueWhere = TextUtils.join("=? and ", stringColumns) + "=?";
+//        }
+//        if(numberColumns.size() > 0) {
+//            if (!uniqueWhere.isEmpty()) uniqueWhere += " and ";
+//            for(String key:numberColumns) {
+//                uniqueWhere += key + "=" + values.get(key);
+//            }
+//        }
+//        String[] uniqueValues = new String[stringColumns.size()];
+//        for(int i = 0; i < stringColumns.size(); i ++) {
+//            uniqueValues[i] = String.valueOf(values.get(stringColumns.get(i)));
+//        }
+        Cursor cursor = db.rawQuery("select id from " + table + " where " + where.statement, where.arguments);
+        if(cursor.moveToFirst()) {
+            long id = cursor.getLong(0);
+            cursor.close();
+            return id;
+        } else {
+            cursor.close();
+        }
+        return -1;
+    }
+
+    /**
      * A utility to perform insert+update operations.
      * Insert failures are ignored.
      * Update failures are thrown.
@@ -68,14 +124,16 @@ public class Library {
      */
     private long insertOrUpdate(String table, ContentValues values, String[] uniqueColumns) throws Exception {
         // insert
-        long id = db.insertWithOnConflict(table, null, values, SQLiteDatabase.CONFLICT_IGNORE);
+        long id = insertOrIgnore(table, values, uniqueColumns);
         if(id == -1) {
+            WhereClause where = WhereClause.prepare(values, uniqueColumns);
+
             // prepare unique columns
-            String uniqueWhere = TextUtils.join("=? and ", uniqueColumns) + "=?";
-            String[] uniqueValues = new String[uniqueColumns.length];
-            for(int i = 0; i < uniqueColumns.length; i ++) {
-                uniqueValues[i] = String.valueOf(values.get(uniqueColumns[i]));
-            }
+//            String uniqueWhere = TextUtils.join("=? and ", uniqueColumns) + "=?";
+//            String[] uniqueValues = new String[uniqueColumns.length];
+//            for(int i = 0; i < uniqueColumns.length; i ++) {
+//                uniqueValues[i] = String.valueOf(values.get(uniqueColumns[i]));
+//            }
 
             // clean values
             for(String key:uniqueColumns) {
@@ -83,12 +141,12 @@ public class Library {
             }
 
             // update
-            int numRows = db.updateWithOnConflict(table, values, uniqueWhere, uniqueValues, SQLiteDatabase.CONFLICT_ROLLBACK);
+            int numRows = db.updateWithOnConflict(table, values, where.statement, where.arguments, SQLiteDatabase.CONFLICT_ROLLBACK);
             if(numRows == 0) {
                 throw new Exception("Failed to update the row in " + table);
             } else {
                 // retrieve updated row id
-                Cursor cursor = db.rawQuery("select id from " + table + " where " + uniqueWhere, uniqueValues);
+                Cursor cursor = db.rawQuery("select id from " + table + " where " + where.statement, where.arguments);
                 if(cursor.moveToFirst()) {
                     id = cursor.getLong(0);
                     cursor.close();
@@ -217,16 +275,11 @@ public class Library {
                 insertValues.put("slug", category.slug);
                 insertValues.put("parent_id", parentCategoryId);
 
-                long id = db.insertWithOnConflict("category", null, insertValues, SQLiteDatabase.CONFLICT_IGNORE);
+                long id = insertOrIgnore("category", insertValues, new String[]{"slug", "parent_id"});
                 if(id > 0) {
                     parentCategoryId = id;
                 } else {
-                    Cursor cursor = db.rawQuery("select id from category where slug=? and parent_id=" + parentCategoryId, new String[]{category.slug});
-                    if(cursor.moveToFirst()){
-                        parentCategoryId = cursor.getLong(0);
-                    } else {
-                        throw new Exception("Invalid category");
-                    }
+                    throw new Exception("Invalid category");
                 }
 
                 ContentValues updateValues = new ContentValues();
@@ -266,13 +319,15 @@ public class Library {
         ContentValues values = new ContentValues();
         values.put("slug", versification.slug);
 
-        long versificationId = db.insertWithOnConflict("versification", null, values, SQLiteDatabase.CONFLICT_IGNORE);
+        long versificationId = insertOrIgnore("versification", values, new String[]{"slug"});
         if(versificationId > 0) {
             ContentValues cv = new ContentValues();
             cv.put("source_language_id", sourceLanguageId);
             cv.put("versification_id", versificationId);
             cv.put("name", versification.name);
             versificationId = insertOrUpdate("versification_name", cv, new String[]{"source_language_id", "versification_id"});
+        } else {
+            throw new Exception("Invalid versification");
         }
         return versificationId;
     }
@@ -297,14 +352,9 @@ public class Library {
         chunkValues.put("project_slug", projectSlug);
         chunkValues.put("versification_id", versificationId);
 
-        long id= db.insertWithOnConflict("chunk_marker", null, chunkValues, SQLiteDatabase.CONFLICT_IGNORE);
+        long id = insertOrIgnore("chunk_marker", chunkValues, new String[]{"project_slug", "versification_id", "chapter", "verse"});
         if(id == -1) {
-            Cursor cursor = db.rawQuery("select id from chunk_marker where project_slug=? and versification_id=" + versificationId, new String[]{projectSlug});
-            if(cursor.moveToFirst()){
-                id = cursor.getLong(0);
-            } else {
-                throw new Exception("Invalid Chunk Marker");
-            }
+            throw new Exception("Invalid Chunk Marker");
         }
         return id;
     }
@@ -374,7 +424,7 @@ public class Library {
      * @return the id of the questionnaire row
      * @throws Exception
      */
-    public long addQuestionaire(Questionnaire questionnaire) throws Exception {
+    public long addQuestionnaire(Questionnaire questionnaire) throws Exception {
         validateNotEmpty(questionnaire.languageSlug);
         validateNotEmpty(questionnaire.languageName);
         validateNotEmpty(questionnaire.languageDirection);
@@ -396,7 +446,7 @@ public class Library {
      * @return the id of the question row
      * @throws Exception
      */
-    public long addQuestion(Question question, int questionnaireId) throws Exception {
+    public long addQuestion(Question question, long questionnaireId) throws Exception {
         validateNotEmpty(question.text);
         validateNotEmpty(question.inputType);
 
@@ -410,7 +460,7 @@ public class Library {
         values.put("td_id", question.tdId);
         values.put("questionnaire_id", questionnaireId);
 
-        return insertOrUpdate("question", values, new String[]{"td_id", "language_slug"});
+        return insertOrUpdate("question", values, new String[]{"td_id", "questionnaire_id"});
     }
 
     /**
@@ -866,5 +916,64 @@ public class Library {
         }
         cursor.close();
         return questions;
+    }
+
+    /**
+     * This is a utility class for preparing a where clause
+     */
+    private static class WhereClause {
+        public final String statement;
+        public final String[] arguments;
+
+        private WhereClause(String statement, String[] values) {
+            this.statement = statement;
+            this.arguments = values;
+        }
+
+        /**
+         * Performs a bunch of magical operations to convert a set of values and the specified unique columns
+         * into a valid where clause with supporting values.
+         *
+         *
+         *
+         * @param values
+         * @param uniqueColumns
+         * @return
+         */
+        public static WhereClause prepare(ContentValues values, String[] uniqueColumns) {
+            List<String> stringColumns = new ArrayList<>();
+            List<String> numberColumns = new ArrayList<>();
+
+            // split columns into sets by type
+            for(String key:uniqueColumns) {
+                if(values.get(key) instanceof String) {
+                    stringColumns.add(key);
+                } else {
+                    numberColumns.add(key);
+                }
+            }
+
+            // build the statement
+            String whereStmt = "";
+            if(stringColumns.size() > 0) {
+                whereStmt = TextUtils.join("=? and ", stringColumns) + "=?";
+            }
+            if(numberColumns.size() > 0) {
+                if (!whereStmt.isEmpty()) whereStmt += " and ";
+                List<String> expressions = new ArrayList<>();
+                for(String key:numberColumns) {
+                    expressions.add(key + "=" + values.get(key));
+                }
+                whereStmt += TextUtils.join(" and ", expressions);
+            }
+
+            // build the values
+            String[] uniqueValues = new String[stringColumns.size()];
+            for(int i = 0; i < stringColumns.size(); i ++) {
+                uniqueValues[i] = String.valueOf(values.get(stringColumns.get(i)));
+            }
+
+            return new WhereClause(whereStmt, uniqueValues);
+        }
     }
 }
