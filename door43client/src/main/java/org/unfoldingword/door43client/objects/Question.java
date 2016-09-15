@@ -3,7 +3,7 @@ package org.unfoldingword.door43client.objects;
 /**
  * Represents a single question in a questionnaire
  */
-public class Question {
+public class Question extends DatabaseObject {
     public final String text;
     public final String help;
     public final boolean isRequired;

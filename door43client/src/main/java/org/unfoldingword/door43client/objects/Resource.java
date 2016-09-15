@@ -7,7 +7,7 @@ import java.util.Map;
 /**
  * Represents a resource that can be translated
  */
-public class Resource {
+public class Resource extends DatabaseObject {
     public String slug;
     public String name;
     public String type;

@@ -3,7 +3,7 @@ package org.unfoldingword.door43client.objects;
 /**
  * Represents a global catalog
  */
-public class Catalog {
+public class Catalog extends DatabaseObject {
     public final String slug;
     public final String url;
     public final int modifiedAt;

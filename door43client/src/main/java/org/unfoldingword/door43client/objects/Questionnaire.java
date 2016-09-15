@@ -3,7 +3,7 @@ package org.unfoldingword.door43client.objects;
 /**
  * Represents a questionnaire that can be completed in the app
  */
-public class Questionnaire {
+public class Questionnaire extends DatabaseObject {
     public final String languageSlug;
     public final String languageName;
     public final String languageDirection;

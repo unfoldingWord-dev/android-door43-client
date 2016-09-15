@@ -3,7 +3,7 @@ package org.unfoldingword.door43client.objects;
 /**
  * Represents the beginning of a chunk in a chapter
  */
-public class ChunkMarker {
+public class ChunkMarker extends DatabaseObject {
     public static String chapter;
     public static String verse;
 

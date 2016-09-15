@@ -20,6 +20,7 @@ import org.unfoldingword.door43client.objects.Questionnaire;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 
 /**
@@ -37,6 +38,31 @@ public class Library {
     public Library(SQLiteHelper sqliteHelper) {
         this.sqliteHelper = sqliteHelper;
         this.db = sqliteHelper.getWritableDatabase();
+    }
+
+    /**
+     * Used to open a transaction
+     */
+    public void beginTransaction() {
+        db.beginTransactionNonExclusive();
+    }
+
+    /**
+     * Used to close a transaction
+     * @param success set to false if the transaction should fail and the changes rolled back.
+     */
+    public void endTransaction(boolean success) {
+        if(success) {
+            db.setTransactionSuccessful();
+        }
+        db.endTransaction();
+    }
+
+    /**
+     * Closes the database
+     */
+    public void closeDatabase() {
+        db.close();
     }
 
     /**
@@ -468,7 +494,7 @@ public class Library {
      * @param languageSlug the source language who's projects will be selected. If left empty the results will include all projects in all languages.
      * @return
      */
-    public List<HashMap> listProjectsLastModified(String languageSlug) {
+    public List<Map> listProjectsLastModified(String languageSlug) {
         Cursor cursor = null;
         if(languageSlug != null || languageSlug != ""){
             cursor = db.rawQuery("select p.slug, max(rf.modified_at) as modified_at from resource_format as rf"
@@ -486,7 +512,7 @@ public class Library {
                 + " group by p.slug", null);
         }
         cursor.moveToFirst();
-        List<HashMap> projectsLastModifiedList = new ArrayList<>();
+        List<Map> projectsLastModifiedList = new ArrayList<>();
         while(!cursor.isAfterLast()) {
             String slug = cursor.getString(cursor.getColumnIndex("slug"));
             int modifiedAt = cursor.getInt(cursor.getColumnIndex("modified_at"));
@@ -511,6 +537,7 @@ public class Library {
             String name = cursor.getString(2);
             String direction = cursor.getString(3);
             SourceLanguage sourceLanguage = new SourceLanguage(slug, name, direction);
+            sourceLanguage._info.id = cursor.getLong(0);
             cursor.close();
             return sourceLanguage;
         } else {
@@ -535,7 +562,7 @@ public class Library {
             String direction = cursor.getString(3);
 
             SourceLanguage sourceLanguage = new SourceLanguage(slug, name, direction);
-
+            sourceLanguage._info.id = cursor.getLong(0);
             sourceLanguages.add(sourceLanguage);
             cursor.moveToNext();
         }
@@ -622,18 +649,20 @@ public class Library {
     public TargetLanguage getApprovedTargetLanguage(String slug) {
         TargetLanguage language = null;
 
-        Cursor cursor = db.rawQuery("select tl.* from target_language as tl" +
+        Cursor cursor = db.rawQuery("select tl.slug, tl.name, tl.anglicized_name, tl.direction, tl.region, tl.is_gateway_language" +
+                " from target_language as tl" +
                 " left join temp_target_language as ttl on ttl.approved_target_language_slug=tl.slug" +
                 " where ttl.slug=?", new String[]{slug});
 
         if(cursor.moveToFirst()) {
-            String name = cursor.getString(2);
-            String angName = cursor.getString(3);
-            String dir = cursor.getString(4);
-            String region = cursor.getString(5);
-            boolean isGate = cursor.getInt(6) == 1;
+            String approvedSlug = cursor.getString(0);
+            String name = cursor.getString(1);
+            String angName = cursor.getString(2);
+            String dir = cursor.getString(3);
+            String region = cursor.getString(4);
+            boolean isGate = cursor.getInt(5) == 1;
 
-            language = new TargetLanguage(slug, name, angName, dir, region, isGate);
+            language = new TargetLanguage(approvedSlug, name, angName, dir, region, isGate);
             cursor.close();
         }
         return language;
@@ -662,6 +691,7 @@ public class Library {
             String chunksUrl = cursor.getString(6);
 
             project = new Project(slug, name, desc, icon, sort, chunksUrl);
+            project._info.id = cursor.getLong(0);
             //TODO: store the language slug for convenience
         }
         cursor.close();
@@ -690,6 +720,7 @@ public class Library {
             String chunksUrl = cursor.getString(6);
 
             Project project = new Project(slug, name, desc, icon, sort, chunksUrl);
+            project._info.id = cursor.getLong(0);
             projects.add(project);
             cursor.moveToNext();
         }
@@ -736,6 +767,7 @@ public class Library {
             String url = cursor.getString(2);
             int modifiedAt = cursor.getInt(3);
             catalog = new Catalog(slug, url, modifiedAt);
+            catalog._info.id = cursor.getLong(0);
         }
         cursor.close();
         return catalog;
@@ -757,6 +789,7 @@ public class Library {
             int modifiedAt = cursor.getInt(3);
 
             Catalog catalog = new Catalog(slug, url, modifiedAt);
+            catalog._info.id = cursor.getLong(0);
             catalogs.add(catalog);
             cursor.moveToNext();
         }
@@ -773,15 +806,16 @@ public class Library {
      */
     public Versification getVersification(String languageSlug, String versificationSlug) {
         Versification versification = null;
-        Cursor cursor = db.rawQuery("select vn.name, v.slug, v.id from versification_name as vn" +
+        Cursor cursor = db.rawQuery("select v.id, v.slug, vn.name from versification_name as vn" +
                 " left join versification as v on v.id=vn.versification_id" +
                 " left join source_language as sl on sl.id=vn.source_language_id" +
                 " where sl.slug=? and v.slug=?", new String[]{languageSlug, versificationSlug});
 
         if(cursor.moveToFirst()) {
-            String slug = cursor.getString(cursor.getColumnIndex("slug"));
-            String name = cursor.getString(cursor.getColumnIndex("name"));
+            String slug = cursor.getString(1);
+            String name = cursor.getString(2);
             versification = new Versification(slug, name);
+            versification._info.id = cursor.getLong(0);
         }
         cursor.close();
         return versification;
@@ -794,16 +828,17 @@ public class Library {
      * @return
      */
     public List<Versification> getVersifications(String languageSlug) {
-        Cursor cursor = db.rawQuery("select vn.name, v.slug, v.id from versification_name as vn" +
+        Cursor cursor = db.rawQuery("select v.id, v.slug, vn.name from versification_name as vn" +
                 " left join versification as v on v.id=vn.versification_id" +
                 " left join source_language as sl on sl.id=vn.source_language_id" +
                 " where sl.slug=? and v.slug=?", new String[]{languageSlug});
 
         List<Versification> versifications = new ArrayList<>();
         while(!cursor.isAfterLast()) {
-            String slug = cursor.getString(cursor.getColumnIndex("slug"));
-            String name = cursor.getString(cursor.getColumnIndex("name"));
+            String slug = cursor.getString(1);
+            String name = cursor.getString(2);
             Versification versification = new Versification(slug, name);
+            versification._info.id = cursor.getLong(0);
             versifications.add(versification);
             cursor.moveToNext();
         }
@@ -831,6 +866,7 @@ public class Library {
             String slug = cursor.getString(3);
 
             ChunkMarker chunkMarker = new ChunkMarker(chapter, verse);
+            chunkMarker._info.id = cursor.getLong(0);
             chunkMarkers.add(chunkMarker);
             cursor.moveToNext();
         }
@@ -855,6 +891,7 @@ public class Library {
             long tdId = cursor.getLong(4);
 
             Questionnaire questionnaire = new Questionnaire(slug, name, direction, tdId);
+            questionnaire._info.id = cursor.getLong(0);
             questionnaires.add(questionnaire);
         }
         cursor.close();
@@ -867,8 +904,8 @@ public class Library {
      * @param questionnaireId the parent questionnaire row id
      * @return a list of questions
      */
-    public List<Question> getQuestions(int questionnaireId) {
-        Cursor cursor = db.rawQuery("select question where questionnaire_id=?", new String[]{String.valueOf(questionnaireId)});
+    public List<Question> getQuestions(long questionnaireId) {
+        Cursor cursor = db.rawQuery("select * from question where questionnaire_id=?", new String[]{String.valueOf(questionnaireId)});
 
         List<Question> questions = new ArrayList<>();
         cursor.moveToFirst();
@@ -882,6 +919,7 @@ public class Library {
             int tdId = cursor.getInt(7);
 
             Question question = new Question(text, help, isRequired, inputType, sort, dependsOn, tdId);
+            question._info.id = cursor.getLong(0);
             questions.add(question);
             cursor.moveToNext();
         }

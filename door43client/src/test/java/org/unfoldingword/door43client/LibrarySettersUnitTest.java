@@ -24,6 +24,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
+import java.lang.annotation.Target;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -147,6 +148,14 @@ public class LibrarySettersUnitTest {
         // expect 1 language (they are now combined)
         assertEquals(library.getTargetLanguages().size(), 1);
         assertNull(library.getTargetLanguage(tempLanguage.slug));
+
+        // expect temp langauge no longer accessible
+        assertNull(library.getTargetLanguage(tempLanguage.slug));
+
+        // expect approved language
+        TargetLanguage fetchedApprovedLanguage = library.getApprovedTargetLanguage(tempLanguage.slug);
+        assertNotNull(fetchedApprovedLanguage);
+        assertEquals(fetchedApprovedLanguage.slug, approvedLanguage.slug);
     }
 
     @Test

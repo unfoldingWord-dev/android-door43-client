@@ -3,7 +3,7 @@ package org.unfoldingword.door43client.objects;
 /**
  * Represents a project to be translated
  */
-public class Project {
+public class Project extends DatabaseObject {
     public final String slug;
     public final String name;
     public final String description;

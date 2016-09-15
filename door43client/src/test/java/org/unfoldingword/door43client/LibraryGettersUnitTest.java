@@ -1,7 +1,9 @@
 package org.unfoldingword.door43client;
 
 import android.content.Context;
+import android.util.Log;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -24,14 +26,15 @@ import org.unfoldingword.door43client.utils.SQLiteHelper;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -39,7 +42,6 @@ import static org.junit.Assert.assertTrue;
  */
 @RunWith(RobolectricTestRunner.class)
 public class LibraryGettersUnitTest {
-    private boolean setupIsDone = false;
     private static final int GENERATOR_QTY = 5;
     private static Context context;
     private static Library library;
@@ -71,6 +73,9 @@ public class LibraryGettersUnitTest {
             library.addTempTargetLanguage(l);
         }
 
+        // approved target language
+        library.setApprovedTargetLanguage("temp-en1", "en1");
+
         // source languages
         for(String lSlug:stringGenerator("en", GENERATOR_QTY)) {
             SourceLanguage l = new SourceLanguage(lSlug, "English", "ltr");
@@ -78,7 +83,7 @@ public class LibraryGettersUnitTest {
 
             // versification
             long versificationId = 0;
-            for(String slug:stringGenerator("versification", GENERATOR_QTY)) {
+            for(String slug:stringGenerator("versi", GENERATOR_QTY)) {
                 Versification v = new Versification(slug, "Versification");
                 long id = library.addVersification(v, sourceLanguageId);
                 if(versificationId == 0) versificationId = id; // keep the first one for projects
@@ -149,9 +154,8 @@ public class LibraryGettersUnitTest {
 
     @Before
     public void initialize() throws Exception {
-        if(setupIsDone) return;
-        setupIsDone = true;
         context = RuntimeEnvironment.application;
+        Log.d("Tests", "Initializing");
 
         // load schema
         ClassLoader classLoader = getClass().getClassLoader();
@@ -173,7 +177,45 @@ public class LibraryGettersUnitTest {
         SQLiteHelper helper = new SQLiteHelper(context, sb.toString(), "index");
         library = new Library(helper);
 
-        buildData();
+        library.beginTransaction();
+        try {
+            buildData();
+        } catch(Exception e) {
+            library.endTransaction(true);
+            throw e;
+        }
+    }
+
+    @After
+    public void cleanup() {
+        library.closeDatabase();
+    }
+
+    @Test
+    public void listProjectsLastModified() throws Exception {
+//        List<Map> modified = library.listProjectsLastModified("en1");
+//        assertTrue(modified.size() > 0);
+//        for(Map map:modified) {
+//            assertTrue(map.containsKey("slug"));
+//        }
+        // TODO: 9/14/16 turn this on after we have resources
+    }
+
+    @Test
+    public void getSourceLanguage() throws Exception {
+        SourceLanguage found1 = library.getSourceLanguage("en1");
+        assertNotNull(found1);
+        assertEquals(found1.slug, "en1");
+
+        SourceLanguage found2 = library.getSourceLanguage("en2");
+        assertNotNull(found2);
+        assertEquals(found2.slug, "en2");
+    }
+
+    @Test
+    public void getSourceLanguages() throws Exception {
+        List<SourceLanguage> languages = library.getSourceLanguages();
+        assertTrue(languages.size() > 0);
     }
 
     @Test
@@ -185,6 +227,10 @@ public class LibraryGettersUnitTest {
         TargetLanguage found2 = library.getTargetLanguage("en2");
         assertNotNull(found2);
         assertEquals(found2.slug, "en2");
+
+        // approved so this will not be accessible
+        TargetLanguage found3 = library.getTargetLanguage("temp-en1");
+        assertNull(found3);
     }
 
     @Test
@@ -192,4 +238,86 @@ public class LibraryGettersUnitTest {
         List<TargetLanguage> languages = library.getTargetLanguages();
         assertTrue(languages.size() > 0);
     }
+
+    @Test
+    public void getApprovedTargetLanguage() throws Exception {
+        // TODO: fix this
+        TargetLanguage language = library.getApprovedTargetLanguage("temp-en1");
+        assertNotNull(language);
+        assertEquals(language.slug, "en1");
+    }
+
+    @Test
+    public void getProject() throws Exception {
+        Project p1 = library.getProject("en1", "proj-no-cat-1");
+        Project p2 = library.getProject("en1", "proj-cat1-1");
+        Project p3 = library.getProject("en1", "proj-cat2-1");
+
+        assertNotNull(p1);
+        assertNotNull(p2);
+        assertNotNull(p3);
+    }
+
+    @Test
+    public void getProjects() throws Exception {
+        List<Project> projects = library.getProjects("en1");
+        assertTrue(projects.size() > 0);
+    }
+
+    @Test
+    public void getProjectCategories() throws Exception {
+        // TODO: finish after we have the method
+    }
+
+    @Test
+    public void getResource() throws Exception {
+        // TODO: finish after we have the method
+    }
+
+    @Test
+    public void getResources() throws Exception {
+        // TODO: finish after we have the method
+    }
+
+    @Test
+    public void getCatalog() throws Exception {
+        Catalog c = library.getCatalog("cat1");
+        assertNotNull(c);
+    }
+
+    @Test
+    public void getCatalogs() throws Exception {
+        List<Catalog> list = library.getCatalogs();
+        assertTrue(list.size() > 0);
+    }
+
+    @Test
+    public void getVersification() throws Exception {
+        Versification v = library.getVersification("en1", "versi1");
+        assertNotNull(v);
+    }
+
+    @Test
+    public void getVersifications() throws Exception {
+        List<Versification> list = library.getVersifications("en1");
+        assertTrue(list.size() > 0);
+    }
+
+    @Test
+    public void getChunkMarkers() throws Exception {
+        List<ChunkMarker> list = library.getChunkMarkers("proj-cat1-1" , "versi1");
+        assertTrue(list.size() > 0);
+    }
+
+    @Test
+    public void getQuestionnairesAndQuestions() throws Exception {
+        // TODO: 9/14/16 not working
+        List<Questionnaire> list = library.getQuestionnaires();
+        assertTrue(list.size() > 0);
+        for(Questionnaire q:list) {
+            List<Question> questions = library.getQuestions(q._info.id);
+            assertTrue(questions.size() > 0);
+        }
+    }
+
 }

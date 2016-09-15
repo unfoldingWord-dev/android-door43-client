@@ -3,7 +3,7 @@ package org.unfoldingword.door43client.objects;
 /**
  * Represents a language that a resource exists in  (for the purpose of source content)
  */
-public class SourceLanguage {
+public class SourceLanguage extends DatabaseObject {
     public final String slug;
     public final String name;
     public final String direction;
