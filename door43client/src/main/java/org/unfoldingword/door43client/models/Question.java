@@ -1,4 +1,4 @@
-package org.unfoldingword.door43client.objects;
+package org.unfoldingword.door43client.models;
 
 /**
  * Represents a single question in a questionnaire
@@ -9,8 +9,8 @@ public class Question extends DatabaseObject {
     public final boolean isRequired;
     public final String inputType;
     public final int sort;
-    public final int dependsOn;
-    public final int tdId;
+    public final long dependsOn;
+    public final long tdId;
 
     /**
      *
@@ -22,7 +22,7 @@ public class Question extends DatabaseObject {
      * @param dependsOn the translation database id of the question that this question depends on.
      * @param tdId the translation database id of this question (server side)
      */
-    public Question(String text, String help, boolean isRequired, String inputType, int sort, int dependsOn, int tdId) {
+    public Question(String text, String help, boolean isRequired, String inputType, int sort, long dependsOn, long tdId) {
         this.text = text;
         this.help = help;
         this.isRequired = isRequired;

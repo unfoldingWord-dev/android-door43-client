@@ -1,4 +1,4 @@
-package org.unfoldingword.door43client.objects;
+package org.unfoldingword.door43client.models;
 
 /**
  * Represents a questionnaire that can be completed in the app

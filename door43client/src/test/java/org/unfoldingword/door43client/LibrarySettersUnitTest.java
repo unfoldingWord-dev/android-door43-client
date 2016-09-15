@@ -7,24 +7,21 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.RuntimeEnvironment;
-import org.unfoldingword.door43client.objects.Catalog;
-import org.unfoldingword.door43client.objects.Category;
-import org.unfoldingword.door43client.objects.ChunkMarker;
-import org.unfoldingword.door43client.objects.Project;
-import org.unfoldingword.door43client.objects.Question;
-import org.unfoldingword.door43client.objects.Questionnaire;
-import org.unfoldingword.door43client.objects.Resource;
-import org.unfoldingword.door43client.objects.TargetLanguage;
-import org.unfoldingword.door43client.objects.SourceLanguage;
-import org.unfoldingword.door43client.objects.Versification;
-import org.unfoldingword.door43client.utils.Library;
-import org.unfoldingword.door43client.utils.SQLiteHelper;
+import org.unfoldingword.door43client.models.Catalog;
+import org.unfoldingword.door43client.models.Category;
+import org.unfoldingword.door43client.models.ChunkMarker;
+import org.unfoldingword.door43client.models.Project;
+import org.unfoldingword.door43client.models.Question;
+import org.unfoldingword.door43client.models.Questionnaire;
+import org.unfoldingword.door43client.models.Resource;
+import org.unfoldingword.door43client.models.TargetLanguage;
+import org.unfoldingword.door43client.models.SourceLanguage;
+import org.unfoldingword.door43client.models.Versification;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
-import java.lang.annotation.Target;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -222,7 +219,7 @@ public class LibrarySettersUnitTest {
         categories.add(new Category("bible-ot", "Old Testament"));
         long projectId = library.addProject(project, categories, languageId);
 
-        Resource resource = new Resource();
+//        Resource resource = new Resource();
         // TODO: 9/14/16 finish building the resource
 //        long resourceId = library.addResource(resource, projectId);
 //        assertTrue(resourceId > 0);

@@ -1,9 +1,9 @@
-package org.unfoldingword.door43client.objects;
+package org.unfoldingword.door43client.models;
 
 /**
  * Provides some extra utilties for objects that originated from the database
  */
-public abstract class DatabaseObject {
+abstract class DatabaseObject {
     public DBInfo _info = new DBInfo();
 
     public static class DBInfo {

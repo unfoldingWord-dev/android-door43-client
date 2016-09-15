@@ -1,4 +1,4 @@
-package org.unfoldingword.door43client.utils;
+package org.unfoldingword.door43client;
 
 import android.content.ContentValues;
 import android.database.Cursor;
@@ -6,16 +6,17 @@ import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.text.TextUtils;
 
-import org.unfoldingword.door43client.objects.Category;
-import org.unfoldingword.door43client.objects.ChunkMarker;
-import org.unfoldingword.door43client.objects.TargetLanguage;
-import org.unfoldingword.door43client.objects.Project;
-import org.unfoldingword.door43client.objects.Question;
-import org.unfoldingword.door43client.objects.Resource;
-import org.unfoldingword.door43client.objects.SourceLanguage;
-import org.unfoldingword.door43client.objects.Versification;
-import org.unfoldingword.door43client.objects.Catalog;
-import org.unfoldingword.door43client.objects.Questionnaire;
+import org.unfoldingword.door43client.models.Category;
+import org.unfoldingword.door43client.models.CategoryEntry;
+import org.unfoldingword.door43client.models.ChunkMarker;
+import org.unfoldingword.door43client.models.TargetLanguage;
+import org.unfoldingword.door43client.models.Project;
+import org.unfoldingword.door43client.models.Question;
+import org.unfoldingword.door43client.models.Resource;
+import org.unfoldingword.door43client.models.SourceLanguage;
+import org.unfoldingword.door43client.models.Versification;
+import org.unfoldingword.door43client.models.Catalog;
+import org.unfoldingword.door43client.models.Questionnaire;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -26,7 +27,7 @@ import java.util.Map;
 /**
  * Manages the indexed library content.
  */
-public class Library {
+class Library implements Index {
 
     private final SQLiteHelper sqliteHelper;
     private final SQLiteDatabase db;
@@ -375,6 +376,14 @@ public class Library {
         return insertOrUpdate("catalog", values, new String[]{"slug"});
     }
 
+    /**
+     * Inserts or updates a resource in the library.
+     *
+     * @param resource
+     * @param projectId the parent project row id
+     * @return the id of the resource row
+     * @throws Exception
+     */
     public long addResource(Resource resource, long projectId) throws Exception {
         validateNotEmpty(resource.slug);
         validateNotEmpty(resource.name);
@@ -393,9 +402,11 @@ public class Library {
         values.put("pub_date", resource.status.get("pub_date") != null ? (long)resource.status.get("pub_date") : 0);
         values.put("license", deNull((String)resource.status.get("license")));
         values.put("version", (String)resource.status.get("version"));
+        values.put("project_id", projectId);
 
-        long rowId = insertOrUpdate("resource", values, new String[]{"slug", "resource_id"});
+        long resourceId = insertOrUpdate("resource", values, new String[]{"slug", String.valueOf(projectId)});
 
+        // add formats
         for(Resource.Format format : resource.formats) {
             validateNotEmpty(format.mimeType);
             ContentValues formatValues = new ContentValues();
@@ -403,15 +414,19 @@ public class Library {
             formatValues.put("mime_type", format.mimeType);
             formatValues.put("modified_at", format.modifiedAt);
             formatValues.put("url", deNull(format.url));
-            formatValues.put("resource_id", format.resourceId);
+            formatValues.put("resource_id", resourceId);
 
             insertOrUpdate("resource_format", formatValues, new String[]{"mime_type", "resource_id"});
         }
 
-
-
-        //TODO add more here
-        return -1;
+        //add legacy data
+        if(resource.wordsAssignmentsUrl != null && !resource.wordsAssignmentsUrl.equals("")) {
+            ContentValues legacyValues = new ContentValues();
+            legacyValues.put("translation_words_assignments_url", resource.wordsAssignmentsUrl);
+            legacyValues.put("resource_id", resourceId);
+            insertOrUpdate("legacy_resource_info", legacyValues, new String[]{String.valueOf(resourceId)});
+        }
+        return resourceId;
     }
 
     /**
@@ -460,12 +475,6 @@ public class Library {
         return insertOrUpdate("question", values, new String[]{"td_id", "questionnaire_id"});
     }
 
-    /**
-     * Returns a list of source languages and when they were last modified.
-     * The value is taken from the max modified resource format date within the language
-     *
-     * @return {slug, modified_at}
-     */
     public List<HashMap> listSourceLanguagesLastModified() {
         Cursor cursor = db.rawQuery("select sl.slug, max(rf.modified_at) as modified_at from resource_format as rf"
                 + " left join resource  as r on r.id=rf.resource_id"
@@ -476,8 +485,10 @@ public class Library {
         cursor.moveToFirst();
         List<HashMap> langsLastModifiedList = new ArrayList<>();
         while(!cursor.isAfterLast()) {
-            String slug = cursor.getString(cursor.getColumnIndex("slug"));
-            int modifiedAt = cursor.getInt(cursor.getColumnIndex("modified_at"));
+            CursorReader reader = new CursorReader(cursor);
+
+            String slug = reader.getString("slug");
+            int modifiedAt = reader.getInt("modified_at");
 
             HashMap sourceLanguageMap = new HashMap();
             sourceLanguageMap.put(slug, modifiedAt);
@@ -487,13 +498,6 @@ public class Library {
         return langsLastModifiedList;
     }
 
-    /**
-     * Returns a list of projects and when they were last modified
-     * The value is taken from the max modified resource format date within the project
-     *
-     * @param languageSlug the source language who's projects will be selected. If left empty the results will include all projects in all languages.
-     * @return
-     */
     public List<Map> listProjectsLastModified(String languageSlug) {
         Cursor cursor = null;
         if(languageSlug != null || languageSlug != ""){
@@ -514,8 +518,10 @@ public class Library {
         cursor.moveToFirst();
         List<Map> projectsLastModifiedList = new ArrayList<>();
         while(!cursor.isAfterLast()) {
-            String slug = cursor.getString(cursor.getColumnIndex("slug"));
-            int modifiedAt = cursor.getInt(cursor.getColumnIndex("modified_at"));
+            CursorReader reader = new CursorReader(cursor);
+
+            String slug = reader.getString("slug");
+            int modifiedAt = reader.getInt("modified_at");
 
             HashMap projectMap = new HashMap();
             projectMap.put(slug, modifiedAt);
@@ -525,19 +531,16 @@ public class Library {
         return projectsLastModifiedList;
     }
 
-    /**
-     * Returns a source language.
-     *
-     * @param slug
-     * @return the language object or null if it does not exist
-     */
-    public SourceLanguage getSourceLanguage(String slug) {
-        Cursor cursor = db.rawQuery("select * from source_language where slug=? limit 1", new String[]{slug});
-        if(cursor.moveToFirst()){
-            String name = cursor.getString(2);
-            String direction = cursor.getString(3);
-            SourceLanguage sourceLanguage = new SourceLanguage(slug, name, direction);
-            sourceLanguage._info.id = cursor.getLong(0);
+    public SourceLanguage getSourceLanguage(String sourceLanguageSlug) {
+        Cursor cursor = db.rawQuery("select * from source_language where slug=? limit 1", new String[]{sourceLanguageSlug});
+        if(cursor.moveToFirst()) {
+            CursorReader reader = new CursorReader(cursor);
+
+            String name = reader.getString("name");
+            String direction = reader.getString("direction");
+
+            SourceLanguage sourceLanguage = new SourceLanguage(sourceLanguageSlug, name, direction);
+            sourceLanguage._info.id = reader.getLong("id");
             cursor.close();
             return sourceLanguage;
         } else {
@@ -546,23 +549,20 @@ public class Library {
         }
     }
 
-    /**
-     * Returns a list of every source language.
-     *
-     * @return an array of source languages
-     */
     public List<SourceLanguage> getSourceLanguages() {
         Cursor cursor = db.rawQuery("select * from source_language order by slug desc", null);
 
         List<SourceLanguage> sourceLanguages = new ArrayList<>();
         cursor.moveToFirst();
         while(!cursor.isAfterLast()) {
-            String slug = cursor.getString(1);
-            String name = cursor.getString(2);
-            String direction = cursor.getString(3);
+            CursorReader reader = new CursorReader(cursor);
+
+            String slug = reader.getString("id");
+            String name = reader.getString("name");
+            String direction = reader.getString("direction");
 
             SourceLanguage sourceLanguage = new SourceLanguage(slug, name, direction);
-            sourceLanguage._info.id = cursor.getLong(0);
+            sourceLanguage._info.id = reader.getLong("id");
             sourceLanguages.add(sourceLanguage);
             cursor.moveToNext();
         }
@@ -570,31 +570,24 @@ public class Library {
         return sourceLanguages;
     }
 
-    /**
-     * Returns a target language.
-     * The result may be a temp target language.
-     *
-     * Note: does not include the row id. You don't need it
-     *
-     * @param slug
-     * @return the language object or null if it does not exist
-     */
-    public TargetLanguage getTargetLanguage(String slug) {
+    public TargetLanguage getTargetLanguage(String targetLangaugeSlug) {
         Cursor cursor = db.rawQuery("select * from (" +
                 "  select slug, name, anglicized_name, direction, region, is_gateway_language from target_language" +
                 "  union" +
                 "  select slug, name, anglicized_name, direction, region, is_gateway_language from temp_target_language" +
                 "  where approved_target_language_slug is null" +
-                ") where slug=? limit 1", new String[]{slug});
+                ") where slug=? limit 1", new String[]{targetLangaugeSlug});
 
         if(cursor.moveToFirst()) {
-            String name = cursor.getString(1);
-            String anglicized = cursor.getString(2);
-            String direction = cursor.getString(3);
-            String region = cursor.getString(4);
-            boolean isGateWay = cursor.getInt(5) == 1;
+            CursorReader reader = new CursorReader(cursor);
 
-            TargetLanguage dummyTargetLanguage = new TargetLanguage(slug, name, anglicized, direction, region, isGateWay);
+            String name = reader.getString("name");
+            String anglicized = reader.getString("anglicized_name");
+            String direction = reader.getString("direction");
+            String region = reader.getString("region");
+            boolean isGateWay = reader.getBoolean("is_gateway_language");
+
+            TargetLanguage dummyTargetLanguage = new TargetLanguage(targetLangaugeSlug, name, anglicized, direction, region, isGateWay);
             cursor.close();
             return dummyTargetLanguage;
         } else {
@@ -603,32 +596,25 @@ public class Library {
         }
     }
 
-    /**
-     * Returns a list of every target language.
-     * The result may include temp target languages.
-     *
-     * Note: does not include the row id. You don't need it.
-     * And we are pulling from two tables so it would be confusing.
-     *
-     * @return
-     */
     public List<TargetLanguage> getTargetLanguages() {
         Cursor cursor = db.rawQuery("select * from (" +
                 "  select slug, name, anglicized_name, direction, region, is_gateway_language from target_language" +
                 "  union" +
                 "  select slug, name, anglicized_name, direction, region, is_gateway_language from temp_target_language" +
                 "  where approved_target_language_slug is null" +
-                ") order by slug asc, name desc", new String[0]);
+                ") order by slug asc, name desc", null);
 
         List<TargetLanguage> languages = new ArrayList<>();
         cursor.moveToFirst();
         while(!cursor.isAfterLast()) {
-            String slug = cursor.getString(0);
-            String name = cursor.getString(1);
-            String angName = cursor.getString(2);
-            String dir = cursor.getString(3);
-            String region = cursor.getString(4);
-            boolean isGate = cursor.getInt(5) == 1;
+            CursorReader reader = new CursorReader(cursor);
+
+            String slug = reader.getString("slug");
+            String name = reader.getString("name");
+            String angName = reader.getString("anglicized_name");
+            String dir = reader.getString("direction");
+            String region = reader.getString("region");
+            boolean isGate = reader.getBoolean("is_gateway_language");
 
             TargetLanguage newLang = new TargetLanguage(slug, name, angName, dir, region, isGate);
             languages.add(newLang);
@@ -638,29 +624,23 @@ public class Library {
         return languages;
     }
 
-    /**
-     * Returns the target language that has been assigned to a temporary target language.
-     *
-     * Note: does not include the row id. You don't need it
-     *
-     * @param slug the temporary target language with the assignment
-     * @return the language object or null if it does not exist
-     */
-    public TargetLanguage getApprovedTargetLanguage(String slug) {
+    public TargetLanguage getApprovedTargetLanguage(String tempTargetLanguageSlug) {
         TargetLanguage language = null;
 
         Cursor cursor = db.rawQuery("select tl.slug, tl.name, tl.anglicized_name, tl.direction, tl.region, tl.is_gateway_language" +
                 " from target_language as tl" +
                 " left join temp_target_language as ttl on ttl.approved_target_language_slug=tl.slug" +
-                " where ttl.slug=?", new String[]{slug});
+                " where ttl.slug=?", new String[]{tempTargetLanguageSlug});
 
         if(cursor.moveToFirst()) {
-            String approvedSlug = cursor.getString(0);
-            String name = cursor.getString(1);
-            String angName = cursor.getString(2);
-            String dir = cursor.getString(3);
-            String region = cursor.getString(4);
-            boolean isGate = cursor.getInt(5) == 1;
+            CursorReader reader = new CursorReader(cursor);
+
+            String approvedSlug = reader.getString("slug");
+            String name = reader.getString("name");
+            String angName = reader.getString("anglicized_name");
+            String dir = reader.getString("direction");
+            String region = reader.getString("region");
+            boolean isGate = reader.getBoolean("is_gateway_language");
 
             language = new TargetLanguage(approvedSlug, name, angName, dir, region, isGate);
             cursor.close();
@@ -668,59 +648,50 @@ public class Library {
         return language;
     }
 
-    /**
-     * Returns a project
-     *
-     * @param languageSlug
-     * @param projectSlug
-     * @return the project object or null
-     */
-    public Project getProject(String languageSlug, String projectSlug) {
+    public Project getProject(String sourceLanguageSlug, String projectSlug) {
         Project project = null;
         Cursor cursor = db.rawQuery("select * from project" +
                 " where slug=? and source_language_id in (" +
                 " select id from source_language where slug=?)" +
-                " limit 1", new String[]{projectSlug, languageSlug});
+                " limit 1", new String[]{projectSlug, sourceLanguageSlug});
 
         if(cursor.moveToFirst()) {
-            String slug = cursor.getString(1);
-            String name = cursor.getString(2);
-            String desc = cursor.getString(3);
-            String icon = cursor.getString(4);
-            int sort = cursor.getInt(5);
-            String chunksUrl = cursor.getString(6);
+            CursorReader reader = new CursorReader(cursor);
+
+            String slug = reader.getString("slug");
+            String name = reader.getString("name");
+            String desc = reader.getString("desc");
+            String icon = reader.getString("icon");
+            int sort = reader.getInt("sort");
+            String chunksUrl = reader.getString("chunks_url");
 
             project = new Project(slug, name, desc, icon, sort, chunksUrl);
-            project._info.id = cursor.getLong(0);
+            project._info.id = reader.getLong("id");
             //TODO: store the language slug for convenience
         }
         cursor.close();
         return project;
     }
 
-    /**
-     * Returns a list of projects available in the given language.
-     *
-     * @param languageSlug
-     * @return an array of projects
-     */
-    public List<Project> getProjects(String languageSlug) {
+    public List<Project> getProjects(String sourceLanguageSlug) {
         Cursor cursor = db.rawQuery("select * from project" +
                 " where source_language_id in (select id from source_language where slug=?)" +
-                " order by sort asc", new String[]{languageSlug});
+                " order by sort asc", new String[]{sourceLanguageSlug});
 
         List<Project> projects = new ArrayList<>();
         cursor.moveToFirst();
         while(!cursor.isAfterLast()) {
-            String slug = cursor.getString(1);
-            String name = cursor.getString(2);
-            String desc = cursor.getString(3);
-            String icon = cursor.getString(4);
-            int sort = cursor.getInt(5);
-            String chunksUrl = cursor.getString(6);
+            CursorReader reader = new CursorReader(cursor);
+
+            String slug = reader.getString("slug");
+            String name = reader.getString("name");
+            String desc = reader.getString("desc");
+            String icon = reader.getString("icon");
+            int sort = reader.getInt("sort");
+            String chunksUrl = reader.getString("chunks_url");
 
             Project project = new Project(slug, name, desc, icon, sort, chunksUrl);
-            project._info.id = cursor.getLong(0);
+            project._info.id = reader.getLong("id");
             projects.add(project);
             cursor.moveToNext();
         }
@@ -728,68 +699,101 @@ public class Library {
         return projects;
     }
 
-//    public getProjectCategories(int parentCategoryId, String languageSlug, String translateMode) {
-//
-//    }
-
-    public Resource getResource(String languageSlug, String projectSlug, String resourceSlug) {
-        Cursor cursor = db.rawQuery("select r.*, lri.translation_words_assignments_url from resource as r" +
-                "  left join legacy_resource_info as lri on lri.resource_id=r.id" +
-                "  where r.slug=? and r.project_id in (" +
-                "  select id from project where slug=? and source_language_id in (" +
-                "  select id from source_language where slug=?)" +
-                " ) limit 1", new String[]{resourceSlug, projectSlug, languageSlug});
-
-        if(cursor.moveToFirst()) {
-            // load resource object
-
-            // load formats and add to resource
-        }
-
-        cursor.close();
+    public List<CategoryEntry> getProjectCategories(long parentCategoryId, String languageSlug, String translateMode) {
         return null;
     }
 
-//    public List<Resource> getResources(String languageSlug, String projectSlug) {
-//
-//    }
+    public Resource getResource(String sourceLanguageSlug, String projectSlug, String resourceSlug) {
+        Resource resource = null;
+        Cursor cursor = db.rawQuery("select r.id, r.name, r.translate_mode, r.type, r.checking_level," +
+                " r.comments, r.pub_date, r.license, r.version," +
+                " lri.translation_words_assignments_url from resource as r" +
+                " left join legacy_resource_info as lri on lri.resource_id=r.id" +
+                " where r.slug=? and r.project_id in (" +
+                "  select id from project where slug=? and source_language_id in (" +
+                "  select id from source_language where slug=?)" +
+                " ) limit 1", new String[]{resourceSlug, projectSlug, sourceLanguageSlug});
 
-    /**
-     * Returns a catalog
-     *
-     * @param slug
-     * @return the catalog object or null if it does not exist
-     */
-    public Catalog getCatalog(String slug) {
-        Catalog catalog = null;
-        Cursor cursor = db.rawQuery("select * from catalog where slug=?", new String[]{slug});
         if(cursor.moveToFirst()) {
-            String url = cursor.getString(2);
-            int modifiedAt = cursor.getInt(3);
-            catalog = new Catalog(slug, url, modifiedAt);
-            catalog._info.id = cursor.getLong(0);
+            CursorReader reader = new CursorReader(cursor);
+
+            long resourceId = reader.getLong("id");
+            String name = reader.getString("name");
+            String translateMode = reader.getString("translate_mode");
+            String type = reader.getString("type");
+            String checkingLevel = reader.getString("checking_level");
+            String comments = reader.getString("comments");
+            int pubDate = reader.getInt("pub_date");
+            String license = reader.getString("license");
+            String version = reader.getString("version");
+            String wordsAssignmentsUrl = reader.getString("translation_words_assignments_url");
+
+            HashMap status = new HashMap();
+            status.put("translateMode", translateMode);
+            status.put("checkingLevel", checkingLevel);
+            status.put("comments", comments);
+            status.put("pub_date", pubDate);
+            status.put("license", license);
+            status.put("version", version);
+
+            resource = new Resource(resourceSlug, name, type, wordsAssignmentsUrl, status);
+
+            // load formats and add to resource
+            Cursor formatCursor = db.rawQuery("select * from resource_format where resource_id=" + resourceId, null);
+            formatCursor.moveToFirst();
+            while(!formatCursor.isAfterLast()) {
+                CursorReader formatReader = new CursorReader(formatCursor);
+
+                int packageVersion = formatReader.getInt("package_version");
+                String mimeType = formatReader.getString("mime_type");
+                int modifiedAt = formatReader.getInt("modified_at");
+                String url = formatReader.getString("url");
+
+                Resource.Format format = new Resource.Format(packageVersion, mimeType, modifiedAt, url);
+                resource.addFormat(format);
+                formatCursor.moveToNext();
+            }
+            formatCursor.close();
+        }
+        cursor.close();
+        return resource;
+    }
+
+    public List<Resource> getResources(String sourcelanguageSlug, String projectSlug) {
+        // TODO: 9/14/16 finish
+        return null;
+    }
+
+    public Catalog getCatalog(String catalogSlug) {
+        Catalog catalog = null;
+        Cursor cursor = db.rawQuery("select id, url, modified_at from catalog where slug=?", new String[]{catalogSlug});
+        if(cursor.moveToFirst()) {
+            CursorReader reader = new CursorReader(cursor);
+
+            String url = reader.getString("url");
+            int modifiedAt = reader.getInt("modified_at");
+
+            catalog = new Catalog(catalogSlug, url, modifiedAt);
+            catalog._info.id = reader.getLong("id");
         }
         cursor.close();
         return catalog;
     }
 
-    /**
-     * Returns a list of catalogs
-     *
-     * @return
-     */
     public List<Catalog> getCatalogs() {
         Cursor cursor = db.rawQuery("select * from catalog", null);
 
         List<Catalog> catalogs = new ArrayList<>();
         cursor.moveToFirst();
         while(!cursor.isAfterLast()) {
-            String slug = cursor.getString(1);
-            String url = cursor.getString(2);
-            int modifiedAt = cursor.getInt(3);
+            CursorReader reader = new CursorReader(cursor);
+
+            String slug = reader.getString("slug");
+            String url = reader.getString("url");
+            int modifiedAt = reader.getInt("modified_at");
 
             Catalog catalog = new Catalog(slug, url, modifiedAt);
-            catalog._info.id = cursor.getLong(0);
+            catalog._info.id = reader.getLong("id");
             catalogs.add(catalog);
             cursor.moveToNext();
         }
@@ -797,48 +801,41 @@ public class Library {
         return catalogs;
     }
 
-    /**
-     * Returns a versification
-     *
-     * @param languageSlug
-     * @param versificationSlug
-     * @return versification or null
-     */
-    public Versification getVersification(String languageSlug, String versificationSlug) {
+    public Versification getVersification(String sourceLanguageSlug, String versificationSlug) {
         Versification versification = null;
         Cursor cursor = db.rawQuery("select v.id, v.slug, vn.name from versification_name as vn" +
                 " left join versification as v on v.id=vn.versification_id" +
                 " left join source_language as sl on sl.id=vn.source_language_id" +
-                " where sl.slug=? and v.slug=?", new String[]{languageSlug, versificationSlug});
+                " where sl.slug=? and v.slug=?", new String[]{sourceLanguageSlug, versificationSlug});
 
         if(cursor.moveToFirst()) {
-            String slug = cursor.getString(1);
-            String name = cursor.getString(2);
+            CursorReader reader = new CursorReader(cursor);
+
+            String slug = reader.getString("slug");
+            String name = reader.getString("name");
+
             versification = new Versification(slug, name);
-            versification._info.id = cursor.getLong(0);
+            versification._info.id = reader.getLong("id");
         }
         cursor.close();
         return versification;
     }
 
-    /**
-     * Returns a list of versifications
-     *
-     * @param languageSlug
-     * @return
-     */
-    public List<Versification> getVersifications(String languageSlug) {
+    public List<Versification> getVersifications(String sourceLanguageSlug) {
         Cursor cursor = db.rawQuery("select v.id, v.slug, vn.name from versification_name as vn" +
                 " left join versification as v on v.id=vn.versification_id" +
                 " left join source_language as sl on sl.id=vn.source_language_id" +
-                " where sl.slug=? and v.slug=?", new String[]{languageSlug});
+                " where sl.slug=? and v.slug=?", new String[]{sourceLanguageSlug});
 
         List<Versification> versifications = new ArrayList<>();
         while(!cursor.isAfterLast()) {
-            String slug = cursor.getString(1);
-            String name = cursor.getString(2);
+            CursorReader reader = new CursorReader(cursor);
+
+            String slug = reader.getString("slug");
+            String name = reader.getString("name");
+
             Versification versification = new Versification(slug, name);
-            versification._info.id = cursor.getLong(0);
+            versification._info.id = reader.getLong("id");
             versifications.add(versification);
             cursor.moveToNext();
         }
@@ -846,27 +843,21 @@ public class Library {
         return versifications;
     }
 
-    /**
-     * Returns a list of chunk markers for a project
-     *
-     * @param projectSlug
-     * @param versificationSlug
-     * @return
-     */
     public List<ChunkMarker> getChunkMarkers(String projectSlug, String versificationSlug) {
-        Cursor cursor = db.rawQuery("select cm.* from chunk_marker as cm" +
+        Cursor cursor = db.rawQuery("select cm.id, cm.chapter, cm.verse from chunk_marker as cm" +
                 " left join versification as v on v.id=cm.versification_id" +
                 " where v.slug=? and cm.project_slug=?", new String[]{versificationSlug, projectSlug});
 
         List<ChunkMarker> chunkMarkers = new ArrayList<>();
         cursor.moveToFirst();
         while(!cursor.isAfterLast()) {
-            String chapter = cursor.getString(1);
-            String verse = cursor.getString(2);
-            String slug = cursor.getString(3);
+            CursorReader reader = new CursorReader(cursor);
+
+            String chapter = reader.getString("chapter");
+            String verse = reader.getString("verse");
 
             ChunkMarker chunkMarker = new ChunkMarker(chapter, verse);
-            chunkMarker._info.id = cursor.getLong(0);
+            chunkMarker._info.id = reader.getLong("id");
             chunkMarkers.add(chunkMarker);
             cursor.moveToNext();
         }
@@ -874,52 +865,45 @@ public class Library {
         return chunkMarkers;
     }
 
-    /**
-     * Returns a list of questionnaires
-     *
-     * @return a list of questionnaires
-     */
     public List<Questionnaire> getQuestionnaires() {
         Cursor cursor = db.rawQuery("select * from questionnaire", null);
 
         List<Questionnaire> questionnaires = new ArrayList<>();
         cursor.moveToFirst();
         while(!cursor.isAfterLast()) {
-            String slug = cursor.getString(1);
-            String name = cursor.getString(2);
-            String direction = cursor.getString(3);
-            long tdId = cursor.getLong(4);
+            CursorReader reader = new CursorReader(cursor);
+
+            String slug = reader.getString("language_slug");
+            String name = reader.getString("language_name");
+            String direction = reader.getString("language_direction");
+            long tdId = reader.getLong("td_id");
 
             Questionnaire questionnaire = new Questionnaire(slug, name, direction, tdId);
-            questionnaire._info.id = cursor.getLong(0);
+            questionnaire._info.id = reader.getLong("id");
             questionnaires.add(questionnaire);
         }
         cursor.close();
         return questionnaires;
     }
 
-    /**
-     * Returns a list of questions.
-     *
-     * @param questionnaireId the parent questionnaire row id
-     * @return a list of questions
-     */
-    public List<Question> getQuestions(long questionnaireId) {
-        Cursor cursor = db.rawQuery("select * from question where questionnaire_id=?", new String[]{String.valueOf(questionnaireId)});
+    public List<Question> getQuestions(long questionnaireTDId) {
+        Cursor cursor = db.rawQuery("select * from question where td_id=" + questionnaireTDId, null);
 
         List<Question> questions = new ArrayList<>();
         cursor.moveToFirst();
         while(!cursor.isAfterLast()) {
-            String text = cursor.getString(1);
-            String help = cursor.getString(2);
-            boolean isRequired = cursor.getInt(3) > 0;
-            String inputType = cursor.getString(4);
-            int sort = cursor.getInt(5);
-            int dependsOn = cursor.getInt(6);
-            int tdId = cursor.getInt(7);
+            CursorReader reader = new CursorReader(cursor);
+
+            String text = reader.getString("text");
+            String help = reader.getString("help");
+            boolean isRequired = reader.getBoolean("is_required");
+            String inputType = reader.getString("input_type");
+            int sort = reader.getInt("sort");
+            long dependsOn = reader.getInt("depends_on");
+            long tdId = reader.getInt("td_id");
 
             Question question = new Question(text, help, isRequired, inputType, sort, dependsOn, tdId);
-            question._info.id = cursor.getLong(0);
+            question._info.id = reader.getLong("id");
             questions.add(question);
             cursor.moveToNext();
         }
@@ -983,6 +967,33 @@ public class Library {
             }
 
             return new WhereClause(whereStmt, uniqueValues);
+        }
+    }
+
+    /**
+     * A helper class to make reading from a cursor easier.
+     */
+    private static class CursorReader {
+        private final Cursor cursor;
+
+        public CursorReader(Cursor cursor) {
+            this.cursor =cursor;
+        }
+
+        public String getString(String key)  {
+            return this.cursor.getString(this.cursor.getColumnIndexOrThrow(key));
+        }
+
+        public long getLong(String key) {
+            return this.cursor.getLong(this.cursor.getColumnIndexOrThrow(key));
+        }
+
+        public int getInt(String key) {
+            return this.cursor.getInt(this.cursor.getColumnIndexOrThrow(key));
+        }
+
+        public boolean getBoolean(String key) {
+            return this.cursor.getInt(this.cursor.getColumnIndexOrThrow(key)) > 0;
         }
     }
 }
