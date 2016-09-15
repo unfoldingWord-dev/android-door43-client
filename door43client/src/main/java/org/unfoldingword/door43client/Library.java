@@ -700,6 +700,7 @@ class Library implements Index {
     }
 
     public List<CategoryEntry> getProjectCategories(long parentCategoryId, String languageSlug, String translateMode) {
+        // TODO: 9/15/16 finish
         return null;
     }
 
@@ -759,9 +760,81 @@ class Library implements Index {
         return resource;
     }
 
-    public List<Resource> getResources(String sourcelanguageSlug, String projectSlug) {
-        // TODO: 9/14/16 finish
-        return null;
+    /**
+     * Returns a list of resources available in the given project
+     *
+     * @param languageSlug the language of the resource. If null then all resources of the project will be returned.
+     * @param projectSlug the project who's resources will be returned
+     * @return an array of resources
+     */
+    public List<Resource> getResources(String languageSlug, String projectSlug) {
+        List<Resource> resources = new ArrayList<>();
+        Cursor resourceCursor = null;
+        if(!languageSlug.isEmpty()) {
+            resourceCursor = db.rawQuery("select r.*, lri.translation_words_assignments_url from resource as r" +
+                    " left join legacy_resource_info as lri on lri.resource_id=r.id" +
+                    " where r.project_id in (" +
+                    "  select id from project where slug=? and source_language_id in (" +
+                    "  select id from source_language where slug=?)" +
+                    "  order by r.slug desc", new String[]{projectSlug, languageSlug});
+        } else {
+            resourceCursor = db.rawQuery("select sl.slug as source_language_slug, r.*, lri.translation_words_assignments_url from resource as r" +
+                    " left join legacy_resource_info as lri on lri.resource_id=r.id" +
+                    " left join project as p on p.id=r.project_id" +
+                    " left join (" +
+                    " select id, slug from source_language" +
+                    " ) as sl on sl.id=p.source_language_id" +
+                    " where p.slug=? order by r.slug asc", new String[]{projectSlug});
+        }
+
+        resourceCursor.moveToFirst();
+        while(!resourceCursor.isAfterLast()) {
+            CursorReader reader = new CursorReader(resourceCursor);
+
+            long resourceId = reader.getLong("id");
+            String slug = reader.getString("slug");
+            String name = reader.getString("name");
+            String translateMode = reader.getString("translate_mode");
+            String type = reader.getString("type");
+            String checkingLevel = reader.getString("checking_level");
+            String comments = reader.getString("comments");
+            int pubDate = reader.getInt("pub_date");
+            String license = reader.getString("license");
+            String version = reader.getString("version");
+            String wordsAssignmentsUrl = reader.getString("translation_words_assignments_url");
+
+            HashMap status = new HashMap();
+            status.put("translateMode", translateMode);
+            status.put("checkingLevel", checkingLevel);
+            status.put("comments", comments);
+            status.put("pub_date", pubDate);
+            status.put("license", license);
+            status.put("version", version);
+
+            Resource resource = new Resource(slug, name, type, wordsAssignmentsUrl, status);
+
+            // load formats and add to resource
+            Cursor formatCursor = db.rawQuery("select * from resource_format where resource_id=" + resourceId, null);
+            formatCursor.moveToFirst();
+            while(!formatCursor.isAfterLast()) {
+                CursorReader formatReader = new CursorReader(formatCursor);
+
+                int packageVersion = formatReader.getInt("package_version");
+                String mimeType = formatReader.getString("mime_type");
+                int modifiedAt = formatReader.getInt("modified_at");
+                String url = formatReader.getString("url");
+
+                Resource.Format format = new Resource.Format(packageVersion, mimeType, modifiedAt, url);
+                resource.addFormat(format);
+                formatCursor.moveToNext();
+            }
+            formatCursor.close();
+
+            resources.add(resource);
+            resourceCursor.moveToNext();
+        }
+        resourceCursor.close();
+        return resources;
     }
 
     public Catalog getCatalog(String catalogSlug) {
