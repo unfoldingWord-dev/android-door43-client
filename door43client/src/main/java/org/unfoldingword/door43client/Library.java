@@ -700,7 +700,36 @@ class Library implements Index {
     }
 
     public List<CategoryEntry> getProjectCategories(long parentCategoryId, String languageSlug, String translateMode) {
-        // TODO: 9/15/16 finish
+        Cursor categoryCursor = null;
+        if(!translateMode.isEmpty()) {
+            categoryCursor = db.rawQuery("select \'category\' as type, c.slug as name, \'\' as source_language_slug," +
+                    " c.id, c.slug, c.parent_id, count(p.id) as num from category as c" +
+                    " left join (" +
+                    "  select p.id, p.category_id, count(r.id) as num from project as p" +
+                    "  left join resource as r on r.project_id=p.id and r.translate_mode like(?)" +
+                    "  group by p.slug" +
+                    " ) p on p.category_id=c.id and p.num > 0" +
+                    " where parent_id=? and num > 0 group by c.slug", new String[]{translateMode, String.valueOf(parentCategoryId)});
+        } else {
+            categoryCursor = db.rawQuery("select \'category\' as type, category.slug as name, \'\' as source_language_slug, * from category where parent_id=" + parentCategoryId, null);
+        }
+
+        //find best name
+        while(!categoryCursor.isAfterLast()) {
+            int catId = categoryCursor.getInt(categoryCursor.getColumnIndex("id"));
+
+            Cursor cursor = db.rawQuery("select sl.slug as source_language_slug, cn.name as name" +
+                    " from category_name as cn" +
+                    " left join source_language as sl on sl.id=cn.source_language_id" +
+                    " where sl.slug like(?) and cn.category_id=?", new String[]{   ,catId});
+
+            if(cursor.moveToFirst()) {
+
+            }
+
+            categoryCursor.moveToNext();
+        }
+
         return null;
     }
 
