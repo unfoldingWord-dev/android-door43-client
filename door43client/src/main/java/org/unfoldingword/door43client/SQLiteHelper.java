@@ -1,4 +1,4 @@
-package org.unfoldingword.door43client.utils;
+package org.unfoldingword.door43client;
 
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
@@ -8,7 +8,7 @@ import android.os.Build;
 /**
  * A SQLite database helper
  */
-public class SQLiteHelper extends SQLiteOpenHelper {
+class SQLiteHelper extends SQLiteOpenHelper {
     private static final int DATABASE_VERSION = 1;
     private final String schema;
     private final String name;

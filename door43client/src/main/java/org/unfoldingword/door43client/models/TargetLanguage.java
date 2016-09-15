@@ -1,4 +1,4 @@
-package org.unfoldingword.door43client.objects;
+package org.unfoldingword.door43client.models;
 
 /**
  * Represents a language that a resource will be translated into

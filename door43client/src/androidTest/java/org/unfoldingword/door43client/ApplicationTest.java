@@ -4,8 +4,8 @@ import android.app.Application;
 import android.test.ApplicationTestCase;
 
 import org.junit.Test;
-import org.unfoldingword.door43client.utils.Library;
-import org.unfoldingword.door43client.utils.SQLiteHelper;
+import org.unfoldingword.door43client.library.Library;
+import org.unfoldingword.door43client.library.SQLiteHelper;
 
 import java.io.BufferedReader;
 import java.io.IOException;

@@ -1,11 +1,6 @@
-package org.unfoldingword.door43client.utils;
+package org.unfoldingword.door43client;
 
 import android.content.Context;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-import org.unfoldingword.door43client.objects.Project;
-import org.unfoldingword.door43client.objects.Resource;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -43,6 +38,13 @@ public class Door43Client {
         this.library = new Library(helper);
     }
 
+    /**
+     * Returns the read only index
+     * @return
+     */
+    public Index index() {
+        return library;
+    }
 
     // TODO: 9/2/16 write all the methods!
 }
