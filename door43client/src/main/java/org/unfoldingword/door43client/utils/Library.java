@@ -4,6 +4,7 @@ import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.text.TextUtils;
+import android.util.ArrayMap;
 
 import org.unfoldingword.door43client.objects.Category;
 import org.unfoldingword.door43client.objects.ChunkMarker;
@@ -19,6 +20,7 @@ import org.unfoldingword.door43client.objects.Questionnaire;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 
 /**
@@ -328,6 +330,14 @@ public class Library {
         return insertOrUpdate("catalog", values, new String[]{"slug"});
     }
 
+    /**
+     * Inserts or updates a resource in the library.
+     *
+     * @param resource
+     * @param projectId the parent project row id
+     * @return the id of the resource row
+     * @throws Exception
+     */
     public long addResource(Resource resource, long projectId) throws Exception {
         validateNotEmpty(resource.slug);
         validateNotEmpty(resource.name);
@@ -346,9 +356,11 @@ public class Library {
         values.put("pub_date", resource.status.get("pub_date") != null ? (long)resource.status.get("pub_date") : 0);
         values.put("license", deNull((String)resource.status.get("license")));
         values.put("version", (String)resource.status.get("version"));
+        values.put("project_id", projectId);
 
-        long rowId = insertOrUpdate("resource", values, new String[]{"slug", "resource_id"});
+        long resourceId = insertOrUpdate("resource", values, new String[]{"slug", String.valueOf(projectId)});
 
+        // add formats
         for(Resource.Format format : resource.formats) {
             validateNotEmpty(format.mimeType);
             ContentValues formatValues = new ContentValues();
@@ -361,10 +373,14 @@ public class Library {
             insertOrUpdate("resource_format", formatValues, new String[]{"mime_type", "resource_id"});
         }
 
-
-
-        //TODO add more here
-        return -1;
+        //add legacy data
+        if(resource.translationWordsAssignmentsUrl != null && !resource.translationWordsAssignmentsUrl.equals("")) {
+            ContentValues legacyValues = new ContentValues();
+            legacyValues.put("translation_words_assignments_url", resource.translationWordsAssignmentsUrl);
+            legacyValues.put("resource_id", resourceId);
+            insertOrUpdate("legacy_resource_info", legacyValues, new String[]{String.valueOf(resourceId)});
+        }
+        return resourceId;
     }
 
     /**
@@ -680,7 +696,16 @@ public class Library {
 //
 //    }
 
+    /**
+     * Returns a resource
+     *
+     * @param languageSlug
+     * @param projectSlug
+     * @param resourceSlug
+     * @return the Resource object or null if it does not exist
+     */
     public Resource getResource(String languageSlug, String projectSlug, String resourceSlug) {
+        Resource resource = null;
         Cursor cursor = db.rawQuery("select r.*, lri.translation_words_assignments_url from resource as r" +
                 "  left join legacy_resource_info as lri on lri.resource_id=r.id" +
                 "  where r.slug=? and r.project_id in (" +
@@ -689,13 +714,47 @@ public class Library {
                 " ) limit 1", new String[]{resourceSlug, projectSlug, languageSlug});
 
         if(cursor.moveToFirst()) {
-            // load resource object
+            String slug = cursor.getString(cursor.getColumnIndex("slug"));
+            String name = cursor.getString(cursor.getColumnIndex("name"));
+            String type = cursor.getString(cursor.getColumnIndex("type"));
+            String translate_mode = cursor.getString(cursor.getColumnIndex("translate_mode"));
+            String checkingLevel = cursor.getString(cursor.getColumnIndex("checkingLevel"));
+            String comments = cursor.getString(cursor.getColumnIndex("comments"));
+            int pubDate = cursor.getInt(cursor.getColumnIndex("pub_date"));
+            String license = cursor.getString(cursor.getColumnIndex("license"));
+            String version = cursor.getString(cursor.getColumnIndex("version"));
+            int projectId = cursor.getInt(cursor.getColumnIndex("project_id"));
+
+            HashMap status = new HashMap();
+            status.put("translateMode", cursor.getString(cursor.getColumnIndex("translate_mode"));
+            status.put("checkingLevel", cursor.getString(cursor.getColumnIndex("checkingLevel")));
+            status.put("comments", cursor.getString(cursor.getColumnIndex("comments")));
+            status.put("pub_date", cursor.getString(cursor.getColumnIndex("pub_date")));
+            status.put("license", cursor.getString(cursor.getColumnIndex("license")));
+            status.put("version", cursor.getString(cursor.getColumnIndex("version")));
+
+            resource = new Resource(slug, name, type, translate_mode, checkingLevel, comments,
+                        pubDate, license, version, projectId, status);
 
             // load formats and add to resource
-        }
+            int id = cursor.getInt(cursor.getColumnIndex("id"));
+            Cursor formatResults = db.rawQuery("select * from resource_format where resource_id=" + id, null);
+            formatResults.moveToFirst();
+            while(!formatResults.isAfterLast()) {
+                int packageVersion = formatResults.getInt(cursor.getColumnIndex("packageVersion"));
+                String mimeType = formatResults.getString(cursor.getColumnIndex("mimeType"));
+                int modifiedAt = formatResults.getInt(cursor.getColumnIndex("modifiedAt"));
+                String url = formatResults.getString(cursor.getColumnIndex("url"));
+                int resourceId = formatResults.getInt(cursor.getColumnIndex("resourceId"));
 
+                Resource.Format format = new Resource.Format(packageVersion, mimeType, modifiedAt, url, resourceId);
+                resource.addFormat(format);
+                formatResults.moveToNext();
+            }
+            formatResults.close();
+        }
         cursor.close();
-        return null;
+        return resource;
     }
 
 //    public List<Resource> getResources(String languageSlug, String projectSlug) {
