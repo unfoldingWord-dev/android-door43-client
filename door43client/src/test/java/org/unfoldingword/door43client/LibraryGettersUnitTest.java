@@ -65,7 +65,7 @@ public class LibraryGettersUnitTest {
         // target languages
         for(String slug:stringGenerator("en", GENERATOR_QTY)) {
             TargetLanguage l = new TargetLanguage(slug, "English", "American English", "ltr", "United States", true);
-            library.addTempTargetLanguage(l);
+            library.addTargetLanguage(l);
         }
 
         // approved target language
@@ -175,8 +175,9 @@ public class LibraryGettersUnitTest {
         library.beginTransaction();
         try {
             buildData();
-        } catch(Exception e) {
             library.endTransaction(true);
+        } catch(Exception e) {
+            library.endTransaction(false);
             throw e;
         }
     }
@@ -236,7 +237,6 @@ public class LibraryGettersUnitTest {
 
     @Test
     public void getApprovedTargetLanguage() throws Exception {
-        // TODO: fix this
         TargetLanguage language = library.getApprovedTargetLanguage("temp-en1");
         assertNotNull(language);
         assertEquals(language.slug, "en1");
@@ -304,15 +304,14 @@ public class LibraryGettersUnitTest {
         assertTrue(list.size() > 0);
     }
 
-//    @Test
-//    public void getQuestionnairesAndQuestions() throws Exception {
-//        // TODO: 9/14/16 not working
-//        List<Questionnaire> list = library.getQuestionnaires();
-//        assertTrue(list.size() > 0);
-//        for(Questionnaire q:list) {
-//            List<Question> questions = library.getQuestions(q._info.id);
-//            assertTrue(questions.size() > 0);
-//        }
-//    }
+    @Test
+    public void getQuestionnairesAndQuestions() throws Exception {
+        List<Questionnaire> list = library.getQuestionnaires();
+        assertTrue(list.size() > 0);
+        for(Questionnaire q:list) {
+            List<Question> questions = library.getQuestions(q._info.id);
+            assertTrue(questions.size() > 0);
+        }
+    }
 
 }

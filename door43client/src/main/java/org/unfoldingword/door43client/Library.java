@@ -718,14 +718,14 @@ class Library implements Index {
         while(!categoryCursor.isAfterLast()) {
             int catId = categoryCursor.getInt(categoryCursor.getColumnIndex("id"));
 
-            Cursor cursor = db.rawQuery("select sl.slug as source_language_slug, cn.name as name" +
-                    " from category_name as cn" +
-                    " left join source_language as sl on sl.id=cn.source_language_id" +
-                    " where sl.slug like(?) and cn.category_id=?", new String[]{   ,catId});
-
-            if(cursor.moveToFirst()) {
-
-            }
+//            Cursor cursor = db.rawQuery("select sl.slug as source_language_slug, cn.name as name" +
+//                    " from category_name as cn" +
+//                    " left join source_language as sl on sl.id=cn.source_language_id" +
+//                    " where sl.slug like(?) and cn.category_id=?", new String[]{   ,catId});
+//
+//            if(cursor.moveToFirst()) {
+//
+//            }
 
             categoryCursor.moveToNext();
         }
@@ -924,12 +924,13 @@ class Library implements Index {
     }
 
     public List<Versification> getVersifications(String sourceLanguageSlug) {
-        Cursor cursor = db.rawQuery("select v.id, v.slug, vn.name from versification_name as vn" +
+        Cursor cursor = db.rawQuery("select vn.name, v.slug, v.id from versification_name as vn" +
                 " left join versification as v on v.id=vn.versification_id" +
                 " left join source_language as sl on sl.id=vn.source_language_id" +
-                " where sl.slug=? and v.slug=?", new String[]{sourceLanguageSlug});
+                " where sl.slug=?", new String[]{sourceLanguageSlug});
 
         List<Versification> versifications = new ArrayList<>();
+        cursor.moveToFirst();
         while(!cursor.isAfterLast()) {
             CursorReader reader = new CursorReader(cursor);
 
@@ -983,13 +984,14 @@ class Library implements Index {
             Questionnaire questionnaire = new Questionnaire(slug, name, direction, tdId);
             questionnaire._info.id = reader.getLong("id");
             questionnaires.add(questionnaire);
+            cursor.moveToNext();
         }
         cursor.close();
         return questionnaires;
     }
 
     public List<Question> getQuestions(long questionnaireTDId) {
-        Cursor cursor = db.rawQuery("select * from question where td_id=" + questionnaireTDId, null);
+        Cursor cursor = db.rawQuery("select * from question where questionnaire_id=" + questionnaireTDId, null);
 
         List<Question> questions = new ArrayList<>();
         cursor.moveToFirst();
