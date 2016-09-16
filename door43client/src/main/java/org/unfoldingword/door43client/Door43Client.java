@@ -46,5 +46,67 @@ public class Door43Client {
         return library;
     }
 
-    // TODO: 9/2/16 write all the methods!
+    /**
+     * Indexes the Door43 catalog.
+     *
+     * @param url the entry resource api catalog
+     * @param listener an optional progress listener. This should receive progress id, total, completed
+     */
+    public void updatePrimaryIndex(String url, OnProgressListener listener) {
+
+    }
+
+    /**
+     * Downloads a global catalog and indexes it.
+     *
+     * @param catalogSlug the slug of the catalog to download. Or an object containing all the args.
+     * @param listener an optional progress listener. This should receive progress id, total, completed
+     */
+    public void updateCatalogIndex(String catalogSlug, OnProgressListener listener) {
+
+    }
+
+    public void downloadResourceContainer() {
+
+    }
+
+    @Deprecated
+    public void downloadFutureCompatibleResourceContainer() {
+
+    }
+
+    @Deprecated
+    public void convertLegacyResource() {
+
+    }
+
+    public void openResourceContainer() {
+
+    }
+
+    public void closeResourceContainer() {
+
+    }
+
+    public void listResourceContainers() {
+
+    }
+
+    public void getProjectUpdates() {
+
+    }
+
+    public void getSourceLanguageUpdates() {
+
+    }
+
+    public interface OnProgressListener {
+        /**
+         *
+         * @param tag used to identify what progress event is occurring
+         * @param max the total number of items being processed
+         * @param complete the number of items that have been successfully processed
+         */
+        void onProgress(String tag, long max, long complete);
+    }
 }
