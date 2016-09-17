@@ -8,12 +8,12 @@ import java.util.Map;
  * Represents a resource that can be translated
  */
 public class Resource extends DatabaseObject {
-    public String slug;
-    public String name;
-    public String type;
-    public Map status;
-    public List<Format> formats = new ArrayList<>();
-    public String wordsAssignmentsUrl;
+    public final String slug;
+    public final String name;
+    public final String type;
+    public final Map status;
+    public final List<Format> formats = new ArrayList<>();
+    public final String wordsAssignmentsUrl;
 
     public Resource(String slug, String name, String type, String wordsAssignmentsUrl, Map status) {
         this.slug = slug;

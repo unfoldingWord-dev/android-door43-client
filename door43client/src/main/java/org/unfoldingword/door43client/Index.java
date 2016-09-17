@@ -34,7 +34,7 @@ public interface Index {
      * @param languageSlug the source language who's projects will be selected. If left empty the results will include all projects in all languages.
      * @return
      */
-    List<Map> listProjectsLastModified(String languageSlug);
+    Map<String, Integer> listProjectsLastModified(String languageSlug);
 
     /**
      * Returns a source language.
