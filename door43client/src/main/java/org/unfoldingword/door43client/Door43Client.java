@@ -2,14 +2,18 @@ package org.unfoldingword.door43client;
 
 import android.content.Context;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.unfoldingword.resourcecontainer.ResourceContainer;
+import org.unfoldingword.tools.http.GetRequest;
+import org.unfoldingword.tools.http.Request;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.URL;
 import java.util.List;
 
 /**
@@ -56,8 +60,23 @@ public class Door43Client {
      * @param url the entry resource api catalog
      * @param listener an optional progress listener. This should receive progress id, total, completed
      */
-    public void updatePrimaryIndex(String url, OnProgressListener listener) {
+    public void updatePrimaryIndex(String url, final OnProgressListener listener) throws Exception {
+        // inject missing global catalogs
+        LegacyTools.injectGlobalCatalogs(library);
+        GetRequest getPrimaryCatalog = new GetRequest(new URL(url));
+        getPrimaryCatalog.setProgressListener(new Request.OnProgressListener() {
+            @Override
+            public void onProgress(long max, long progress) {
+                listener.onProgress("catalog", max, progress);
+            }
 
+            @Override
+            public void onIndeterminate() {
+            }
+        });
+        String data = getPrimaryCatalog.read();
+        // process legacy catalog data
+        LegacyTools.processCatalog(library, data, listener);
     }
 
     /**
