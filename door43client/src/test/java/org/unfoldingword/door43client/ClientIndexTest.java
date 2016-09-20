@@ -11,6 +11,7 @@ import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.RuntimeEnvironment;
+import org.unfoldingword.door43client.models.TargetLanguage;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 
@@ -94,11 +95,27 @@ public class ClientIndexTest {
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
                         .withBody(questionnairesCatalog)));
+        String tempLangnamesCatalog = Util.loadResource(this.getClass().getClassLoader(), "temp_langnames.json");
+        stubFor(get(urlEqualTo("/api/templanguages/"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody(tempLangnamesCatalog)));
+        String approvedLangnamesCatalog = Util.loadResource(this.getClass().getClassLoader(), "approved_temp_langnames.json");
+        stubFor(get(urlEqualTo("/api/templanguages/assignment/changed/"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody(approvedLangnamesCatalog)));
 
         client.setGlobalCatalogServer("http://localhost:" + wireMockRule.port());
         client.updatePrimaryIndex("http://localhost:" + wireMockRule.port() + "/catalog", null);
         client.updateCatalogIndex("langnames", null);
+        assertNotNull(client.index().getTargetLanguage("kff-x-dmorla"));
         client.updateCatalogIndex("new-language-questions", null);
+        client.updateCatalogIndex("temp-langnames", null);
+        assertNotNull(client.index().getTargetLanguage("qaa-x-802d08"));
+        client.updateCatalogIndex("approved-temp-langnames", null);
 
         assertEquals(3, client.index().getSourceLanguages().size());
         // TRICKY: counts also include tw-bible and/or tw-obs
@@ -108,8 +125,11 @@ public class ClientIndexTest {
         // TRIKCY: counts may also includes resources for helps
         assertEquals(4, client.index().getResources("en", "gen").size());
         assertEquals(3, client.index().getResources("en", "obs").size());
-        assertEquals(5, client.index().getTargetLanguages().size());
+        assertTrue(client.index().getTargetLanguages().size() > 0);
         assertEquals(1, client.index().getQuestionnaires().size());
+        TargetLanguage approved = client.index().getApprovedTargetLanguage("qaa-x-802d08");
+        assertNotNull(approved);
+        assertEquals("kff-x-dmorla", approved.slug);
 
         verify(getRequestedFor(urlMatching("/catalog")));
     }

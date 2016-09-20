@@ -20,16 +20,35 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.util.Iterator;
 import java.util.List;
 
 /**
  * Created by joel on 8/30/16.
  */
 public class Door43Client {
+    private static final OnLogListener defaultLogListener;
+
+    static {
+        defaultLogListener = new OnLogListener() {
+            @Override
+            public void onInfo(String message) {
+            }
+
+            @Override
+            public void onWarning(String message) {
+            }
+
+            @Override
+            public void onError(String message, Exception ex) {
+            }
+        };
+    }
 
     private final File resourceDir;
     private final Library library;
     private String globalCatalogHost = null;
+    private OnLogListener logListener = defaultLogListener;
 
     /**
      * Initializes the new api client
@@ -54,6 +73,18 @@ public class Door43Client {
 
         SQLiteHelper helper = new SQLiteHelper(context, sb.toString(), databaseName);
         this.library = new Library(helper);
+    }
+
+    /**
+     * Attaches a listener to receive log events
+     * @param listener
+     */
+    public void setLogger(OnLogListener listener) {
+        if(listener == null) {
+            this.logListener = defaultLogListener;
+        } else {
+            this.logListener = listener;
+        }
     }
 
     /**
@@ -154,8 +185,10 @@ public class Door43Client {
             JSONObject l = languages.getJSONObject(i);
             boolean isGateway = l.has("gl") ? l.getBoolean("gl") : false;
             TargetLanguage language = new TargetLanguage(l.getString("lc"), l.getString("ln"),
-                    l.getString("ang"), l.getString("ld"), l.getString("ld"), isGateway);
-            library.addTargetLanguage(language);
+                    l.getString("ang"), l.getString("ld"), l.getString("lr"), isGateway);
+            if(!library.addTargetLanguage(language)) {
+                logListener.onWarning("Failed to add the target language: " + language.slug);
+            }
             if(listener != null) listener.onProgress("langnames", languages.length(), i + 1);
         }
     }
@@ -200,8 +233,18 @@ public class Door43Client {
      * @param data
      * @param listener
      */
-    private void indexTempLanguagesCatalog(String data, OnProgressListener listener) {
-
+    private void indexTempLanguagesCatalog(String data, OnProgressListener listener) throws Exception {
+        JSONArray languages = new JSONArray(data);
+        for(int i = 0; i < languages.length(); i ++) {
+            JSONObject l = languages.getJSONObject(i);
+            boolean isGateway = l.has("gl") ? l.getBoolean("gl") : false;
+            TargetLanguage language = new TargetLanguage(l.getString("lc"), l.getString("ln"),
+                    l.getString("ang"), l.getString("ld"), l.getString("lr"), isGateway);
+            if(!library.addTempTargetLanguage(language)) {
+                logListener.onWarning("Failed to add the temp target language: " + language.slug);
+            }
+            if(listener != null) listener.onProgress("temp-langnames", languages.length(), i + 1);
+        }
     }
 
     /**
@@ -209,8 +252,19 @@ public class Door43Client {
      * @param data
      * @param listener
      */
-    private void indexApprovedTempLanguagesCatalog(String data, OnProgressListener listener) {
-
+    private void indexApprovedTempLanguagesCatalog(String data, OnProgressListener listener) throws Exception {
+        JSONArray languages = new JSONArray(data);
+        for(int i = 0; i < languages.length(); i ++) {
+            JSONObject l = languages.getJSONObject(i);
+            Iterator<String> keys = l.keys();
+            while(keys.hasNext()) {
+                String key = keys.next();
+                if(!library.setApprovedTargetLanguage(key, l.getString(key))) {
+                    logListener.onWarning("Failed to approve the temp target language: " + key + " as " + l.getString(key));
+                }
+            }
+            if(listener != null) listener.onProgress("approved-temp-langnames", languages.length(), i + 1);
+        }
     }
 
     /**
@@ -330,5 +384,14 @@ public class Door43Client {
          * @param complete the number of items that have been successfully processed
          */
         void onProgress(String tag, long max, long complete);
+    }
+
+    /**
+     * A utility to receive log events from the module
+     */
+    public interface OnLogListener {
+        void onInfo(String message);
+        void onWarning(String message);
+        void onError(String message, Exception ex);
     }
 }

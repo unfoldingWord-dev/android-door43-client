@@ -39,6 +39,7 @@ class LegacyTools {
         // TRICKY: the trailing / is required on these urls
         library.addCatalog(new Catalog("new-language-questions", host + "/api/questionnaire/", 0));
         library.addCatalog(new Catalog("temp-langnames", host + "/api/templanguages/", 0));
+        // TRICKY: this catalog should always be indexed after langnames and temp-langnames otherwise the linking will fail!
         library.addCatalog(new Catalog("approved-temp-langnames", host + "/api/templanguages/assignment/changed/", 0));
     }
 

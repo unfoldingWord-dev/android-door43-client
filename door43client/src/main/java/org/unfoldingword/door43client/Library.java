@@ -624,8 +624,7 @@ class Library implements Index {
     public TargetLanguage getApprovedTargetLanguage(String tempTargetLanguageSlug) {
         TargetLanguage language = null;
 
-        Cursor cursor = db.rawQuery("select tl.slug, tl.name, tl.anglicized_name, tl.direction, tl.region, tl.is_gateway_language" +
-                " from target_language as tl" +
+        Cursor cursor = db.rawQuery("select tl.* from target_language as tl" +
                 " left join temp_target_language as ttl on ttl.approved_target_language_slug=tl.slug" +
                 " where ttl.slug=?", new String[]{tempTargetLanguageSlug});
 
