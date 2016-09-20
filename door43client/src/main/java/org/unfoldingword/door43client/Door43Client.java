@@ -3,7 +3,10 @@ package org.unfoldingword.door43client;
 import android.content.Context;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
+import org.unfoldingword.door43client.models.Catalog;
+import org.unfoldingword.door43client.models.TargetLanguage;
 import org.unfoldingword.resourcecontainer.ResourceContainer;
 import org.unfoldingword.tools.http.GetRequest;
 import org.unfoldingword.tools.http.Request;
@@ -107,7 +110,78 @@ public class Door43Client {
      * @param catalogSlug the slug of the catalog to download. Or an object containing all the args.
      * @param listener an optional progress listener. This should receive progress id, total, completed
      */
-    public void updateCatalogIndex(String catalogSlug, OnProgressListener listener) {
+    public void updateCatalogIndex(String catalogSlug, OnProgressListener listener) throws Exception {
+        Catalog cat = library.getCatalog(catalogSlug);
+        if(cat == null) throw new Exception("Unknown catalog");
+        GetRequest request = new GetRequest(new URL(cat.url));
+        String data = request.read();
+        if(request.getResponseCode() != 200) throw new Exception(request.getResponseMessage());
+        library.beginTransaction();
+        try {
+            switch (catalogSlug) {
+                case "langnames":
+                    indexTargetLanguageCatalog(data, listener);
+                    break;
+                case "new-language-questions":
+                    indexNewLanguageQuestionsCatalog(data, listener);
+                    break;
+                case "temp-langnames":
+                    indexTempLanguagesCatalog(data, listener);
+                    break;
+                case "approved-temp-langnames":
+                    indexApprovedTempLanguagesCatalog(data, listener);
+                    break;
+                default:
+                    throw new Exception("Parsing this catalog has not been implemented");
+            }
+        } catch (Exception e) {
+            library.endTransaction(false);
+            throw e;
+        }
+        library.endTransaction(true);
+    }
+
+    /**
+     * parses the target language catalog and indexes it
+     * @param data
+     * @param listener
+     */
+    private void indexTargetLanguageCatalog(String data, OnProgressListener listener) throws Exception {
+        JSONArray languages = new JSONArray(data);
+        for(int i = 0; i < languages.length(); i ++) {
+            JSONObject l = languages.getJSONObject(i);
+            boolean isGateway = l.has("gl") ? l.getBoolean("gl") : false;
+            TargetLanguage language = new TargetLanguage(l.getString("lc"), l.getString("ln"),
+                    l.getString("ang"), l.getString("ld"), l.getString("ld"), isGateway);
+            library.addTargetLanguage(language);
+            if(listener != null) listener.onProgress("langnames", languages.length(), i + 1);
+        }
+    }
+
+    /**
+     * Parses the new language questions catalog and indexes it
+     * @param data
+     * @param listener
+     */
+    private static void indexNewLanguageQuestionsCatalog(String data, OnProgressListener listener) {
+
+    }
+
+    /**
+     * Parses the temporary language codes catalog and indexes it
+     * @param data
+     * @param listener
+     */
+    private static void indexTempLanguagesCatalog(String data, OnProgressListener listener) {
+
+    }
+
+    /**
+     * Parses the approved temporary language codes catalog and indexes it
+     * @param data
+     * @param listener
+     */
+    private static void indexApprovedTempLanguagesCatalog(String data, OnProgressListener listener) {
 
     }
 
