@@ -24,6 +24,7 @@ public class Door43Client {
 
     private final File resourceDir;
     private final Library library;
+    private String globalCatalogHost = null;
 
     /**
      * Initializes the new api client
@@ -51,6 +52,16 @@ public class Door43Client {
     }
 
     /**
+     * Sets the host to use when injecting the global catalogs.
+     * This is only valid until we migrate to the use api.
+     * @param host
+     */
+    @Deprecated
+    public void setGlobalCatalogServer(String host) {
+        this.globalCatalogHost = host;
+    }
+
+    /**
      * Returns the read only index
      * @return
      */
@@ -66,21 +77,28 @@ public class Door43Client {
      */
     public void updatePrimaryIndex(String url, final OnProgressListener listener) throws Exception {
         // inject missing global catalogs
-        LegacyTools.injectGlobalCatalogs(library);
-        GetRequest getPrimaryCatalog = new GetRequest(new URL(url));
-        getPrimaryCatalog.setProgressListener(new Request.OnProgressListener() {
-            @Override
-            public void onProgress(long max, long progress) {
-                if(listener != null) listener.onProgress("catalog", max, progress);
-            }
+        library.beginTransaction();
+        try {
+            LegacyTools.injectGlobalCatalogs(library, globalCatalogHost);
+            GetRequest getPrimaryCatalog = new GetRequest(new URL(url));
+            getPrimaryCatalog.setProgressListener(new Request.OnProgressListener() {
+                @Override
+                public void onProgress(long max, long progress) {
+                    if (listener != null) listener.onProgress("catalog", max, progress);
+                }
 
-            @Override
-            public void onIndeterminate() {
-            }
-        });
-        String data = getPrimaryCatalog.read();
-        // process legacy catalog data
-        LegacyTools.processCatalog(library, data, listener);
+                @Override
+                public void onIndeterminate() {
+                }
+            });
+            String data = getPrimaryCatalog.read();
+            // process legacy catalog data
+            LegacyTools.processCatalog(library, data, listener);
+        } catch(Exception e) {
+            library.endTransaction(false);
+            throw e;
+        }
+        library.endTransaction(true);
     }
 
     /**

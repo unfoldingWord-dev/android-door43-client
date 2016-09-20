@@ -1,7 +1,6 @@
 package org.unfoldingword.door43client;
 
 import android.content.Context;
-import android.content.Intent;
 import android.util.Log;
 
 import org.junit.After;
@@ -12,7 +11,6 @@ import org.robolectric.RobolectricTestRunner;
 import org.robolectric.RuntimeEnvironment;
 import org.unfoldingword.door43client.models.Catalog;
 import org.unfoldingword.door43client.models.Category;
-import org.unfoldingword.door43client.models.CategoryEntry;
 import org.unfoldingword.door43client.models.ChunkMarker;
 import org.unfoldingword.door43client.models.Project;
 import org.unfoldingword.door43client.models.Question;
@@ -337,7 +335,7 @@ public class LibraryGettersUnitTest {
         List<Questionnaire> list = library.getQuestionnaires();
         assertTrue(list.size() > 0);
         for(Questionnaire q:list) {
-            List<Question> questions = library.getQuestions(q._info.id);
+            List<Question> questions = library.getQuestions(q._dbInfo.rowId);
             assertTrue(questions.size() > 0);
         }
     }

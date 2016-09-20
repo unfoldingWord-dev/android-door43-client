@@ -5,6 +5,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.unfoldingword.door43client.models.Catalog;
 import org.unfoldingword.door43client.models.Category;
+import org.unfoldingword.door43client.models.ChunkMarker;
 import org.unfoldingword.door43client.models.Project;
 import org.unfoldingword.door43client.models.Resource;
 import org.unfoldingword.door43client.models.SourceLanguage;
@@ -13,8 +14,6 @@ import org.unfoldingword.resourcecontainer.ContainerTools;
 import org.unfoldingword.resourcecontainer.ResourceContainer;
 import org.unfoldingword.tools.http.GetRequest;
 
-import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -26,39 +25,65 @@ import java.util.Map;
  * Created by joel on 9/19/16.
  */
 class LegacyTools {
-    public static void injectGlobalCatalogs(Library library) throws Exception {
-        library.addCatalog(new Catalog("langnames", "http://td.unfoldingword.org/exports/langnames.json", 0));
+
+    /**
+     *
+     * @param library
+     * @param host the host to use for the catalogs
+     * @throws Exception
+     */
+    public static void injectGlobalCatalogs(Library library, String host) throws Exception {
+        host = host != null && !host.trim().isEmpty() ? host : "http://td.unfoldingword.org";
+
+        library.addCatalog(new Catalog("langnames", host + "/exports/langnames.json", 0));
         // TRICKY: the trailing / is required on these urls
-        library.addCatalog(new Catalog("new-language-questions", "http://td.unfoldingword.org/api/questionnaire/", 0));
-        library.addCatalog(new Catalog("temp-langnames", "http://td.unfoldingword.org/api/templanguages/", 0));
-        library.addCatalog(new Catalog("approved-temp-langnames", "http://td.unfoldingword.org/api/templanguages/assignment/changed/", 0));
+        library.addCatalog(new Catalog("new-language-questions", host + "/api/questionnaire/", 0));
+        library.addCatalog(new Catalog("temp-langnames", host + "/api/templanguages/", 0));
+        library.addCatalog(new Catalog("approved-temp-langnames", host + "/api/templanguages/assignment/changed/", 0));
     }
 
     public static void processCatalog(Library library, String data, Door43Client.OnProgressListener listener) throws Exception {
         JSONArray projects = new JSONArray(data);
         for(int i = 0; i < projects.length(); i ++) {
             JSONObject pJson = projects.getJSONObject(i);
+            if(listener != null) listener.onProgress(pJson.getString("slug"), projects.length(), i + 1);
             downloadSourceLanguages(library, pJson, listener);
         }
     }
 
+    /**
+     * This will download the source languages for a project.
+     * Some of the project info is mixed with languages
+     * so we are creating the projects and langauges here
+     *
+     * @param library
+     * @param pJson the project json
+     * @param listener
+     * @throws Exception
+     */
     private static void downloadSourceLanguages(Library library, JSONObject pJson, Door43Client.OnProgressListener listener) throws Exception {
         GetRequest request = new GetRequest(new URL(pJson.getString("lang_catalog")));
         String response = request.read();
         if(request.getResponseCode() != 200) throw new Exception(request.getResponseMessage());
 
+        String chunksUrl = "";
+        if(!pJson.getString("slug").toLowerCase().equals("obs")) {
+            chunksUrl = "https://api.unfoldingword.org/bible/txt/1/" + pJson.getString("slug") + "/chunks.json";
+        }
+
         JSONArray languages = new JSONArray(response);
         for(int i = 0; i < languages.length(); i ++) {
             JSONObject lJson = languages.getJSONObject(i);
+
+            if(listener != null) listener.onProgress(lJson.getJSONObject("language").getString("slug") + pJson.getString("slug"), languages.length(), i + 1);
+
             SourceLanguage sl = new SourceLanguage(lJson.getJSONObject("language").getString("slug"),
                     lJson.getJSONObject("language").getString("name"),
                     lJson.getJSONObject("language").getString("direction"));
             long languageId = library.addSourceLanguage(sl);
 
-            String chunksUrl = "";
-            if(!pJson.getString("slug").toLowerCase().equals("obs")) {
-                chunksUrl = "https://api.unfoldingword.org/bible/txt/1/" + pJson.getString("slug") + "/chunks.json";
-            }
+            // TODO: retrieve the correct versification name(s) from the source language
+            library.addVersification(new Versification("en-US", "American English"), languageId);
 
             Project project = new Project(pJson.getString("slug"),
                     lJson.getJSONObject("project").getString("name"),
@@ -74,17 +99,29 @@ class LegacyTools {
                 }
             }
 
-            // TODO: retrieve the correct versification name(s) from the source language
-            library.addVersification(new Versification("en-US", "American English"), languageId);
-
             long projectId = library.addProject(project, categories, languageId);
-
-            // TODO: 9/19/16 chunks
 
             downloadResources(library, projectId, pJson, languageId, lJson);
         }
+
+        // chunks
+        if(!chunksUrl.isEmpty()) {
+            downloadChunks(library, chunksUrl, "en", pJson.getString("slug"));
+        }
     }
 
+    /**
+     * Downloads resources for a project.
+     * This will split notes and questions into their own resource.
+     * words are added as a new project.
+     *
+     * @param library
+     * @param projectId
+     * @param pJson
+     * @param languageId
+     * @param lJson
+     * @throws Exception
+     */
     private static void downloadResources(Library library, long projectId, JSONObject pJson, long languageId, JSONObject lJson) throws Exception {
         GetRequest request = new GetRequest(new URL(lJson.getString("res_catalog")));
         String response = request.read();
@@ -112,20 +149,96 @@ class LegacyTools {
                     "book",
                     rJson.getString("tw_cat"),
                     status);
-            Resource.Format format = new Resource.Format(ResourceContainer.version, ContainerTools.typeToMime("book"), 0, rJson.getString("source"));
+            Resource.Format format = new Resource.Format(ResourceContainer.version, ContainerTools.typeToMime("book"), rJson.getInt("date_modified"), rJson.getString("source"));
             resource.addFormat(format);
 
             long resourceId = library.addResource(resource, projectId);
 
             // coerce notes to resource
+            if(rJson.has("notes") && !rJson.getString("notes").isEmpty()) {
+                status.put("translate_mode", "gl");
+
+                List<Map> sourceTranslations = new ArrayList();
+                Map<String, Object> tnSourceTranslation = new HashMap();
+                tnSourceTranslation.put("language_slug", lJson.getJSONObject("language").getString("slug"));
+                tnSourceTranslation.put("resource_slug", "tn");
+                tnSourceTranslation.put("version", resource.status.get("version"));
+                sourceTranslations.add(tnSourceTranslation);
+                status.put("source_translations", sourceTranslations);
+
+                Resource tnResource = new Resource("tn", "translationNotes", "help", null, status);
+                Resource.Format tnFormat = new Resource.Format(ResourceContainer.version, ContainerTools.typeToMime("help"), rJson.getInt("date_modified"), rJson.getString("notes"));
+                tnResource.addFormat(tnFormat);
+                library.addResource(tnResource, projectId);
+            }
 
             // coerce questions to resource
+            if(rJson.has("checking_questions") && !rJson.getString("checking_questions").isEmpty()) {
+                status.put("translate_mode", "gl");
 
-            // add words project
+                List<Map> sourceTranslations = new ArrayList();
+                Map<String, Object> tnSourceTranslation = new HashMap();
+                tnSourceTranslation.put("language_slug", lJson.getJSONObject("language").getString("slug"));
+                tnSourceTranslation.put("resource_slug", "tq");
+                tnSourceTranslation.put("version", resource.status.get("version"));
+                sourceTranslations.add(tnSourceTranslation);
+                status.put("source_translations", sourceTranslations);
 
-            // add resource to words project
+                Resource tqResource = new Resource("tq", "translationQuestions", "help", null, status);
+                Resource.Format tqFormat = new Resource.Format(ResourceContainer.version, ContainerTools.typeToMime("help"), rJson.getInt("date_modified"), rJson.getString("checking_questions"));
+                tqResource.addFormat(tqFormat);
+                library.addResource(tqResource, projectId);
+            }
 
-            // TODO: 9/19/16 finish
+            // add words project (this is insert/update so it will only be added once)
+            // TRICKY: obs tw has not been unified with bible tw yet so we add it as separate project.
+            if(rJson.has("terms") && !rJson.getString("terms").isEmpty()) {
+                String slug = pJson.getString("slug").equals("obs") ? "bible-obs" : "bible";
+                String name = "translationWords" + (pJson.getString("slug").equals("obs") ? " OBS" : "");
+                Project wordsProject = new Project(slug, name, "", null, 100, "");
+                long wordsProjectId = library.addProject(wordsProject, null, languageId);
+
+                // add resource to words project
+                status.put("translate_mode", "gl");
+
+                List<Map> sourceTranslations = new ArrayList();
+                Map<String, Object> twSourceTranslation = new HashMap();
+                twSourceTranslation.put("language_slug", lJson.getJSONObject("language").getString("slug"));
+                twSourceTranslation.put("resource_slug", "tw");
+                twSourceTranslation.put("version", resource.status.get("version"));
+                sourceTranslations.add(twSourceTranslation);
+                status.put("source_translations", sourceTranslations);
+
+                Resource twResource = new Resource("tw", "translationWords", "dict", null, status);
+                Resource.Format twFormat = new Resource.Format(ResourceContainer.version, ContainerTools.typeToMime("dict"), rJson.getInt("date_modified"), rJson.getString("terms"));
+                twResource.addFormat(twFormat);
+                library.addResource(twResource, wordsProjectId);
+            }
+        }
+    }
+
+    /**
+     * Downloads chunks for a project
+     * @param library
+     * @param chunksUrl
+     * @param sourceLanguageSlug
+     * @param projectSlug
+     * @throws Exception
+     */
+    private static void downloadChunks(Library library, String chunksUrl, String sourceLanguageSlug, String projectSlug) throws Exception {
+        String versificationSlug = "en-US"; // TODO: pull the correct versification slug from the data. For now there is only one versification
+        Versification v = library.getVersification(sourceLanguageSlug, versificationSlug);
+        if(v != null) {
+            GetRequest request = new GetRequest(new URL(chunksUrl));
+            String data = request.read();
+            JSONArray chunks = new JSONArray(data);
+            for(int i = 0; i < chunks.length(); i ++) {
+                JSONObject chunk = chunks.getJSONObject(i);
+                ChunkMarker cm = new ChunkMarker(chunk.getString("chp"), chunk.getString("firstvs"));
+                library.addChunkMarker(cm, projectSlug, v._dbInfo.rowId);
+            }
+        } else {
+            System.console().writer().write("Unknown versification " + versificationSlug + " while downloading chunks for project " + projectSlug);
         }
     }
 

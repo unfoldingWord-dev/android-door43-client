@@ -11,7 +11,7 @@
       meta: [ ],
       name: "HISTORIAS BÍBLICAS LIBRES"
     },
-    res_catalog: "https://api.unfoldingword.org/ts/txt/2/obs/es/resources.json?date_modified=20150408"
+    res_catalog: "http://localhost:8090/ts/txt/2/obs/es/resources.json"
   },
   {
     language: {
@@ -25,6 +25,6 @@
       meta: [ ],
       name: "Open Bible Stories"
     },
-    res_catalog: "https://api.unfoldingword.org/ts/txt/2/obs/en/resources.json?date_modified=20150924"
+    res_catalog: "http://localhost:8090/ts/txt/2/obs/en/resources.json"
   }
 ]

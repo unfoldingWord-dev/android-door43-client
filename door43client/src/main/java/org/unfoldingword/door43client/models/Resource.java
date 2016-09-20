@@ -11,7 +11,7 @@ public class Resource extends DatabaseObject {
     public final String slug;
     public final String name;
     public final String type;
-    public final Map status;
+    public final Map<String, Object> status;
     public final List<Format> formats = new ArrayList<>();
     public final String wordsAssignmentsUrl;
 

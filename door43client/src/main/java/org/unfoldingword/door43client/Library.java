@@ -537,7 +537,7 @@ class Library implements Index {
             String direction = reader.getString("direction");
 
             SourceLanguage sourceLanguage = new SourceLanguage(sourceLanguageSlug, name, direction);
-            sourceLanguage._info.id = reader.getLong("id");
+            sourceLanguage._dbInfo.rowId = reader.getLong("id");
             cursor.close();
             return sourceLanguage;
         } else {
@@ -559,7 +559,7 @@ class Library implements Index {
             String direction = reader.getString("direction");
 
             SourceLanguage sourceLanguage = new SourceLanguage(slug, name, direction);
-            sourceLanguage._info.id = reader.getLong("id");
+            sourceLanguage._dbInfo.rowId = reader.getLong("id");
             sourceLanguages.add(sourceLanguage);
             cursor.moveToNext();
         }
@@ -663,7 +663,7 @@ class Library implements Index {
             String chunksUrl = reader.getString("chunks_url");
 
             project = new Project(slug, name, desc, icon, sort, chunksUrl);
-            project._info.id = reader.getLong("id");
+            project._dbInfo.rowId = reader.getLong("id");
             //TODO: store the language slug for convenience
         }
         cursor.close();
@@ -688,7 +688,7 @@ class Library implements Index {
             String chunksUrl = reader.getString("chunks_url");
 
             Project project = new Project(slug, name, desc, icon, sort, chunksUrl);
-            project._info.id = reader.getLong("id");
+            project._dbInfo.rowId = reader.getLong("id");
             projects.add(project);
             cursor.moveToNext();
         }
@@ -874,7 +874,7 @@ class Library implements Index {
             int modifiedAt = reader.getInt("modified_at");
 
             catalog = new Catalog(catalogSlug, url, modifiedAt);
-            catalog._info.id = reader.getLong("id");
+            catalog._dbInfo.rowId = reader.getLong("id");
         }
         cursor.close();
         return catalog;
@@ -893,7 +893,7 @@ class Library implements Index {
             int modifiedAt = reader.getInt("modified_at");
 
             Catalog catalog = new Catalog(slug, url, modifiedAt);
-            catalog._info.id = reader.getLong("id");
+            catalog._dbInfo.rowId = reader.getLong("id");
             catalogs.add(catalog);
             cursor.moveToNext();
         }
@@ -915,7 +915,7 @@ class Library implements Index {
             String name = reader.getString("name");
 
             versification = new Versification(slug, name);
-            versification._info.id = reader.getLong("id");
+            versification._dbInfo.rowId = reader.getLong("id");
         }
         cursor.close();
         return versification;
@@ -936,7 +936,7 @@ class Library implements Index {
             String name = reader.getString("name");
 
             Versification versification = new Versification(slug, name);
-            versification._info.id = reader.getLong("id");
+            versification._dbInfo.rowId = reader.getLong("id");
             versifications.add(versification);
             cursor.moveToNext();
         }
@@ -958,7 +958,7 @@ class Library implements Index {
             String verse = reader.getString("verse");
 
             ChunkMarker chunkMarker = new ChunkMarker(chapter, verse);
-            chunkMarker._info.id = reader.getLong("id");
+            chunkMarker._dbInfo.rowId = reader.getLong("id");
             chunkMarkers.add(chunkMarker);
             cursor.moveToNext();
         }
@@ -980,7 +980,7 @@ class Library implements Index {
             long tdId = reader.getLong("td_id");
 
             Questionnaire questionnaire = new Questionnaire(slug, name, direction, tdId);
-            questionnaire._info.id = reader.getLong("id");
+            questionnaire._dbInfo.rowId = reader.getLong("id");
             questionnaires.add(questionnaire);
             cursor.moveToNext();
         }
@@ -1005,7 +1005,7 @@ class Library implements Index {
             long tdId = reader.getInt("td_id");
 
             Question question = new Question(text, help, isRequired, inputType, sort, dependsOn, tdId);
-            question._info.id = reader.getLong("id");
+            question._dbInfo.rowId = reader.getLong("id");
             questions.add(question);
             cursor.moveToNext();
         }
