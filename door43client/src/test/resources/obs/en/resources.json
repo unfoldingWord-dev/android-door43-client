@@ -1,11 +1,11 @@
 [
   {
-    checking_questions: "https://api.unfoldingword.org/obs/txt/1/en/CQ-en.json?date_modified=20150924",
+    checking_questions: "http://localhost:8090/obs/txt/1/en/CQ-en.json",
     date_modified: "20150924",
     name: "Open Bible Stories",
-    notes: "https://api.unfoldingword.org/obs/txt/1/en/tN-en.json?date_modified=20150924",
+    notes: "http://localhost:8090/txt/1/en/tN-en.json",
     slug: "obs",
-    source: "https://api.unfoldingword.org/obs/txt/1/en/obs-en.json?date_modified=20150826",
+    source: "http://localhost:8090/obs/txt/1/en/obs-en.json",
     status: {
       checking_entity: "Distant Shores Media; Wycliffe Associates",
       checking_level: "3",
@@ -16,7 +16,7 @@
       source_text_version: "4",
       version: "4"
     },
-    terms: "https://api.unfoldingword.org/obs/txt/1/en/kt-en.json?date_modified=20150924",
-    tw_cat: "https://api.unfoldingword.org/obs/txt/1/en/tw_cat-en.json?date_modified=20150924"
+    terms: "http://localhost:8090/obs/txt/1/en/kt-en.json",
+    tw_cat: "http://localhost:8090/obs/txt/1/en/tw_cat-en.json"
   }
 ]

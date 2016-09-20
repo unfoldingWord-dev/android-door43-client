@@ -13,7 +13,6 @@ import org.robolectric.RobolectricTestRunner;
 import org.robolectric.RuntimeEnvironment;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
-import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 
 /**
  * Created by joel on 9/19/16.
@@ -21,7 +20,7 @@ import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMoc
 @RunWith(RobolectricTestRunner.class)
 public class ClientIndexTest {
     @Rule
-    public WireMockRule wireMockRule = new WireMockRule(8090);//wireMockConfig().dynamicPort().dynamicHttpsPort());
+    public WireMockRule wireMockRule = new WireMockRule(8090);
     @Rule
     public TemporaryFolder resourceDir = new TemporaryFolder();
 

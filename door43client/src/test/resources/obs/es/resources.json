@@ -1,11 +1,11 @@
 [
   {
-    checking_questions: "https://api.unfoldingword.org/obs/txt/1/es/CQ-es.json",
+    checking_questions: "http://localhost:8090/obs/txt/1/es/CQ-es.json",
     date_modified: "20150408",
     name: "Open Bible Stories",
-    notes: "https://api.unfoldingword.org/obs/txt/1/es/tN-es.json",
+    notes: "http://localhost:8090/obs/txt/1/es/tN-es.json",
     slug: "obs",
-    source: "https://api.unfoldingword.org/obs/txt/1/es/obs-es.json?date_modified=20150408",
+    source: "http://localhost:8090/obs/txt/1/es/obs-es.json",
     status: {
       checking_entity: "translation team",
       checking_level: "1",
@@ -16,7 +16,7 @@
       source_text_version: "3.1",
       version: "3.2.1"
     },
-    terms: "https://api.unfoldingword.org/obs/txt/1/es/kt-es.json",
-    tw_cat: "https://api.unfoldingword.org/obs/txt/1/es/tw_cat-es.json"
+    terms: "http://localhost:8090/obs/txt/1/es/kt-es.json",
+    tw_cat: "http://localhost:8090/obs/txt/1/es/tw_cat-es.json"
   }
 ]
