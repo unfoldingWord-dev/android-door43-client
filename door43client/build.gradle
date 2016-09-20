@@ -45,8 +45,9 @@ android {
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
     testCompile 'junit:junit:4.12'
-    testCompile 'org.mockito:mockito-core:1.+'
     testCompile 'org.robolectric:robolectric:3.1.2'
+    testCompile 'com.github.tomakehurst:wiremock-standalone:2.1.12'
+    testCompile 'org.slf4j:slf4j-simple:1.6.4'
     compile 'org.unfoldingword.tools:resource-container:0.3.0'
     compile 'org.unfoldingword.tools:http:2.1.0'
 }

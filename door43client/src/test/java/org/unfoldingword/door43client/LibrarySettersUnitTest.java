@@ -19,11 +19,6 @@ import org.unfoldingword.door43client.models.SourceLanguage;
 import org.unfoldingword.door43client.models.Versification;
 import org.unfoldingword.resourcecontainer.ResourceContainer;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStreamReader;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -43,25 +38,13 @@ public class LibrarySettersUnitTest {
     @Before
     public void initialize() throws Exception {
         this.context = RuntimeEnvironment.application;
-
-        // load schema
-        ClassLoader classLoader = this.getClass().getClassLoader();
-        URL resource = classLoader.getResource("schema.sqlite");
-        File sqliteFile = new File(resource.getPath());
-
-        // read schema
-        BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(sqliteFile)));
-        StringBuilder sb = new StringBuilder();
-        String line;
-        while((line = reader.readLine()) != null) {
-            sb.append(line).append("\n");
-        }
+        String schema = Util.loadResource(this.getClass().getClassLoader(), "schema.sqlite");
 
         // clean up old index
         context.deleteDatabase("index");
 
         // initialize library
-        SQLiteHelper helper = new SQLiteHelper(context, sb.toString(), "index");
+        SQLiteHelper helper = new SQLiteHelper(context, schema, "index");
         this.library = new Library(helper);
     }
 

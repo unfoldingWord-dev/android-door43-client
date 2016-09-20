@@ -9,6 +9,8 @@ import org.unfoldingword.door43client.models.Project;
 import org.unfoldingword.door43client.models.Resource;
 import org.unfoldingword.door43client.models.SourceLanguage;
 import org.unfoldingword.door43client.models.Versification;
+import org.unfoldingword.resourcecontainer.ContainerTools;
+import org.unfoldingword.resourcecontainer.ResourceContainer;
 import org.unfoldingword.tools.http.GetRequest;
 
 import java.io.IOException;
@@ -48,9 +50,9 @@ class LegacyTools {
         JSONArray languages = new JSONArray(response);
         for(int i = 0; i < languages.length(); i ++) {
             JSONObject lJson = languages.getJSONObject(i);
-            SourceLanguage sl = new SourceLanguage(lJson.getString("slug"),
-                    lJson.getString("name"),
-                    lJson.getString("direction"));
+            SourceLanguage sl = new SourceLanguage(lJson.getJSONObject("language").getString("slug"),
+                    lJson.getJSONObject("language").getString("name"),
+                    lJson.getJSONObject("language").getString("direction"));
             long languageId = library.addSourceLanguage(sl);
 
             String chunksUrl = "";
@@ -61,14 +63,14 @@ class LegacyTools {
             Project project = new Project(pJson.getString("slug"),
                     lJson.getJSONObject("project").getString("name"),
                     lJson.getJSONObject("project").getString("desc"),
-                    pJson.getString("icon"),
+                    null,
                     pJson.getInt("sort"),
                     chunksUrl);
             List<Category> categories = new ArrayList<>();
             if(pJson.has("meta")) {
                 for(int j = 0; j < pJson.getJSONArray("meta").length(); j ++) {
                     String slug = pJson.getJSONArray("meta").getString(j);
-                    categories.add(new Category(slug, lJson.getJSONObject("project").getJSONObject("meta").getString(slug)));
+                    categories.add(new Category(slug, lJson.getJSONObject("project").getJSONArray("meta").getString(j)));
                 }
             }
 
@@ -77,11 +79,13 @@ class LegacyTools {
 
             long projectId = library.addProject(project, categories, languageId);
 
-            // TODO: 9/19/16 process the chunks
+            // TODO: 9/19/16 chunks
+
+            downloadResources(library, projectId, pJson, languageId, lJson);
         }
     }
 
-    private void downloadResources(Library library, long projectId, JSONObject pJson, long languageId, JSONObject lJson) throws Exception {
+    private static void downloadResources(Library library, long projectId, JSONObject pJson, long languageId, JSONObject lJson) throws Exception {
         GetRequest request = new GetRequest(new URL(lJson.getString("res_catalog")));
         String response = request.read();
         if(request.getResponseCode() != 200) throw new Exception(request.getResponseMessage());
@@ -108,6 +112,8 @@ class LegacyTools {
                     "book",
                     rJson.getString("tw_cat"),
                     status);
+            Resource.Format format = new Resource.Format(ResourceContainer.version, ContainerTools.typeToMime("book"), 0, rJson.getString("source"));
+            resource.addFormat(format);
 
             long resourceId = library.addResource(resource, projectId);
 

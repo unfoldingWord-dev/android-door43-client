@@ -401,7 +401,7 @@ class Library implements Index {
         values.put("translate_mode", (String)resource.status.get("translate_mode"));
         values.put("checking_level", (String)resource.status.get("checking_level"));
         values.put("comments", deNull((String)resource.status.get("comments")));
-        values.put("pub_date", resource.status.get("pub_date") != null ? (long)resource.status.get("pub_date") : 0);
+        values.put("pub_date", deNull((String)resource.status.get("pub_date")));
         values.put("license", deNull((String)resource.status.get("license")));
         values.put("version", (String)resource.status.get("version"));
         values.put("project_id", projectId);
@@ -750,7 +750,7 @@ class Library implements Index {
             String type = reader.getString("type");
             String checkingLevel = reader.getString("checking_level");
             String comments = reader.getString("comments");
-            int pubDate = reader.getInt("pub_date");
+            String pubDate = reader.getString("pub_date");
             String license = reader.getString("license");
             String version = reader.getString("version");
             String wordsAssignmentsUrl = reader.getString("translation_words_assignments_url");

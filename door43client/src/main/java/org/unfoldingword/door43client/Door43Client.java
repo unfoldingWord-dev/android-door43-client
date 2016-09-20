@@ -10,6 +10,7 @@ import org.unfoldingword.tools.http.Request;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -34,8 +35,11 @@ public class Door43Client {
         this.resourceDir = resourceDir;
 
         // load schema
-        InputStream in = context.getAssets().open("schema.sqlite");
-        BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+        URL resource = this.getClass().getClassLoader().getResource("schema.sqlite");
+        File sqliteFile = new File(resource.getPath());
+
+        // read schema
+        BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(sqliteFile)));
         StringBuilder sb = new StringBuilder();
         String line;
         while((line = reader.readLine()) != null) {
@@ -67,7 +71,7 @@ public class Door43Client {
         getPrimaryCatalog.setProgressListener(new Request.OnProgressListener() {
             @Override
             public void onProgress(long max, long progress) {
-                listener.onProgress("catalog", max, progress);
+                if(listener != null) listener.onProgress("catalog", max, progress);
             }
 
             @Override
