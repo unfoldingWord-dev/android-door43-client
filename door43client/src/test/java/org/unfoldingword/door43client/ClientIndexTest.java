@@ -88,10 +88,17 @@ public class ClientIndexTest {
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
                         .withBody(langnamesCatalog)));
+        String questionnairesCatalog = Util.loadResource(this.getClass().getClassLoader(), "questionnaires.json");
+        stubFor(get(urlEqualTo("/api/questionnaire/"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody(questionnairesCatalog)));
 
         client.setGlobalCatalogServer("http://localhost:" + wireMockRule.port());
         client.updatePrimaryIndex("http://localhost:" + wireMockRule.port() + "/catalog", null);
         client.updateCatalogIndex("langnames", null);
+        client.updateCatalogIndex("new-language-questions", null);
 
         assertEquals(3, client.index().getSourceLanguages().size());
         // TRICKY: counts also include tw-bible and/or tw-obs

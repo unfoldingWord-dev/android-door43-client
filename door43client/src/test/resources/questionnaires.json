@@ -1,0 +1,358 @@
+{
+  languages: [
+    {
+      questions: [
+        {
+          depends_on: null,
+          id: 0,
+          sort: 1,
+          help: "",
+          required: true,
+          input_type: "string",
+          text: "What do you call your language?"
+        },
+        {
+          depends_on: 0,
+          id: 1,
+          sort: 2,
+          help: "",
+          required: false,
+          input_type: "string",
+          text: "Does that have a special meaning?"
+        },
+        {
+          depends_on: 0,
+          id: 2,
+          sort: 3,
+          help: "",
+          required: false,
+          input_type: "string",
+          text: "Do you have other names for your language?"
+        },
+        {
+          depends_on: null,
+          id: 3,
+          sort: 4,
+          help: "",
+          required: true,
+          input_type: "boolean",
+          text: "Is your language written from left to right?"
+        },
+        {
+          depends_on: null,
+          id: 4,
+          sort: 5,
+          help: "",
+          required: true,
+          input_type: "string",
+          text: "What country are you in?"
+        },
+        {
+          depends_on: null,
+          id: 5,
+          sort: 6,
+          help: "",
+          required: false,
+          input_type: "boolean",
+          text: "Do other people have a different name for your language?"
+        },
+        {
+          depends_on: 5,
+          id: 6,
+          sort: 7,
+          help: "",
+          required: false,
+          input_type: "string",
+          text: "What do they call it?"
+        },
+        {
+          depends_on: 5,
+          id: 7,
+          sort: 8,
+          help: "",
+          required: false,
+          input_type: "string",
+          text: "Who calls it that?"
+        },
+        {
+          depends_on: 5,
+          id: 8,
+          sort: 9,
+          help: "",
+          required: false,
+          input_type: "string",
+          text: "Does that have a special meaning?"
+        },
+        {
+          depends_on: null,
+          id: 9,
+          sort: 10,
+          help: "",
+          required: false,
+          input_type: "string",
+          text: "Where else do people speak just the same way as you do?"
+        },
+        {
+          depends_on: null,
+          id: 10,
+          sort: 11,
+          help: "",
+          required: false,
+          input_type: "string",
+          text: "Where do people speak just a little bit differently?"
+        },
+        {
+          depends_on: 10,
+          id: 11,
+          sort: 12,
+          help: "",
+          required: false,
+          input_type: "boolean",
+          text: "Have you yourself gone to these places?"
+        },
+        {
+          depends_on: 10,
+          id: 12,
+          sort: 13,
+          help: "",
+          required: false,
+          input_type: "boolean",
+          text: "Do people from there also come here?"
+        },
+        {
+          depends_on: 10,
+          id: 13,
+          sort: 14,
+          help: "",
+          required: false,
+          input_type: "string",
+          text: "Do you have a name for this other dialect in your own language?"
+        },
+        {
+          depends_on: null,
+          id: 14,
+          sort: 15,
+          help: "",
+          required: false,
+          input_type: "string",
+          text: "Where do people speak very differently?"
+        },
+        {
+          depends_on: 14,
+          id: 15,
+          sort: 16,
+          help: "",
+          required: false,
+          input_type: "string",
+          text: "How much of their speech do you understand?"
+        },
+        {
+          depends_on: 14,
+          id: 16,
+          sort: 17,
+          help: "",
+          required: false,
+          input_type: "boolean",
+          text: "Have you yourself gone to these places?"
+        },
+        {
+          depends_on: 14,
+          id: 17,
+          sort: 18,
+          help: "",
+          required: false,
+          input_type: "boolean",
+          text: "Do people from there come here?"
+        },
+        {
+          depends_on: 14,
+          id: 18,
+          sort: 19,
+          help: "",
+          required: false,
+          input_type: "string",
+          text: "Do you have a name for this other dialect in your own language?"
+        },
+        {
+          depends_on: null,
+          id: 19,
+          sort: 20,
+          help: "",
+          required: false,
+          input_type: "string",
+          text: "Where do people speak your own language the most purely?"
+        },
+        {
+          depends_on: 19,
+          id: 20,
+          sort: 21,
+          help: "",
+          required: false,
+          input_type: "string",
+          text: "Why do you say that it is the most pure?"
+        },
+        {
+          depends_on: 19,
+          id: 21,
+          sort: 22,
+          help: "",
+          required: false,
+          input_type: "boolean",
+          text: "Have you yourself gone to these places?"
+        },
+        {
+          depends_on: 19,
+          id: 22,
+          sort: 23,
+          help: "",
+          required: false,
+          input_type: "boolean",
+          text: "Do people from there come here?"
+        },
+        {
+          depends_on: null,
+          id: 23,
+          sort: 24,
+          help: "",
+          required: false,
+          input_type: "string",
+          text: "Where is your language spoken badly?"
+        },
+        {
+          depends_on: 23,
+          id: 24,
+          sort: 25,
+          help: "",
+          required: false,
+          input_type: "string",
+          text: "Why do you say that it is spoken badly?"
+        },
+        {
+          depends_on: 23,
+          id: 25,
+          sort: 26,
+          help: "",
+          required: false,
+          input_type: "boolean",
+          text: "Have you yourself gone to these places?"
+        },
+        {
+          depends_on: 23,
+          id: 26,
+          sort: 27,
+          help: "",
+          required: false,
+          input_type: "boolean",
+          text: "Have people from there come here?"
+        },
+        {
+          depends_on: null,
+          id: 27,
+          sort: 28,
+          help: "",
+          required: false,
+          input_type: "string",
+          text: "What do you call the language the people in the nearest city speak?"
+        },
+        {
+          depends_on: 27,
+          id: 28,
+          sort: 29,
+          help: "",
+          required: false,
+          input_type: "string",
+          text: "Do people understand you when you speak your language there?"
+        },
+        {
+          depends_on: 27,
+          id: 29,
+          sort: 30,
+          help: "",
+          required: false,
+          input_type: "string",
+          text: "If a man from there come here, can everybody understand his speech?"
+        },
+        {
+          depends_on: 27,
+          id: 30,
+          sort: 31,
+          help: "",
+          required: false,
+          input_type: "string",
+          text: "Even the women and children understand him?"
+        },
+        {
+          depends_on: null,
+          id: 31,
+          sort: 32,
+          help: "",
+          required: false,
+          input_type: "string",
+          text: "What other places do you travel to?"
+        },
+        {
+          depends_on: null,
+          id: 32,
+          sort: 33,
+          help: "",
+          required: false,
+          input_type: "boolean",
+          text: "Do many people travel outside from here?"
+        },
+        {
+          depends_on: null,
+          id: 33,
+          sort: 34,
+          help: "",
+          required: false,
+          input_type: "string",
+          text: "What do you call your own people?"
+        },
+        {
+          depends_on: null,
+          id: 34,
+          sort: 35,
+          help: "",
+          required: false,
+          input_type: "string",
+          text: "What other languages are spoken in your area?"
+        },
+        {
+          depends_on: null,
+          id: 35,
+          sort: 36,
+          help: "",
+          required: false,
+          input_type: "boolean",
+          text: "Do you speak the same language as your grandfather did?"
+        },
+        {
+          depends_on: null,
+          id: 36,
+          sort: 37,
+          help: "",
+          required: false,
+          input_type: "string",
+          text: "What other languages do you speak?"
+        },
+        {
+          depends_on: 36,
+          id: 37,
+          sort: 38,
+          help: "",
+          required: false,
+          input_type: "string",
+          text: "Where do you speak them?"
+        }
+      ],
+      dir: "ltr",
+      slug: "en",
+      questionnaire_id: 1,
+      language_data: {
+        ln: 0,
+        cc: 4
+      },
+      name: "English"
+    }
+  ]
+}

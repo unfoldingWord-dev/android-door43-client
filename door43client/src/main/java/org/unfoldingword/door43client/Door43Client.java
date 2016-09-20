@@ -6,6 +6,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.unfoldingword.door43client.models.Catalog;
+import org.unfoldingword.door43client.models.Question;
+import org.unfoldingword.door43client.models.Questionnaire;
 import org.unfoldingword.door43client.models.TargetLanguage;
 import org.unfoldingword.resourcecontainer.ResourceContainer;
 import org.unfoldingword.tools.http.GetRequest;
@@ -163,8 +165,34 @@ public class Door43Client {
      * @param data
      * @param listener
      */
-    private static void indexNewLanguageQuestionsCatalog(String data, OnProgressListener listener) {
+    private void indexNewLanguageQuestionsCatalog(String data, OnProgressListener listener) throws Exception {
+        JSONObject obj = new JSONObject(data);
+        JSONArray languages = obj.getJSONArray("languages");
+        for(int i = 0; i < languages.length(); i ++) {
+            JSONObject qJson = languages.getJSONObject(i);
+            Questionnaire questionnaire = new Questionnaire(qJson.getString("slug"), qJson.getString("name"), qJson.getString("dir"), qJson.getLong("questionnaire_id"));
+            long questionnaireId = library.addQuestionnaire(questionnaire);
 
+            // add questions
+            for(int j = 0; j < qJson.getJSONArray("questions").length(); j ++) {
+                JSONObject questionJson = qJson.getJSONArray("questions").getJSONObject(j);
+                long dependsOnId = questionJson.isNull("depends_on") ? 0 : questionJson.getLong("depends_on");
+                Question question = new Question(questionJson.getString("text"),
+                        questionJson.getString("help"), questionJson.getBoolean("required"),
+                        questionJson.getString("input_type"), questionJson.getInt("sort"),
+                        dependsOnId, questionJson.getLong("id"));
+                library.addQuestion(question, questionnaireId);
+
+                // broadcast itemized progress if there is only one questionnaire
+                if(languages.length() == 1 && listener != null) {
+                    listener.onProgress("new-language-questions", qJson.getJSONArray("questions").length(), j + 1);
+                }
+            }
+            // broadcast overall progress if there are multiple questionnaires.
+            if(languages.length() > 1 && listener != null) {
+                listener.onProgress("new-language-questions", qJson.getJSONArray("questions").length(), i + 1);
+            }
+        }
     }
 
     /**
@@ -172,7 +200,7 @@ public class Door43Client {
      * @param data
      * @param listener
      */
-    private static void indexTempLanguagesCatalog(String data, OnProgressListener listener) {
+    private void indexTempLanguagesCatalog(String data, OnProgressListener listener) {
 
     }
 
@@ -181,7 +209,7 @@ public class Door43Client {
      * @param data
      * @param listener
      */
-    private static void indexApprovedTempLanguagesCatalog(String data, OnProgressListener listener) {
+    private void indexApprovedTempLanguagesCatalog(String data, OnProgressListener listener) {
 
     }
 
