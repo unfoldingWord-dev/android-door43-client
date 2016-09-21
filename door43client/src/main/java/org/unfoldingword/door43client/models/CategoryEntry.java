@@ -11,7 +11,7 @@ public class CategoryEntry {
     private final String slug;
     private final String name;
     private final String sourceLanguageSlug;
-    private final long parentCategortId;
+    private final long parentCategoryId;
 
     /**
      *
@@ -20,16 +20,16 @@ public class CategoryEntry {
      * @param slug the slug of the project/category
      * @param name the human readable name of the project/category
      * @param sourceLanguageSlug the slug of the source language in which the name is given (e.g. the name is translated in German, or French)
-     * @param parentCategortId the db id of the parent category id (only used when the entry type is category
+     * @param parentCategoryId the db id of the parent category id (only used when the entry type is category
      */
-    public CategoryEntry(Type entryType, long id, String slug, String name, String sourceLanguageSlug, long parentCategortId) {
+    public CategoryEntry(Type entryType, long id, String slug, String name, String sourceLanguageSlug, long parentCategoryId) {
 
         this.entryType = entryType;
         this.id = id;
         this.slug = slug;
         this.name = name;
         this.sourceLanguageSlug = sourceLanguageSlug;
-        this.parentCategortId = parentCategortId;
+        this.parentCategoryId = parentCategoryId;
     }
 
     public enum Type {
