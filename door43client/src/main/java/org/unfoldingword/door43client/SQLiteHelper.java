@@ -5,6 +5,8 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Build;
 
+import java.io.File;
+
 /**
  * A SQLite database helper
  */
@@ -20,6 +22,7 @@ class SQLiteHelper extends SQLiteOpenHelper {
      * @param name the db name
      */
     public SQLiteHelper(Context context, String schema, String name) {
+        // super(new DatabaseContext(context, dir), name, null, DATABASE_VERSION);
         super(context, name, null, DATABASE_VERSION);
         this.schema = schema;
         this.name = name;
