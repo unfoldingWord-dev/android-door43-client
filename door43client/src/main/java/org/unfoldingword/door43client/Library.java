@@ -726,6 +726,7 @@ class Library implements Index {
         }
 
         //find best name
+        categoryCursor.moveToFirst();
         while(!categoryCursor.isAfterLast()) {
             int catId = categoryCursor.getInt(categoryCursor.getColumnIndex("id"));
 
@@ -744,9 +745,11 @@ class Library implements Index {
                     CategoryEntry categoryEntry = new CategoryEntry(CategoryEntry.Type.PROJECT, catId, slug, catName, catSourceLanguageSlug, parentCategoryId);
                     projectCategories.add(categoryEntry);
                 }
+                cursor.close();
             }
             categoryCursor.moveToNext();
         }
+        categoryCursor.close();
 
         //find best name
         Cursor projectCursor = db.rawQuery("select * from (" +
@@ -770,14 +773,15 @@ class Library implements Index {
 
                     String projectName = reader.getString("name");
                     String projSourceLangSlug = reader.getString("source_language_slug");
-                    long categoryId = reader.getInt("id");
 
-                    CategoryEntry categoryEntry = new CategoryEntry(CategoryEntry.Type.CATEGORY, categoryId, slug, projectName, projSourceLangSlug, parentCategoryId);
+                    CategoryEntry categoryEntry = new CategoryEntry(CategoryEntry.Type.CATEGORY, parentCategoryId, slug, projectName, projSourceLangSlug, parentCategoryId);
                     projectCategories.add(categoryEntry);
                 }
+                cursor.close();
             }
             projectCursor.moveToNext();
         }
+        projectCursor.close();
 
         return projectCategories;
     }
