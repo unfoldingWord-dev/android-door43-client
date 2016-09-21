@@ -48,7 +48,7 @@ public class LegacyTools {
         for(int i = 0; i < projects.length(); i ++) {
             JSONObject pJson = projects.getJSONObject(i);
             if(listener != null) listener.onProgress(pJson.getString("slug"), projects.length(), i + 1);
-            downloadSourceLanguages(library, pJson, listener);
+            downloadSourceLanguages(library, pJson, null);
         }
     }
 

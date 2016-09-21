@@ -49,7 +49,7 @@ dependencies {
     testCompile 'com.github.tomakehurst:wiremock-standalone:2.1.12'
     testCompile 'org.slf4j:slf4j-simple:1.6.4'
     compile 'org.unfoldingword.tools:resource-container:0.3.3'
-    compile 'org.unfoldingword.tools:http:2.2.0'
+    compile 'org.unfoldingword.tools:http:2.3.0'
 }
 
 if (System.env.TRAVIS != 'true') {

@@ -126,7 +126,7 @@ public class Door43Client {
             getPrimaryCatalog.setProgressListener(new Request.OnProgressListener() {
                 @Override
                 public void onProgress(long max, long progress) {
-                    if (listener != null) listener.onProgress("catalog", max, progress);
+//                    if (listener != null) listener.onProgress("catalog", max, progress);
                 }
 
                 @Override
