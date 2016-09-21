@@ -3,10 +3,8 @@ package org.unfoldingword.door43client;
 import android.content.Context;
 
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 import org.unfoldingword.door43client.models.Catalog;
-import org.unfoldingword.door43client.models.Category;
 import org.unfoldingword.door43client.models.Project;
 import org.unfoldingword.door43client.models.Question;
 import org.unfoldingword.door43client.models.Questionnaire;
@@ -21,9 +19,7 @@ import org.unfoldingword.tools.http.Request;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.Iterator;
@@ -284,7 +280,7 @@ public class Door43Client {
      * @param sourceLanguageSlug
      * @param projectSlug
      * @param resourceSlug
-     * @returns The new resource container
+     * @return The new resource container
      */
     public ResourceContainer downloadResourceContainer(String sourceLanguageSlug, String projectSlug, String resourceSlug) throws Exception {
         File path = downloadFutureCompatibleResourceContainer(sourceLanguageSlug, projectSlug, resourceSlug);
@@ -474,7 +470,7 @@ public class Door43Client {
     /**
      * Returns a list of source languages that are eligible for updates.
      *
-     * @returns An array of source language slugs
+     * @return An array of source language slugs
      */
     public List<String> getSourceLanguageUpdates() {
         return null;
