@@ -44,7 +44,9 @@ public class Resource extends DatabaseObject {
         statusJson.put("translate_mode", status.get("translate_mode"));
         statusJson.put("checking_level", status.get("checking_level"));
         statusJson.put("license", status.get("license"));
-        // TODO: add the rest of the status
+        statusJson.put("version", status.get("version"));
+        statusJson.put("pub_date", status.get("pub_date"));
+        statusJson.put("comments", status.get("comments"));
         json.put("status", statusJson);
         return json;
     }

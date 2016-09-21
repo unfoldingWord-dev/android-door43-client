@@ -43,6 +43,7 @@ public class Project extends DatabaseObject {
         json.put("desc", description);
         json.put("icon", icon);
         json.put("sort", sort);
+        json.put("chunks_url", chunksUrl);
         return json;
     }
 }

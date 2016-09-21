@@ -2,6 +2,7 @@ package org.unfoldingword.door43client;
 
 import android.app.Application;
 
+import com.github.tomakehurst.wiremock.core.Container;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 
 import org.junit.Before;
@@ -12,6 +13,7 @@ import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.RuntimeEnvironment;
 import org.unfoldingword.door43client.models.TargetLanguage;
+import org.unfoldingword.resourcecontainer.ContainerTools;
 import org.unfoldingword.resourcecontainer.ResourceContainer;
 import org.unfoldingword.tools.http.GetRequest;
 
@@ -112,6 +114,12 @@ public class ClientIndexTest {
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
                         .withBody(approvedLangnamesCatalog)));
+        // this is supposed to fail
+        stubFor(get(urlEqualTo("/ts/txt/2/gen/en/udb/source.json"))
+                .willReturn(aResponse()
+                        .withStatus(400)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("not found")));
         String genEnUlbSource = Util.loadResource(this.getClass().getClassLoader(), "gen/en/ulb/source.json");
         stubFor(get(urlEqualTo("/ts/txt/2/gen/en/ulb/source.json"))
                 .willReturn(aResponse()
@@ -181,6 +189,22 @@ public class ClientIndexTest {
 
         File path = client.downloadFutureCompatibleResourceContainer("en", "gen", "ulb");
         assertTrue(path.exists());
+    }
+
+    @Test
+    public void failToDownloadContainer() throws Exception {
+        stubAPI();
+        client.setGlobalCatalogServer("http://localhost:" + wireMockRule.port());
+        client.updatePrimaryIndex("http://localhost:" + wireMockRule.port() + "/catalog", null);
+
+        try {
+            File path = client.downloadFutureCompatibleResourceContainer("en", "gen", "udb");
+            assertTrue(!path.exists());
+        } catch (Exception e) {
+            assertNotNull(e);
+            File outputFile = new File(resourceDir.getRoot(), ContainerTools.makeSlug("en", "gen", "udb") + "." + ResourceContainer.fileExtension);
+            assertTrue(!outputFile.exists());
+        }
     }
 
     @Test

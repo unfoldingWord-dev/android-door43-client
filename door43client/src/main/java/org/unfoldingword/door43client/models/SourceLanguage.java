@@ -31,7 +31,7 @@ public class SourceLanguage extends DatabaseObject {
         JSONObject json = new JSONObject();
         json.put("slug", slug);
         json.put("name", name);
-        json.put("dir", direction);
+        json.put("direction", direction);
         return json;
     }
 }

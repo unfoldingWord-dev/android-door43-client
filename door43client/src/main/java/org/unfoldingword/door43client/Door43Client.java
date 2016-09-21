@@ -324,7 +324,7 @@ public class Door43Client {
         FileUtil.deleteQuietly(destFile);
         FileUtil.deleteQuietly(containerDir);
 
-        containerDir.mkdirs();
+        destFile.getParentFile().mkdirs();
         if(containerFormat.url == null || containerFormat.url.isEmpty()) throw new Exception("Missing resource format url");
         GetRequest request = new GetRequest(new URL(containerFormat.url));
         request.download(destFile);
@@ -384,12 +384,12 @@ public class Door43Client {
         Resource.Format format = getResourceContainerFormat(resource.formats);
         if(format == null) throw new Exception("Missing resource container format");
         JSONObject rJson = resource.toJSON();
-        rJson.put("modified_at", format.modifiedAt);
 
         JSONObject properties = new JSONObject();
         properties.put("language", lJson);
         properties.put("project", pJson);
         properties.put("resource", rJson);
+        properties.put("modified_at", format.modifiedAt);
 
         // grab the tW assignments
         if(resource.wordsAssignmentsUrl != null && !resource.wordsAssignmentsUrl.isEmpty()) {
@@ -421,7 +421,9 @@ public class Door43Client {
             }
         }
 
-        return ContainerTools.convertResource(data, containerDir, properties);
+        ResourceContainer container = ContainerTools.convertResource(data, containerDir, properties);
+        ResourceContainer.close(new File(containerDir.getPath()));
+        return container;
     }
 
     /**
