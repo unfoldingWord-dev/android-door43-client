@@ -17,14 +17,12 @@ import org.unfoldingword.door43client.models.Resource;
 import org.unfoldingword.door43client.models.TargetLanguage;
 import org.unfoldingword.door43client.models.SourceLanguage;
 import org.unfoldingword.door43client.models.Versification;
+import org.unfoldingword.resourcecontainer.ResourceContainer;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStreamReader;
-import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.Assert.*;
 
@@ -40,25 +38,13 @@ public class LibrarySettersUnitTest {
     @Before
     public void initialize() throws Exception {
         this.context = RuntimeEnvironment.application;
-
-        // load schema
-        ClassLoader classLoader = this.getClass().getClassLoader();
-        URL resource = classLoader.getResource("schema.sqlite");
-        File sqliteFile = new File(resource.getPath());
-
-        // read schema
-        BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(sqliteFile)));
-        StringBuilder sb = new StringBuilder();
-        String line;
-        while((line = reader.readLine()) != null) {
-            sb.append(line).append("\n");
-        }
+        String schema = Util.loadResource(this.getClass().getClassLoader(), "schema.sqlite");
 
         // clean up old index
         context.deleteDatabase("index");
 
         // initialize library
-        SQLiteHelper helper = new SQLiteHelper(context, sb.toString(), "index");
+        SQLiteHelper helper = new SQLiteHelper(context, schema, "index");
         this.library = new Library(helper);
     }
 
@@ -70,7 +56,8 @@ public class LibrarySettersUnitTest {
         assertTrue(id > 0);
 
         // test updated
-        long updateId = library.addSourceLanguage(language);
+        SourceLanguage newLanguage = new SourceLanguage("en", "Updated English", "ltr");
+        long updateId = library.addSourceLanguage(newLanguage);
         assertEquals(updateId, id);
 
         // test missing args
@@ -219,10 +206,31 @@ public class LibrarySettersUnitTest {
         categories.add(new Category("bible-ot", "Old Testament"));
         long projectId = library.addProject(project, categories, languageId);
 
-//        Resource resource = new Resource();
-        // TODO: 9/14/16 finish building the resource
-//        long resourceId = library.addResource(resource, projectId);
-//        assertTrue(resourceId > 0);
+        Map<String, Object> status = new HashMap();
+        status.put("translate_mode", "all");
+        status.put("checking_level", "3");
+        status.put("version", "4");
+        Resource.Format format = new Resource.Format(ResourceContainer.version, ResourceContainer.baseMimeType + "+book", 0, "some url");
+        Resource resource = new Resource("ulb", "Unlocked Literal Bible", "book", "some url", status);
+
+        // test invalid
+        try {
+            long invalidId = library.addResource(resource, projectId);
+            assertTrue(invalidId == -1);
+        } catch (Exception e) {
+            assertNotNull(e);
+        }
+
+        // test good
+        resource.addFormat(format);
+        long resourceId = library.addResource(resource, projectId);
+        assertTrue(resourceId > 0);
+
+        // test update
+        Resource newResource = new Resource("ulb", "Updated Unlocked Literal Bible", "book", "some url", status);
+        newResource.addFormat(format);
+        long updatedResourceid = library.addResource(newResource, projectId);
+        assertEquals(updatedResourceid, resourceId);
     }
 
     @Test

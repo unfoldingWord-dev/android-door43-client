@@ -1,0 +1,87 @@
+[
+  {
+    lr: "Africa",
+    lc: "aa",
+    ld: "ltr",
+    cc: [
+      "DJ",
+      "ER",
+      "ET",
+      "US",
+      "CA"
+    ],
+    ln: "Afaraf",
+    alt: [
+      "Afaraf",
+      "Danakil",
+      "Denkel",
+      "Adal",
+      "Afar Af",
+      "Qafar",
+      "Baadu (Ba'adu)"
+    ],
+    gw: false,
+    pk: 6,
+    ang: "Afar"
+  },
+  {
+    lr: "Africa",
+    lc: "aaa",
+    ld: "ltr",
+    cc: [
+      "NG"
+    ],
+    ln: "Ghotuo",
+    alt: [ ],
+    gw: false,
+    pk: 7,
+    ang: "Ghotuo"
+  },
+  {
+    lr: "Africa",
+    lc: "aab",
+    ld: "ltr",
+    cc: [
+      "NG"
+    ],
+    ln: "Alumu-Tesu",
+    alt: [
+      "Alumu",
+      "Arum-Chessu",
+      "Arum-Tesu"
+    ],
+    gw: false,
+    pk: 8,
+    ang: "Alumu-Tesu"
+  },
+  {
+    lr: "Pacific",
+    lc: "aac",
+    ld: "ltr",
+    cc: [
+      "PG"
+    ],
+    ln: "Ari",
+    alt: [
+      "Serea"
+    ],
+    gw: false,
+    pk: 9,
+    ang: "Ari"
+  },
+  {
+    lr: "Pacific",
+    lc: "aad",
+    ld: "ltr",
+    cc: [
+      "PG"
+    ],
+    ln: "Amal",
+    alt: [
+      "Alai"
+    ],
+    gw: false,
+    pk: 10,
+    ang: "Amal"
+  }
+]

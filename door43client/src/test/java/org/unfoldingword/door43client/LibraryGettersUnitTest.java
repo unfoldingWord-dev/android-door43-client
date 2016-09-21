@@ -15,9 +15,11 @@ import org.unfoldingword.door43client.models.ChunkMarker;
 import org.unfoldingword.door43client.models.Project;
 import org.unfoldingword.door43client.models.Question;
 import org.unfoldingword.door43client.models.Questionnaire;
+import org.unfoldingword.door43client.models.Resource;
 import org.unfoldingword.door43client.models.SourceLanguage;
 import org.unfoldingword.door43client.models.TargetLanguage;
 import org.unfoldingword.door43client.models.Versification;
+import org.unfoldingword.resourcecontainer.ResourceContainer;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -25,7 +27,9 @@ import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -131,10 +135,15 @@ public class LibraryGettersUnitTest {
     }
 
     private static void buildResources(long projectId) throws Exception {
-        for(String slug:stringGenerator("res", 20)) {
-            // TODO: 9/14/16 add resources
-//            Resource r = new Resource();
-//            library.addResource(r, projectId);
+        for(String slug:stringGenerator("res", GENERATOR_QTY)) {
+            Map<String, Object> status = new HashMap<>();
+            status.put("translate_mode", "all");
+            status.put("checking_level", "3");
+            status.put("version", "4");
+            Resource r = new Resource(slug, "Unlocked Literal Bible", "book", "some url", status);
+            Resource.Format format = new Resource.Format(ResourceContainer.version, ResourceContainer.baseMimeType + "+book", 0, "some url");
+            r.addFormat(format);
+            library.addResource(r, projectId);
         }
     }
 
@@ -189,12 +198,8 @@ public class LibraryGettersUnitTest {
 
     @Test
     public void listProjectsLastModified() throws Exception {
-//        List<Map> modified = library.listProjectsLastModified("en1");
-//        assertTrue(modified.size() > 0);
-//        for(Map map:modified) {
-//            assertTrue(map.containsKey("slug"));
-//        }
-        // TODO: 9/14/16 turn this on after we have resources
+        Map<String, Integer> modified = library.listProjectsLastModified("en1");
+        assertTrue(modified.size() > 0);
     }
 
     @Test
@@ -261,17 +266,38 @@ public class LibraryGettersUnitTest {
 
     @Test
     public void getProjectCategories() throws Exception {
-        // TODO: finish after we have the method
+        // TODO: 9/16/16 write this after we finish the method
+//        List<CategoryEntry> list = library.getProjectCategories(0, "en1", "all");
+//        assertTrue(list.size() > 0);
     }
 
     @Test
     public void getResource() throws Exception {
-        // TODO: finish after we have the method
+        Resource r = library.getResource("en1", "proj-cat2-1", "res1");
+        assertNotNull(r);
+
+        // test missing resource
+        Resource missingR = library.getResource("en1", "proj-cat2-1", "missing");
+        assertNull(missingR);
+
+        // test missing project
+        Resource missingP = library.getResource("en1", "missing", "res1");
+        assertNull(missingP);
+
+        // test missing language
+        Resource missingL = library.getResource("missing", "proj-cat2-1", "res1");
+        assertNull(missingL);
     }
 
     @Test
     public void getResources() throws Exception {
-        // TODO: finish after we have the method
+        // test filtered by language
+        List<Resource> filteredList = library.getResources("en1", "proj-cat2-1");
+        assertTrue(filteredList.size() > 0);
+
+        // test un-filtered
+        List<Resource> list = library.getResources(null, "proj-cat2-1");
+        assertTrue(list.size() > filteredList.size());
     }
 
     @Test
@@ -309,7 +335,7 @@ public class LibraryGettersUnitTest {
         List<Questionnaire> list = library.getQuestionnaires();
         assertTrue(list.size() > 0);
         for(Questionnaire q:list) {
-            List<Question> questions = library.getQuestions(q._info.id);
+            List<Question> questions = library.getQuestions(q._dbInfo.rowId);
             assertTrue(questions.size() > 0);
         }
     }
