@@ -695,8 +695,20 @@ class Library implements Index {
         return projects;
     }
 
+    /**
+     * Returns an array of categories that exist underneath the parent category.
+     * The results of this method are a combination of categories and projects.
+     *
+     * @param parentCategoryId the category who's children will be returned. If 0 then all top level categories will be returned.
+     * @param languageSlug the language in which the category titles will be displayed
+     * @param translateMode limit the results to just those with the given translate mode. Leave this falsy to not filter
+     * @return an array of project categories
+     */
     public List<CategoryEntry> getProjectCategories(long parentCategoryId, String languageSlug, String translateMode) {
-        Cursor categoryCursor = null;
+        Cursor categoryCursor;
+        String[] preferredSlug = {languageSlug, "en", "%"};
+        List<CategoryEntry> projectCategories = new ArrayList<>();
+
         if(!translateMode.isEmpty()) {
             categoryCursor = db.rawQuery("select \'category\' as type, c.slug as name, \'\' as source_language_slug," +
                     " c.id, c.slug, c.parent_id, count(p.id) as num from category as c" +
@@ -705,28 +717,72 @@ class Library implements Index {
                     "  left join resource as r on r.project_id=p.id and r.translate_mode like(?)" +
                     "  group by p.slug" +
                     " ) p on p.category_id=c.id and p.num > 0" +
-                    " where parent_id=? and num > 0 group by c.slug", new String[]{translateMode, String.valueOf(parentCategoryId)});
+                    " where parent_id=? and num > 0 " +
+                    "group by c.slug", new String[]{translateMode, String.valueOf(parentCategoryId)});
         } else {
-            categoryCursor = db.rawQuery("select \'category\' as type, category.slug as name, \'\' as source_language_slug, * from category where parent_id=" + parentCategoryId, null);
+            categoryCursor = db.rawQuery("select \'category\' as type, category.slug as name, \'\' " +
+                    "as source_language_slug, * from category where parent_id=" + parentCategoryId, null);
         }
 
         //find best name
+        categoryCursor.moveToFirst();
         while(!categoryCursor.isAfterLast()) {
             int catId = categoryCursor.getInt(categoryCursor.getColumnIndex("id"));
 
-//            Cursor cursor = db.rawQuery("select sl.slug as source_language_slug, cn.name as name" +
-//                    " from category_name as cn" +
-//                    " left join source_language as sl on sl.id=cn.source_language_id" +
-//                    " where sl.slug like(?) and cn.category_id=?", new String[]{   ,catId});
-//
-//            if(cursor.moveToFirst()) {
-//
-//            }
+            for(String slug : preferredSlug) {
+                Cursor cursor = db.rawQuery("select sl.slug as source_language_slug, cn.name as name" +
+                        " from category_name as cn" +
+                        " left join source_language as sl on sl.id=cn.source_language_id" +
+                        " where sl.slug like(?) and cn.category_id=?", new String[]{slug, String.valueOf(catId)});
 
+                if(cursor.moveToFirst()) {
+                    CursorReader reader = new CursorReader(cursor);
+
+                    String catName = reader.getString("name");
+                    String catSourceLanguageSlug = reader.getString("source_language_slug");
+
+                    CategoryEntry categoryEntry = new CategoryEntry(CategoryEntry.Type.PROJECT, catId, slug, catName, catSourceLanguageSlug, parentCategoryId);
+                    projectCategories.add(categoryEntry);
+                }
+                cursor.close();
+            }
             categoryCursor.moveToNext();
         }
+        categoryCursor.close();
 
-        return null;
+        //find best name
+        Cursor projectCursor = db.rawQuery("select * from (" +
+                " select \'project\' as type, \'\' as source_language_slug," +
+                " p.id, p.slug, p.sort, p.name, count(r.id) as num from project as p" +
+                " left join resource as r on r.project_id=p.id and r.translate_mode like (?)" +
+                " where p.category_id=? group by p.slug)" + (!translateMode.isEmpty() ? " where num > 0" : ""),
+                new String[]{(!translateMode.isEmpty() ? translateMode : "%"), String.valueOf(parentCategoryId)});
+
+        projectCursor.moveToFirst();
+        String projectSlug = projectCursor.getString(projectCursor.getColumnIndex("slug"));
+
+        while(!projectCursor.isAfterLast()) {
+            for(String slug : preferredSlug) {
+                Cursor cursor = db.rawQuery("select sl.slug as source_language_slug, p.name as name" +
+                        " from project as p" +
+                        " left join source_language as sl on sl.id=p.source_language_id" +
+                        " where sl.slug like(?) and p.slug=? order by sl.slug asc", new String[]{slug, projectSlug});
+                if(cursor.moveToFirst()) {
+                    CursorReader reader = new CursorReader(cursor);
+
+                    String projectName = reader.getString("name");
+                    String projSourceLangSlug = reader.getString("source_language_slug");
+
+                    CategoryEntry categoryEntry = new CategoryEntry(CategoryEntry.Type.CATEGORY, parentCategoryId, slug, projectName, projSourceLangSlug, parentCategoryId);
+                    projectCategories.add(categoryEntry);
+                }
+                cursor.close();
+            }
+            projectCursor.moveToNext();
+        }
+        projectCursor.close();
+
+        return projectCategories;
     }
 
     public Resource getResource(String sourceLanguageSlug, String projectSlug, String resourceSlug) {

@@ -11,6 +11,7 @@ import org.robolectric.RobolectricTestRunner;
 import org.robolectric.RuntimeEnvironment;
 import org.unfoldingword.door43client.models.Catalog;
 import org.unfoldingword.door43client.models.Category;
+import org.unfoldingword.door43client.models.CategoryEntry;
 import org.unfoldingword.door43client.models.ChunkMarker;
 import org.unfoldingword.door43client.models.Project;
 import org.unfoldingword.door43client.models.Question;
@@ -266,9 +267,8 @@ public class LibraryGettersUnitTest {
 
     @Test
     public void getProjectCategories() throws Exception {
-        // TODO: 9/16/16 write this after we finish the method
-//        List<CategoryEntry> list = library.getProjectCategories(0, "en1", "all");
-//        assertTrue(list.size() > 0);
+        List<CategoryEntry> list = library.getProjectCategories(0, "en1", "all");
+        assertTrue(list.size() > 0);
     }
 
     @Test
