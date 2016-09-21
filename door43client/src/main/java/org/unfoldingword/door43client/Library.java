@@ -709,7 +709,8 @@ class Library implements Index {
         String[] preferredSlug = {languageSlug, "en", "%"};
         List<CategoryEntry> projectCategories = new ArrayList<>();
 
-        if(!translateMode.isEmpty()) {
+        // load categories
+        if(translateMode != null && !translateMode.isEmpty()) {
             categoryCursor = db.rawQuery("select \'category\' as type, c.slug as name, \'\' as source_language_slug," +
                     " c.id, c.slug, c.parent_id, count(p.id) as num from category as c" +
                     " left join (" +
@@ -717,8 +718,8 @@ class Library implements Index {
                     "  left join resource as r on r.project_id=p.id and r.translate_mode like(?)" +
                     "  group by p.slug" +
                     " ) p on p.category_id=c.id and p.num > 0" +
-                    " where parent_id=? and num > 0 " +
-                    "group by c.slug", new String[]{translateMode, String.valueOf(parentCategoryId)});
+                    " where parent_id=" + parentCategoryId + " and num > 0 " +
+                    "group by c.slug", new String[]{translateMode});
         } else {
             categoryCursor = db.rawQuery("select \'category\' as type, category.slug as name, \'\' " +
                     "as source_language_slug, * from category where parent_id=" + parentCategoryId, null);
@@ -727,13 +728,14 @@ class Library implements Index {
         //find best name
         categoryCursor.moveToFirst();
         while(!categoryCursor.isAfterLast()) {
+            String catSlug = categoryCursor.getString(categoryCursor.getColumnIndex("slug"));
             int catId = categoryCursor.getInt(categoryCursor.getColumnIndex("id"));
 
             for(String slug : preferredSlug) {
                 Cursor cursor = db.rawQuery("select sl.slug as source_language_slug, cn.name as name" +
                         " from category_name as cn" +
                         " left join source_language as sl on sl.id=cn.source_language_id" +
-                        " where sl.slug like(?) and cn.category_id=?", new String[]{slug, String.valueOf(catId)});
+                        " where sl.slug like(?) and cn.category_id=" + catId, new String[]{slug});
 
                 if(cursor.moveToFirst()) {
                     CursorReader reader = new CursorReader(cursor);
@@ -741,7 +743,7 @@ class Library implements Index {
                     String catName = reader.getString("name");
                     String catSourceLanguageSlug = reader.getString("source_language_slug");
 
-                    CategoryEntry categoryEntry = new CategoryEntry(CategoryEntry.Type.PROJECT, catId, slug, catName, catSourceLanguageSlug, parentCategoryId);
+                    CategoryEntry categoryEntry = new CategoryEntry(CategoryEntry.Type.CATEGORY, catId, catSlug, catName, catSourceLanguageSlug, parentCategoryId);
                     projectCategories.add(categoryEntry);
                 }
                 cursor.close();
@@ -750,18 +752,19 @@ class Library implements Index {
         }
         categoryCursor.close();
 
-        //find best name
+        // load projects
         Cursor projectCursor = db.rawQuery("select * from (" +
                 " select \'project\' as type, \'\' as source_language_slug," +
                 " p.id, p.slug, p.sort, p.name, count(r.id) as num from project as p" +
                 " left join resource as r on r.project_id=p.id and r.translate_mode like (?)" +
-                " where p.category_id=? group by p.slug)" + (!translateMode.isEmpty() ? " where num > 0" : ""),
-                new String[]{(!translateMode.isEmpty() ? translateMode : "%"), String.valueOf(parentCategoryId)});
+                " where p.category_id=" + parentCategoryId + " group by p.slug)" + (!translateMode.isEmpty() ? " where num > 0" : ""),
+                new String[]{(!translateMode.isEmpty() ? translateMode : "%")});
 
+        //find best name
         projectCursor.moveToFirst();
-        String projectSlug = projectCursor.getString(projectCursor.getColumnIndex("slug"));
-
         while(!projectCursor.isAfterLast()) {
+            String projectSlug = projectCursor.getString(projectCursor.getColumnIndex("slug"));
+            long projectId = projectCursor.getLong(projectCursor.getColumnIndex("id"));
             for(String slug : preferredSlug) {
                 Cursor cursor = db.rawQuery("select sl.slug as source_language_slug, p.name as name" +
                         " from project as p" +
@@ -773,7 +776,7 @@ class Library implements Index {
                     String projectName = reader.getString("name");
                     String projSourceLangSlug = reader.getString("source_language_slug");
 
-                    CategoryEntry categoryEntry = new CategoryEntry(CategoryEntry.Type.CATEGORY, parentCategoryId, slug, projectName, projSourceLangSlug, parentCategoryId);
+                    CategoryEntry categoryEntry = new CategoryEntry(CategoryEntry.Type.PROJECT, projectId, projectSlug, projectName, projSourceLangSlug, parentCategoryId);
                     projectCategories.add(categoryEntry);
                 }
                 cursor.close();
