@@ -6,9 +6,14 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.unfoldingword.door43client.models.Catalog;
+import org.unfoldingword.door43client.models.Category;
+import org.unfoldingword.door43client.models.Project;
 import org.unfoldingword.door43client.models.Question;
 import org.unfoldingword.door43client.models.Questionnaire;
+import org.unfoldingword.door43client.models.Resource;
+import org.unfoldingword.door43client.models.SourceLanguage;
 import org.unfoldingword.door43client.models.TargetLanguage;
+import org.unfoldingword.resourcecontainer.ContainerTools;
 import org.unfoldingword.resourcecontainer.ResourceContainer;
 import org.unfoldingword.tools.http.GetRequest;
 import org.unfoldingword.tools.http.Request;
@@ -16,6 +21,7 @@ import org.unfoldingword.tools.http.Request;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -280,8 +286,17 @@ public class Door43Client {
      * @param resourceSlug
      * @returns The new resource container
      */
-    public ResourceContainer downloadResourceContainer(String sourceLanguageSlug, String projectSlug, String resourceSlug) {
-        return null;
+    public ResourceContainer downloadResourceContainer(String sourceLanguageSlug, String projectSlug, String resourceSlug) throws Exception {
+        File path = downloadFutureCompatibleResourceContainer(sourceLanguageSlug, projectSlug, resourceSlug);
+
+        // migrate to resource container
+        Resource r = library.getResource(sourceLanguageSlug, projectSlug, resourceSlug);
+        if(r == null) throw new Exception("Unknown resource");
+        String data = FileUtil.readFileToString(path);
+
+        // clean downloaded file
+        FileUtil.deleteQuietly(path);
+        return convertLegacyResource(sourceLanguageSlug, projectSlug, resourceSlug, data);
     }
 
     /**
@@ -290,15 +305,50 @@ public class Door43Client {
      * and will download it directly to the disk
      *
      * once the api can deliver proper resource containers this method
-     * should be renamed to downloadContainer
+     * should be renamed to downloadContainer and the current downloadResourceContainer method removed.
      *
      * @param sourceLanguageSlug
      * @param projectSlug
      * @param resourceSlug
-     * @returns the path to the downloaded resource container
+     * @return the path to the downloaded resource container
      */
-    @Deprecated
-    public String downloadFutureCompatibleResourceContainer(String sourceLanguageSlug, String projectSlug, String resourceSlug) {
+    public File downloadFutureCompatibleResourceContainer(String sourceLanguageSlug, String projectSlug, String resourceSlug) throws Exception {
+        Resource r = library.getResource(sourceLanguageSlug, projectSlug, resourceSlug);
+        if(r == null) throw new Exception("Unknown resource");
+        Resource.Format containerFormat = getResourceContainerFormat(r.formats);
+        if(containerFormat == null) throw new Exception("Missing resource container format");
+        String containerSlug = ContainerTools.makeSlug(sourceLanguageSlug, projectSlug, resourceSlug);
+        File containerDir = new File(resourceDir, containerSlug);
+        File destFile = new File(resourceDir, containerSlug + "." + ResourceContainer.fileExtension);
+
+        FileUtil.deleteQuietly(destFile);
+        FileUtil.deleteQuietly(containerDir);
+
+        containerDir.mkdirs();
+        if(containerFormat.url == null || containerFormat.url.isEmpty()) throw new Exception("Missing resource format url");
+        GetRequest request = new GetRequest(new URL(containerFormat.url));
+        request.download(destFile);
+        if(request.getResponseCode() != 200) {
+            FileUtil.deleteQuietly(destFile);
+            throw new Exception(request.getResponseMessage());
+        }
+
+        return destFile;
+    }
+
+    /**
+     * Returns the first resource container format found in the list.
+     * E.g. the array may contain binary formats such as pdf, mp3, etc. This basically filters those.
+     *
+     * @param formats a list of resource formats
+     * @return
+     */
+    private static Resource.Format getResourceContainerFormat(List<Resource.Format> formats) {
+        for(Resource.Format f:formats) {
+            if(f.mimeType.matches(ResourceContainer.baseMimeType + "\\+.+")) {
+                return f;
+            }
+        }
         return null;
     }
 
@@ -315,8 +365,63 @@ public class Door43Client {
      * @return
      */
     @Deprecated
-    public ResourceContainer convertLegacyResource(String sourceLanguageSlug, String projectSlug, String resourceSlug, String data) {
-        return null;
+    public ResourceContainer convertLegacyResource(String sourceLanguageSlug, String projectSlug, String resourceSlug, String data) throws Exception {
+        String containerSlug = ContainerTools.makeSlug(sourceLanguageSlug, projectSlug, resourceSlug);
+        File containerDir = new File(resourceDir, containerSlug);
+
+        SourceLanguage language = library.getSourceLanguage(sourceLanguageSlug);
+        if(language == null) throw new Exception("Missing language");
+        JSONObject lJson = language.toJSON();
+
+        Project project = library.getProject(sourceLanguageSlug, projectSlug);
+        if(project == null) throw new Exception("Missing project");
+        JSONObject pJson = project.toJSON();
+        // TODO: 9/20/16 need to load the project categories into the json
+//        List<Category> categories = library.getCategories(project.slug);
+
+        Resource resource = library.getResource(sourceLanguageSlug, projectSlug, resourceSlug);
+        if(resource == null) throw new Exception("Missing resource");
+        Resource.Format format = getResourceContainerFormat(resource.formats);
+        if(format == null) throw new Exception("Missing resource container format");
+        JSONObject rJson = resource.toJSON();
+        rJson.put("modified_at", format.modifiedAt);
+
+        JSONObject properties = new JSONObject();
+        properties.put("language", lJson);
+        properties.put("project", pJson);
+        properties.put("resource", rJson);
+
+        // grab the tW assignments
+        if(resource.wordsAssignmentsUrl != null && !resource.wordsAssignmentsUrl.isEmpty()) {
+            GetRequest request = new GetRequest(new URL(resource.wordsAssignmentsUrl));
+            String wordsData = request.read();
+            if(request.getResponseCode() < 300) {
+                try {
+                    JSONArray words = new JSONArray(wordsData);
+                    JSONObject assignmentsJson = new JSONObject();
+                    for(int c = 0; c < words.length(); c ++) {
+                        JSONObject chapter = words.getJSONObject(c);
+                        JSONObject chapterAssignment = new JSONObject();
+                        for(int f = 0; f < chapter.getJSONArray("frames").length(); f ++) {
+                            JSONObject frame = chapter.getJSONArray("frames").getJSONObject(f);
+                            JSONArray frameAssignment = new JSONArray();
+                            for(int w = 0; w < frame.getJSONArray("items").length(); w ++) {
+                                JSONObject word = frame.getJSONArray("items").getJSONObject(w);
+                                String twProjSlug = projectSlug.equals("obs") ? "bible-obs" : "bible";
+                                frameAssignment.put("//" + twProjSlug + "/tw/" + word.getString("id"));
+                            }
+                            chapterAssignment.put(frame.getString("id"), frameAssignment);
+                        }
+                        assignmentsJson.put(chapter.getString("id"), chapterAssignment);
+                    }
+                    properties.put("tw_assignments", assignmentsJson);
+                } catch (Exception e) {
+                    logListener.onWarning(e.getMessage());
+                }
+            }
+        }
+
+        return ContainerTools.convertResource(data, containerDir, properties);
     }
 
     /**

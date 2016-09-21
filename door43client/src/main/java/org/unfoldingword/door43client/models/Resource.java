@@ -1,5 +1,9 @@
 package org.unfoldingword.door43client.models;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.unfoldingword.door43client.LegacyTools;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +29,24 @@ public class Resource extends DatabaseObject {
 
     public void addFormat(Format format) {
         formats.add(format);
+    }
+
+    /**
+     * Returns the object serialized to json
+     * @return
+     */
+    public JSONObject toJSON() throws JSONException {
+        JSONObject json = new JSONObject();
+        json.put("slug", slug);
+        json.put("name", name);
+        json.put("type", type);
+        JSONObject statusJson = new JSONObject();
+        statusJson.put("translate_mode", status.get("translate_mode"));
+        statusJson.put("checking_level", status.get("checking_level"));
+        statusJson.put("license", status.get("license"));
+        // TODO: add the rest of the status
+        json.put("status", statusJson);
+        return json;
     }
 
     /**

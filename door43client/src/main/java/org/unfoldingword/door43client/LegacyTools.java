@@ -24,7 +24,7 @@ import java.util.Map;
 /**
  * Created by joel on 9/19/16.
  */
-class LegacyTools {
+public class LegacyTools {
 
     /**
      *

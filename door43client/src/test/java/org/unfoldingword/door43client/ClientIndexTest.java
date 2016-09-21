@@ -12,6 +12,12 @@ import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.RuntimeEnvironment;
 import org.unfoldingword.door43client.models.TargetLanguage;
+import org.unfoldingword.resourcecontainer.ResourceContainer;
+import org.unfoldingword.tools.http.GetRequest;
+
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 
@@ -39,14 +45,13 @@ public class ClientIndexTest {
         client = new Door43Client(context, "index", resourceDir.getRoot());
     }
 
-    @Test
-    public void updatePrimaryIndex() throws Exception {
+    private void stubAPI() throws IOException {
         String catalog = Util.loadResource(this.getClass().getClassLoader(), "catalog.json");
         stubFor(get(urlEqualTo("/catalog"))
-            .willReturn(aResponse()
-                .withStatus(200)
-                .withHeader("Content-Type", "application/json")
-                .withBody(catalog)));
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody(catalog)));
         String obsLangCatalog = Util.loadResource(this.getClass().getClassLoader(), "obs/languages.json");
         stubFor(get(urlEqualTo("/ts/txt/2/obs/languages.json"))
                 .willReturn(aResponse()
@@ -107,7 +112,41 @@ public class ClientIndexTest {
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
                         .withBody(approvedLangnamesCatalog)));
+        String genEnUlbSource = Util.loadResource(this.getClass().getClassLoader(), "gen/en/ulb/source.json");
+        stubFor(get(urlEqualTo("/ts/txt/2/gen/en/ulb/source.json"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody(genEnUlbSource)));
+        String genEnUlbNotes = Util.loadResource(this.getClass().getClassLoader(), "gen/en/ulb/notes.json");
+        stubFor(get(urlEqualTo("/ts/txt/2/gen/en/notes.json"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody(genEnUlbNotes)));
+        String genEnUlbQuestions = Util.loadResource(this.getClass().getClassLoader(), "gen/en/ulb/questions.json");
+        stubFor(get(urlEqualTo("/ts/txt/2/gen/en/questions.json"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody(genEnUlbQuestions)));
+        String genEnUlbWords = Util.loadResource(this.getClass().getClassLoader(), "gen/en/ulb/words.json");
+        stubFor(get(urlEqualTo("/ts/txt/2/bible/en/terms.json"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody(genEnUlbWords)));
+        String genEnUlbAssignments = Util.loadResource(this.getClass().getClassLoader(), "gen/en/ulb/assignments.json");
+        stubFor(get(urlEqualTo("/ts/txt/2/gen/en/tw_cat.json"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody(genEnUlbAssignments)));
+    }
 
+    @Test
+    public void updatePrimaryIndex() throws Exception {
+        stubAPI();
         client.setGlobalCatalogServer("http://localhost:" + wireMockRule.port());
         client.updatePrimaryIndex("http://localhost:" + wireMockRule.port() + "/catalog", null);
         client.updateCatalogIndex("langnames", null);
@@ -132,5 +171,27 @@ public class ClientIndexTest {
         assertEquals("kff-x-dmorla", approved.slug);
 
         verify(getRequestedFor(urlMatching("/catalog")));
+    }
+
+    @Test
+    public void downloadContainer() throws Exception {
+        stubAPI();
+        client.setGlobalCatalogServer("http://localhost:" + wireMockRule.port());
+        client.updatePrimaryIndex("http://localhost:" + wireMockRule.port() + "/catalog", null);
+
+        File path = client.downloadFutureCompatibleResourceContainer("en", "gen", "ulb");
+        assertTrue(path.exists());
+    }
+
+    @Test
+    public void convertLegacyResource() throws Exception {
+        stubAPI();
+        client.updatePrimaryIndex("http://localhost:" + wireMockRule.port() + "/catalog", null);
+
+        GetRequest request = new GetRequest(new URL("http://localhost:8090/ts/txt/2/gen/en/ulb/source.json"));
+        String data = request.read();
+
+        ResourceContainer container = client.convertLegacyResource("en", "gen", "ulb", data);
+        assertNotNull(container);
     }
 }

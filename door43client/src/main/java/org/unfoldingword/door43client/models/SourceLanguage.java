@@ -1,5 +1,8 @@
 package org.unfoldingword.door43client.models;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 /**
  * Represents a language that a resource exists in  (for the purpose of source content)
  */
@@ -18,5 +21,17 @@ public class SourceLanguage extends DatabaseObject {
         this.slug = slug;
         this.name = name;
         this.direction = direction;
+    }
+
+    /**
+     * Returns the object serialized to json
+     * @return
+     */
+    public JSONObject toJSON() throws JSONException {
+        JSONObject json = new JSONObject();
+        json.put("slug", slug);
+        json.put("name", name);
+        json.put("dir", direction);
+        return json;
     }
 }
