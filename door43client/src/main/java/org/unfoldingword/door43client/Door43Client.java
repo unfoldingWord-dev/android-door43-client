@@ -434,7 +434,7 @@ public class Door43Client {
      * @param resourceSlug
      * @return
      */
-    public ResourceContainer openResourceContainer(String sourceLanguageSlug, String projectSlug, String resourceSlug) throws Exception{
+    public ResourceContainer openResourceContainer(String sourceLanguageSlug, String projectSlug, String resourceSlug) throws Exception {
         Resource resource = library.getResource(sourceLanguageSlug, projectSlug, resourceSlug);
         if(resource == null) {
             throw new Exception("Unknown Resource");
@@ -451,10 +451,16 @@ public class Door43Client {
      * @param sourceLanguageSlug
      * @param projectSlug
      * @param resourceSlug
-     * @return
+     * @return the path to the closed container
      */
-    public String closeResourceContainer(String sourceLanguageSlug, String projectSlug, String resourceSlug) {
-        return null;
+    public File closeResourceContainer(String sourceLanguageSlug, String projectSlug, String resourceSlug) throws Exception {
+        Resource resource = library.getResource(sourceLanguageSlug, projectSlug, resourceSlug);
+        if(resource == null) {
+            throw new Exception("Unknown Resource");
+        }
+        String containerSlug = ContainerTools.makeSlug(sourceLanguageSlug, projectSlug, resourceSlug);
+        File directory = new File(resourceDir + containerSlug);
+        return ResourceContainer.close(directory);
     }
 
     /**
