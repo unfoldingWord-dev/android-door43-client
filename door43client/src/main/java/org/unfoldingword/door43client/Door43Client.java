@@ -1,6 +1,7 @@
 package org.unfoldingword.door43client;
 
 import android.content.Context;
+import android.provider.ContactsContract;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -55,10 +56,10 @@ public class Door43Client {
     /**
      * Initializes the new api client
      * @param context the application context
-     * @param databaseName the name of the datbase where information will be indexed
+     * @param databasePath the name of the database where information will be indexed
      * @param resourceDir the directory where resource containers will be stored
      */
-    public Door43Client(Context context, String databaseName, File resourceDir) throws IOException {
+    public Door43Client(Context context, File databasePath, File resourceDir) throws IOException {
         this.resourceDir = resourceDir;
 
         // load schema
@@ -73,7 +74,8 @@ public class Door43Client {
             sb.append(line).append("\n");
         }
 
-        SQLiteHelper helper = new SQLiteHelper(context, sb.toString(), databaseName);
+        DatabaseContext databaseContext = new DatabaseContext(context,databasePath);
+        SQLiteHelper helper = new SQLiteHelper(databaseContext, sb.toString(), databaseContext.getPackageName());
         this.library = new Library(helper);
     }
 

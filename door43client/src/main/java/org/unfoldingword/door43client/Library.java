@@ -34,7 +34,7 @@ class Library implements Index {
     private final SQLiteDatabase db;
 
     /**
-     * Intantiates a new library
+     * Instantiates a new library
      * @param sqliteHelper
      */
     public Library(SQLiteHelper sqliteHelper) {
