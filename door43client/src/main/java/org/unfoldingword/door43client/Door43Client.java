@@ -1,6 +1,7 @@
 package org.unfoldingword.door43client;
 
 import android.content.Context;
+import android.os.AsyncTask;
 import android.provider.ContactsContract;
 
 import org.json.JSONArray;
@@ -433,8 +434,15 @@ public class Door43Client {
      * @param resourceSlug
      * @return
      */
-    public ResourceContainer openResourceContainer(String sourceLanguageSlug, String projectSlug, String resourceSlug) {
-        return null;
+    public ResourceContainer openResourceContainer(String sourceLanguageSlug, String projectSlug, String resourceSlug) throws Exception{
+        Resource resource = library.getResource(sourceLanguageSlug, projectSlug, resourceSlug);
+        if(resource == null) {
+            throw new Exception("Unknown Resource");
+        }
+        String containerSlug = ContainerTools.makeSlug(sourceLanguageSlug, projectSlug, resourceSlug);
+        File directory = new File(resourceDir + containerSlug);
+        File archive = new File(directory + "." + ResourceContainer.fileExtension);
+        return ResourceContainer.open(archive, directory);
     }
 
     /**
