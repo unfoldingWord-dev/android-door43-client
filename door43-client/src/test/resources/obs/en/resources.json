@@ -1,0 +1,22 @@
+[
+  {
+    checking_questions: "http://localhost:8090/obs/txt/1/en/CQ-en.json",
+    date_modified: "20150924",
+    name: "Open Bible Stories",
+    notes: "http://localhost:8090/txt/1/en/tN-en.json",
+    slug: "obs",
+    source: "http://localhost:8090/obs/txt/1/en/obs-en.json",
+    status: {
+      checking_entity: "Distant Shores Media; Wycliffe Associates",
+      checking_level: "3",
+      comments: "Original source text.",
+      contributors: "Distant Shores Media",
+      publish_date: "2015-08-26",
+      source_text: "en",
+      source_text_version: "4",
+      version: "4"
+    },
+    terms: "http://localhost:8090/obs/txt/1/en/kt-en.json",
+    tw_cat: "http://localhost:8090/obs/txt/1/en/tw_cat-en.json"
+  }
+]
