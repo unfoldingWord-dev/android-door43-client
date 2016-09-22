@@ -39,7 +39,7 @@ public class DatabaseContext extends ContextWrapper {
     }
 
     /**
-     * for devices >= api-11
+     * for devices greater than or equal to  api v11
      * @param name
      * @param mode
      * @param factory
@@ -52,7 +52,7 @@ public class DatabaseContext extends ContextWrapper {
     }
 
     /**
-     * for devices < api-11
+     * For devices less than api v11
      * @param name
      * @param mode
      * @param factory
