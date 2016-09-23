@@ -1,6 +1,8 @@
 package org.unfoldingword.door43client;
 
 import android.content.Context;
+import android.os.AsyncTask;
+import android.provider.ContactsContract;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -55,10 +57,10 @@ public class Door43Client {
     /**
      * Initializes the new api client
      * @param context the application context
-     * @param databaseName the name of the datbase where information will be indexed
+     * @param databasePath the name of the database where information will be indexed
      * @param resourceDir the directory where resource containers will be stored
      */
-    public Door43Client(Context context, String databaseName, File resourceDir) throws IOException {
+    public Door43Client(Context context, File databasePath, File resourceDir) throws IOException {
         this.resourceDir = resourceDir;
 
         // load schema
@@ -73,7 +75,8 @@ public class Door43Client {
             sb.append(line).append("\n");
         }
 
-        SQLiteHelper helper = new SQLiteHelper(context, sb.toString(), databaseName);
+        DatabaseContext databaseContext = new DatabaseContext(context,databasePath);
+        SQLiteHelper helper = new SQLiteHelper(databaseContext, sb.toString(), databaseContext.getPackageName());
         this.library = new Library(helper);
     }
 
@@ -431,8 +434,15 @@ public class Door43Client {
      * @param resourceSlug
      * @return
      */
-    public ResourceContainer openResourceContainer(String sourceLanguageSlug, String projectSlug, String resourceSlug) {
-        return null;
+    public ResourceContainer openResourceContainer(String sourceLanguageSlug, String projectSlug, String resourceSlug) throws Exception {
+        Resource resource = library.getResource(sourceLanguageSlug, projectSlug, resourceSlug);
+        if(resource == null) {
+            throw new Exception("Unknown Resource");
+        }
+        String containerSlug = ContainerTools.makeSlug(sourceLanguageSlug, projectSlug, resourceSlug);
+        File directory = new File(resourceDir + containerSlug);
+        File archive = new File(directory + "." + ResourceContainer.fileExtension);
+        return ResourceContainer.open(archive, directory);
     }
 
     /**
@@ -441,10 +451,16 @@ public class Door43Client {
      * @param sourceLanguageSlug
      * @param projectSlug
      * @param resourceSlug
-     * @return
+     * @return the path to the closed container
      */
-    public String closeResourceContainer(String sourceLanguageSlug, String projectSlug, String resourceSlug) {
-        return null;
+    public File closeResourceContainer(String sourceLanguageSlug, String projectSlug, String resourceSlug) throws Exception {
+        Resource resource = library.getResource(sourceLanguageSlug, projectSlug, resourceSlug);
+        if(resource == null) {
+            throw new Exception("Unknown Resource");
+        }
+        String containerSlug = ContainerTools.makeSlug(sourceLanguageSlug, projectSlug, resourceSlug);
+        File directory = new File(resourceDir + containerSlug);
+        return ResourceContainer.close(directory);
     }
 
     /**

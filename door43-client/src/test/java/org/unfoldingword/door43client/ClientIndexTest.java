@@ -43,7 +43,7 @@ public class ClientIndexTest {
     @Before
     public void setUp() throws Exception {
         this.context = RuntimeEnvironment.application;
-        client = new Door43Client(context, "index", resourceDir.getRoot());
+        client = new Door43Client(context, resourceDir.getRoot(), resourceDir.getRoot());
     }
 
     private void stubAPI() throws IOException {
