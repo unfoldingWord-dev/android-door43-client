@@ -1,8 +1,6 @@
 package org.unfoldingword.door43client;
 
 import android.content.Context;
-import android.os.AsyncTask;
-import android.provider.ContactsContract;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -75,8 +73,9 @@ public class Door43Client {
             sb.append(line).append("\n");
         }
 
-        DatabaseContext databaseContext = new DatabaseContext(context,databasePath);
-        SQLiteHelper helper = new SQLiteHelper(databaseContext, sb.toString(), databaseContext.getPackageName());
+        DatabaseContext databaseContext = new DatabaseContext(context, databasePath);
+        String dbName = databasePath.getName().replaceFirst("\\.[^\\.]+$", "");
+        SQLiteHelper helper = new SQLiteHelper(databaseContext, sb.toString(), dbName);
         this.library = new Library(helper);
     }
 
