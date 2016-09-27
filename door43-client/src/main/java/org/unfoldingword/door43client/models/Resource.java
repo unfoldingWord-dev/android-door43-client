@@ -2,7 +2,6 @@ package org.unfoldingword.door43client.models;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.unfoldingword.door43client.LegacyTools;
 
 import java.util.ArrayList;
 import java.util.List;

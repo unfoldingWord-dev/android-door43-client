@@ -24,7 +24,7 @@ import java.util.Map;
 /**
  * Created by joel on 9/19/16.
  */
-public class LegacyTools {
+class LegacyTools {
 
     /**
      *
@@ -43,7 +43,7 @@ public class LegacyTools {
         library.addCatalog(new Catalog("approved-temp-langnames", host + "/api/templanguages/assignment/changed/", 0));
     }
 
-    public static void processCatalog(Library library, String data, Door43Client.OnProgressListener listener) throws Exception {
+    public static void processCatalog(Library library, String data, OnProgressListener listener) throws Exception {
         JSONArray projects = new JSONArray(data);
         for(int i = 0; i < projects.length(); i ++) {
             JSONObject pJson = projects.getJSONObject(i);
@@ -55,7 +55,7 @@ public class LegacyTools {
         updateTA(library, listener);
     }
 
-    private static void updateTA(Library library, Door43Client.OnProgressListener listener) throws Exception {
+    private static void updateTA(Library library, OnProgressListener listener) throws Exception {
         String[] urls = new String[]{
                 "https://api.unfoldingword.org/ta/txt/1/en/audio_2.json",
                 "https://api.unfoldingword.org/ta/txt/1/en/checking_1.json",
@@ -102,7 +102,7 @@ public class LegacyTools {
      * @param listener
      * @throws Exception
      */
-    private static void downloadSourceLanguages(Library library, JSONObject pJson, Door43Client.OnProgressListener listener) throws Exception {
+    private static void downloadSourceLanguages(Library library, JSONObject pJson, OnProgressListener listener) throws Exception {
         GetRequest request = new GetRequest(new URL(pJson.getString("lang_catalog")));
         String response = request.read();
         if(request.getResponseCode() != 200) throw new Exception(request.getResponseMessage());

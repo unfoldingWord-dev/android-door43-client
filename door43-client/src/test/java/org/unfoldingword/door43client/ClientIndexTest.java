@@ -37,12 +37,12 @@ public class ClientIndexTest {
     public TemporaryFolder resourceDir = new TemporaryFolder();
 
     private Application context;
-    private Door43Client client;
+    private API client;
 
     @Before
     public void setUp() throws Exception {
         this.context = RuntimeEnvironment.application;
-        client = new Door43Client(context, resourceDir.getRoot(), resourceDir.getRoot());
+        client = new API(context, resourceDir.getRoot(), resourceDir.getRoot());
     }
 
     private void stubAPI() throws IOException {
