@@ -115,23 +115,12 @@ public class Door43Client {
      * @param url the entry resource api catalog
      * @param listener an optional progress listener. This should receive progress id, total, completed
      */
-    public void updatePrimaryIndex(String url, final OnProgressListener listener) throws Exception {
-        // inject missing global catalogs
+    public void updateSources(String url, final OnProgressListener listener) throws Exception {
         library.beginTransaction();
         try {
-            LegacyTools.injectGlobalCatalogs(library, globalCatalogHost);
             GetRequest getPrimaryCatalog = new GetRequest(new URL(url));
-            getPrimaryCatalog.setProgressListener(new Request.OnProgressListener() {
-                @Override
-                public void onProgress(long max, long progress) {
-//                    if (listener != null) listener.onProgress("catalog", max, progress);
-                }
-
-                @Override
-                public void onIndeterminate() {
-                }
-            });
             String data = getPrimaryCatalog.read();
+            if(getPrimaryCatalog.getResponseCode() != 200) throw new Exception(getPrimaryCatalog.getResponseMessage());
             // process legacy catalog data
             LegacyTools.processCatalog(library, data, listener);
         } catch(Exception e) {
@@ -142,20 +131,45 @@ public class Door43Client {
     }
 
     /**
+     * Updates all the global catalogs
+     * @param listener
+     * @throws Exception
+     */
+    public void updateCatalogs(OnProgressListener listener) throws Exception {
+        // inject missing global catalogs
+        LegacyTools.injectGlobalCatalogs(library, globalCatalogHost);
+        List<Catalog> catalogs = library.getCatalogs();
+        for(Catalog c:catalogs) {
+            updateCatalog(c, listener);
+        }
+    }
+
+    /**
+     * Utility for testing
+     *
+     * @param slug
+     * @throws Exception
+     */
+    public void updateCatalog(String slug) throws Exception{
+        LegacyTools.injectGlobalCatalogs(library, globalCatalogHost);
+        Catalog c = library.getCatalog(slug);
+        updateCatalog(c, null);
+    }
+ 
+    /**
      * Downloads a global catalog and indexes it.
      *
-     * @param catalogSlug the slug of the catalog to download. Or an object containing all the args.
+     * @param catalog the catalog being updated
      * @param listener an optional progress listener. This should receive progress id, total, completed
      */
-    public void updateCatalogIndex(String catalogSlug, OnProgressListener listener) throws Exception {
-        Catalog cat = library.getCatalog(catalogSlug);
-        if(cat == null) throw new Exception("Unknown catalog");
-        GetRequest request = new GetRequest(new URL(cat.url));
+    private void updateCatalog(Catalog catalog, OnProgressListener listener) throws Exception {
+        if(catalog == null) throw new Exception("Unknown catalog");
+        GetRequest request = new GetRequest(new URL(catalog.url));
         String data = request.read();
         if(request.getResponseCode() != 200) throw new Exception(request.getResponseMessage());
         library.beginTransaction();
         try {
-            switch (catalogSlug) {
+            switch (catalog.slug) {
                 case "langnames":
                     indexTargetLanguageCatalog(data, listener);
                     break;
@@ -478,6 +492,7 @@ public class Door43Client {
      * @param sourceLanguageSlug the slug of a source language who's projects will be checked.
      * @return An array of project slugs
      */
+    @Deprecated
     public List<String> getProjectUpdates(String sourceLanguageSlug) {
         return null;
     }
@@ -487,6 +502,7 @@ public class Door43Client {
      *
      * @return An array of source language slugs
      */
+    @Deprecated
     public List<String> getSourceLanguageUpdates() {
         return null;
     }
