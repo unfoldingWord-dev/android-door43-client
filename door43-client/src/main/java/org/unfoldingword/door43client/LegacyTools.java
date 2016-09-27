@@ -82,7 +82,7 @@ class LegacyTools {
         long languageId = library.addSourceLanguage(new SourceLanguage("en", "English", "ltr"));
 
         // add project
-        String rawSlug = ta.getJSONObject("meta").getString("manual").replace("_", "-");
+        String rawSlug = ta.getJSONObject("meta").getString("manual").replaceAll("\\_", "-");
         String name  = (rawSlug.charAt(0) + "").toUpperCase() + rawSlug.substring(1);
         Project p = new Project("ta-" + rawSlug, name, "", "", 0, "");
         List<Category> categories = new ArrayList<>();
