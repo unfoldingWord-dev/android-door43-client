@@ -55,12 +55,12 @@ public class Resource extends DatabaseObject {
      * Represents a physical form of the resource
      */
     public static class Format {
-        public int packageVersion;
+        public String packageVersion;
         public String mimeType;
         public int modifiedAt;
         public String url;
 
-        public Format(int packageVersion, String mimeType, int modifiedAt, String url) {
+        public Format(String packageVersion, String mimeType, int modifiedAt, String url) {
             this.packageVersion = packageVersion;
             this.mimeType = mimeType;
             this.modifiedAt = modifiedAt;

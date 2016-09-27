@@ -829,7 +829,7 @@ class Library implements Index {
             while(!formatCursor.isAfterLast()) {
                 CursorReader formatReader = new CursorReader(formatCursor);
 
-                int packageVersion = formatReader.getInt("package_version");
+                String packageVersion = formatReader.getString("package_version");
                 String mimeType = formatReader.getString("mime_type");
                 int modifiedAt = formatReader.getInt("modified_at");
                 String url = formatReader.getString("url");
@@ -904,7 +904,7 @@ class Library implements Index {
             while(!formatCursor.isAfterLast()) {
                 CursorReader formatReader = new CursorReader(formatCursor);
 
-                int packageVersion = formatReader.getInt("package_version");
+                String packageVersion = formatReader.getString("package_version");
                 String mimeType = formatReader.getString("mime_type");
                 int modifiedAt = formatReader.getInt("modified_at");
                 String url = formatReader.getString("url");
