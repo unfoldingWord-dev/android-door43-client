@@ -204,15 +204,6 @@ class Library implements Index {
         return id > 0;
     }
 
-    /**
-     * Inserts or updates a temporary target language in the library.
-     *
-     * Note: the result is boolean since you don't need the row id. See getTargetLanguages for more information
-     *
-     * @param language
-     * @return
-     * @throws Exception
-     */
     public boolean addTempTargetLanguage(TargetLanguage language) throws Exception {
         validateNotEmpty(language.slug);
         validateNotEmpty(language.name);
@@ -695,15 +686,6 @@ class Library implements Index {
         return projects;
     }
 
-    /**
-     * Returns an array of categories that exist underneath the parent category.
-     * The results of this method are a combination of categories and projects.
-     *
-     * @param parentCategoryId the category who's children will be returned. If 0 then all top level categories will be returned.
-     * @param languageSlug the language in which the category titles will be displayed
-     * @param translateMode limit the results to just those with the given translate mode. Leave this falsy to not filter
-     * @return an array of project categories
-     */
     public List<CategoryEntry> getProjectCategories(long parentCategoryId, String languageSlug, String translateMode) {
         Cursor categoryCursor;
         String[] preferredSlug = {languageSlug, "en", "%"};
@@ -844,13 +826,6 @@ class Library implements Index {
         return resource;
     }
 
-    /**
-     * Returns a list of resources available in the given project
-     *
-     * @param languageSlug the language of the resource. If null then all resources of the project will be returned.
-     * @param projectSlug the project who's resources will be returned
-     * @return an array of resources
-     */
     public List<Resource> getResources(String languageSlug, String projectSlug) {
         List<Resource> resources = new ArrayList<>();
         Cursor resourceCursor = null;

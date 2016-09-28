@@ -19,6 +19,18 @@ import java.util.Map;
  * Defines the public methods of the index
  */
 public interface Index {
+
+    /**
+     * Inserts or updates a temporary target language in the library.
+     *
+     * Note: the result is boolean since you don't need the row id. See getTargetLanguages for more information
+     *
+     * @param language
+     * @return
+     * @throws Exception
+     */
+    boolean addTempTargetLanguage(TargetLanguage language) throws Exception;
+
     /**
      * Returns a list of source languages and when they were last modified.
      * The value is taken from the max modified resource format date within the language
