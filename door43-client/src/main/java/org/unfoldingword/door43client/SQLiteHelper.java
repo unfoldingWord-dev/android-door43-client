@@ -13,7 +13,6 @@ import java.io.File;
 class SQLiteHelper extends SQLiteOpenHelper {
     private static final int DATABASE_VERSION = 1;
     private final String schema;
-    private final String name;
 
     /**
      *
@@ -22,10 +21,8 @@ class SQLiteHelper extends SQLiteOpenHelper {
      * @param name the db name
      */
     public SQLiteHelper(Context context, String schema, String name) {
-        // super(new DatabaseContext(context, dir), name, null, DATABASE_VERSION);
         super(context, name, null, DATABASE_VERSION);
         this.schema = schema;
-        this.name = name;
     }
 
     @Override

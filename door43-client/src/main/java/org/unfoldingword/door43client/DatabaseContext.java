@@ -12,7 +12,7 @@ import java.io.File;
  * Custom wrapper to provide a custom database path
  * http://stackoverflow.com/questions/5332328/sqliteopenhelper-problem-with-fully-qualified-db-path-name
  */
-public class DatabaseContext extends ContextWrapper {
+class DatabaseContext extends ContextWrapper {
 
     private final File dir;
 

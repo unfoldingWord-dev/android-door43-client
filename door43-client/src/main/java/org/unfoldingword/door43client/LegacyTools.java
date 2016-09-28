@@ -24,7 +24,7 @@ import java.util.Map;
 /**
  * Created by joel on 9/19/16.
  */
-public class LegacyTools {
+class LegacyTools {
 
     /**
      *
@@ -43,13 +43,53 @@ public class LegacyTools {
         library.addCatalog(new Catalog("approved-temp-langnames", host + "/api/templanguages/assignment/changed/", 0));
     }
 
-    public static void processCatalog(Library library, String data, Door43Client.OnProgressListener listener) throws Exception {
+    public static void processCatalog(Library library, String data, OnProgressListener listener) throws Exception {
         JSONArray projects = new JSONArray(data);
         for(int i = 0; i < projects.length(); i ++) {
             JSONObject pJson = projects.getJSONObject(i);
             if(listener != null) listener.onProgress(pJson.getString("slug"), projects.length(), i + 1);
             downloadSourceLanguages(library, pJson, null);
         }
+
+        // tA
+        updateTA(library, listener);
+    }
+
+    private static void updateTA(Library library, OnProgressListener listener) throws Exception {
+        String[] urls = new String[]{
+                "https://api.unfoldingword.org/ta/txt/1/en/audio_2.json",
+                "https://api.unfoldingword.org/ta/txt/1/en/checking_1.json",
+                "https://api.unfoldingword.org/ta/txt/1/en/checking_2.json",
+                "https://api.unfoldingword.org/ta/txt/1/en/gateway_3.json",
+                "https://api.unfoldingword.org/ta/txt/1/en/intro_1.json",
+                "https://api.unfoldingword.org/ta/txt/1/en/process_1.json",
+                "https://api.unfoldingword.org/ta/txt/1/en/translate_1.json",
+                "https://api.unfoldingword.org/ta/txt/1/en/translate_2.json"
+        };
+        for(int i = 0; i < urls.length; i ++) {
+            downloadTA(library, urls[i]);
+            if(listener != null) listener.onProgress("ta", urls.length, i + 1);
+        }
+    }
+
+    private static void downloadTA(Library library, String url) throws Exception {
+        GetRequest get = new GetRequest(new URL(url));
+        String data = get.read();
+        if(get.getResponseCode() != 200) throw new Exception(get.getResponseMessage());
+        JSONObject ta = new JSONObject(data);
+
+        // add language (right now only english)
+        long languageId = library.addSourceLanguage(new SourceLanguage("en", "English", "ltr"));
+
+        // add project
+        String rawSlug = ta.getJSONObject("meta").getString("manual").replaceAll("\\_", "-");
+        String name  = (rawSlug.charAt(0) + "").toUpperCase() + rawSlug.substring(1);
+        Project p = new Project("ta-" + rawSlug, name, "", "", 0, "");
+        List<Category> categories = new ArrayList<>();
+        categories.add(new Category("ta", "translationAcademy"));
+        long projectId = library.addProject(p, categories, languageId);
+
+        // TODO: add resource
     }
 
     /**
@@ -62,7 +102,7 @@ public class LegacyTools {
      * @param listener
      * @throws Exception
      */
-    private static void downloadSourceLanguages(Library library, JSONObject pJson, Door43Client.OnProgressListener listener) throws Exception {
+    private static void downloadSourceLanguages(Library library, JSONObject pJson, OnProgressListener listener) throws Exception {
         GetRequest request = new GetRequest(new URL(pJson.getString("lang_catalog")));
         String response = request.read();
         if(request.getResponseCode() != 200) throw new Exception(request.getResponseMessage());

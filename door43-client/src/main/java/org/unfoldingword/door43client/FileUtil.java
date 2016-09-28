@@ -18,7 +18,7 @@ import java.util.List;
 /**
  * Created by joel on 9/1/16.
  */
-public class FileUtil {
+class FileUtil {
 
     /**
      * Converts an input stream into a string

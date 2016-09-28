@@ -2,7 +2,6 @@ package org.unfoldingword.door43client;
 
 import android.app.Application;
 
-import com.github.tomakehurst.wiremock.core.Container;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 
 import org.junit.Before;
@@ -38,12 +37,12 @@ public class ClientIndexTest {
     public TemporaryFolder resourceDir = new TemporaryFolder();
 
     private Application context;
-    private Door43Client client;
+    private API client;
 
     @Before
     public void setUp() throws Exception {
         this.context = RuntimeEnvironment.application;
-        client = new Door43Client(context, "index", resourceDir.getRoot());
+        client = new API(context, resourceDir.getRoot(), resourceDir.getRoot());
     }
 
     private void stubAPI() throws IOException {
@@ -155,17 +154,17 @@ public class ClientIndexTest {
     public void updatePrimaryIndex() throws Exception {
         stubAPI();
         client.setGlobalCatalogServer("http://localhost:" + wireMockRule.port());
-        client.updatePrimaryIndex("http://localhost:" + wireMockRule.port() + "/catalog", null);
-        client.updateCatalogIndex("langnames", null);
+        client.updateSources("http://localhost:" + wireMockRule.port() + "/catalog", null);
+        client.updateCatalog("langnames");
         assertNotNull(client.index().getTargetLanguage("kff-x-dmorla"));
-        client.updateCatalogIndex("new-language-questions", null);
-        client.updateCatalogIndex("temp-langnames", null);
+        client.updateCatalog("new-language-questions");
+        client.updateCatalog("temp-langnames");
         assertNotNull(client.index().getTargetLanguage("qaa-x-802d08"));
-        client.updateCatalogIndex("approved-temp-langnames", null);
+        client.updateCatalog("approved-temp-langnames");
 
         assertEquals(3, client.index().getSourceLanguages().size());
-        // TRICKY: counts also include tw-bible and/or tw-obs
-        assertEquals(4, client.index().getProjects("en").size());
+        // TRICKY: counts also include tw-bible and/or tw-obs and tA
+        assertEquals(10, client.index().getProjects("en").size());
         assertEquals(2, client.index().getProjects("es").size());
         assertEquals(1, client.index().getProjects("ru").size());
         // TRIKCY: counts may also includes resources for helps
@@ -184,7 +183,7 @@ public class ClientIndexTest {
     public void downloadContainer() throws Exception {
         stubAPI();
         client.setGlobalCatalogServer("http://localhost:" + wireMockRule.port());
-        client.updatePrimaryIndex("http://localhost:" + wireMockRule.port() + "/catalog", null);
+        client.updateSources("http://localhost:" + wireMockRule.port() + "/catalog", null);
 
         File path = client.downloadFutureCompatibleResourceContainer("en", "gen", "ulb");
         assertTrue(path.exists());
@@ -194,7 +193,7 @@ public class ClientIndexTest {
     public void failToDownloadContainer() throws Exception {
         stubAPI();
         client.setGlobalCatalogServer("http://localhost:" + wireMockRule.port());
-        client.updatePrimaryIndex("http://localhost:" + wireMockRule.port() + "/catalog", null);
+        client.updateSources("http://localhost:" + wireMockRule.port() + "/catalog", null);
 
         try {
             File path = client.downloadFutureCompatibleResourceContainer("en", "gen", "udb");
@@ -209,7 +208,7 @@ public class ClientIndexTest {
     @Test
     public void convertLegacyResource() throws Exception {
         stubAPI();
-        client.updatePrimaryIndex("http://localhost:" + wireMockRule.port() + "/catalog", null);
+        client.updateSources("http://localhost:" + wireMockRule.port() + "/catalog", null);
 
         GetRequest request = new GetRequest(new URL("http://localhost:8090/ts/txt/2/gen/en/ulb/source.json"));
         String data = request.read();
