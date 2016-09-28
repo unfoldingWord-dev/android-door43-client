@@ -61,7 +61,7 @@ class LegacyTools {
      * @param listener
      * @throws Exception
      */
-    public static void updateTA(Library library, OnProgressListener listener) throws Exception {
+    private static void updateTA(Library library, OnProgressListener listener) throws Exception {
         String[] urls = new String[]{
                 "https://api.unfoldingword.org/ta/txt/1/en/audio_2.json",
                 "https://api.unfoldingword.org/ta/txt/1/en/checking_1.json",
@@ -97,7 +97,7 @@ class LegacyTools {
 
         // add project
         String rawSlug = ta.getJSONObject("meta").getString("manual").replaceAll("\\_", "-");
-        String name  = (rawSlug.charAt(0) + "").toUpperCase() + rawSlug.substring(1);   // + " Manual"  ?
+        String name  = (rawSlug.charAt(0) + "").toUpperCase() + rawSlug.substring(1) + " Manual";
         Project p = new Project("ta-" + rawSlug, name, "", "", 0, "");
         List<Category> categories = new ArrayList<>();
         categories.add(new Category("ta", "translationAcademy"));

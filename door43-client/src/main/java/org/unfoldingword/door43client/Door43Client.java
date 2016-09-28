@@ -3,7 +3,6 @@ package org.unfoldingword.door43client;
 import android.content.Context;
 
 import org.unfoldingword.resourcecontainer.ResourceContainer;
-import org.unfoldingword.tools.http.Request;
 
 import java.io.File;
 import java.io.IOException;
@@ -54,15 +53,10 @@ public class Door43Client {
     }
 
     /**
-     * Updates Translation Academy
-     *
+     * Indexes the supplementary catalogs
      * @param listener
      * @throws Exception
      */
-    public void updateTA(OnProgressListener listener) throws Exception {
-        api.updateTA(listener);
-    }
-
     public void updateCatalogs(OnProgressListener listener) throws Exception {
         api.updateCatalogs(listener);
     }
