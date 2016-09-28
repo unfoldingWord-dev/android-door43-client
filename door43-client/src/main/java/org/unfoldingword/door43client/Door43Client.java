@@ -52,6 +52,11 @@ public class Door43Client {
         api.updateSources(url, listener);
     }
 
+    /**
+     * Indexes the supplementary catalogs
+     * @param listener
+     * @throws Exception
+     */
     public void updateCatalogs(OnProgressListener listener) throws Exception {
         api.updateCatalogs(listener);
     }
