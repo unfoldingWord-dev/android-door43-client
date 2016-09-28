@@ -14,6 +14,7 @@ import org.unfoldingword.door43client.models.TargetLanguage;
 import org.unfoldingword.resourcecontainer.ContainerTools;
 import org.unfoldingword.resourcecontainer.ResourceContainer;
 import org.unfoldingword.tools.http.GetRequest;
+import org.unfoldingword.tools.http.Request;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -125,6 +126,23 @@ class API {
             // process legacy catalog data
             LegacyTools.processCatalog(library, data, listener);
         } catch(Exception e) {
+            library.endTransaction(false);
+            throw e;
+        }
+        library.endTransaction(true);
+    }
+
+    /**
+     * Updates TA
+     *
+     * @param listener
+     * @throws Exception
+     */
+    public void updateTA(OnProgressListener listener) throws Exception {
+        library.beginTransaction();
+        try {
+            LegacyTools.updateTA(library, listener);
+        } catch (Exception e) {
             library.endTransaction(false);
             throw e;
         }
