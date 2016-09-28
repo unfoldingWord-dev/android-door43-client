@@ -55,6 +55,12 @@ class LegacyTools {
         updateTA(library, listener);
     }
 
+    /**
+     * Downloads the tA projects
+     * @param library
+     * @param listener
+     * @throws Exception
+     */
     private static void updateTA(Library library, OnProgressListener listener) throws Exception {
         String[] urls = new String[]{
                 "https://api.unfoldingword.org/ta/txt/1/en/audio_2.json",
@@ -83,13 +89,41 @@ class LegacyTools {
 
         // add project
         String rawSlug = ta.getJSONObject("meta").getString("manual").replaceAll("\\_", "-");
-        String name  = (rawSlug.charAt(0) + "").toUpperCase() + rawSlug.substring(1);
+        String name  = (rawSlug.charAt(0) + "").toUpperCase() + rawSlug.substring(1);   // + " Manual"  ?
         Project p = new Project("ta-" + rawSlug, name, "", "", 0, "");
         List<Category> categories = new ArrayList<>();
         categories.add(new Category("ta", "translationAcademy"));
         long projectId = library.addProject(p, categories, languageId);
 
-        // TODO: add resource
+        // add resource
+        String slug = "vol " + ta.getJSONObject("meta").getString("volume");
+        String resourceName = "Volume " + ta.getJSONObject("meta").getString("volume");
+        String type = new String("man");
+
+        // compile status
+        String checkingLevel = ta.getJSONObject("meta").getJSONObject("status").getString("checking_level");
+        String comments = ta.getJSONObject("meta").getJSONObject("status").getString("comments");
+        String pubDate = ta.getJSONObject("meta").getJSONObject("status").getString("publish_date");
+        String license = ta.getJSONObject("meta").getJSONObject("status").getString("license");
+        String version = ta.getJSONObject("meta").getJSONObject("status").getString("version");
+
+        HashMap status = new HashMap();
+        status.put("translate_mode", "gl");
+        status.put("checking_level", checkingLevel);
+        status.put("comments", comments);
+        status.put("pub_date", pubDate);
+        status.put("license", license);
+        status.put("version", version);
+
+        Resource resource = new Resource(slug, resourceName, type, null, status);
+
+        String packageVersion = ResourceContainer.version;
+        String mimType = ContainerTools.typeToMime("man");
+        int modifiedAt = ta.getJSONObject("meta").getInt("mod");
+        Resource.Format resourceFormat = new Resource.Format(packageVersion, mimType, modifiedAt, url);
+
+        resource.addFormat(resourceFormat);
+        library.addResource(resource, projectId);
     }
 
     /**
