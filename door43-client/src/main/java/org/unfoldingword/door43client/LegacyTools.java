@@ -61,7 +61,7 @@ class LegacyTools {
      * @param listener
      * @throws Exception
      */
-    private static void updateTA(Library library, OnProgressListener listener) throws Exception {
+    public static void updateTA(Library library, OnProgressListener listener) throws Exception {
         String[] urls = new String[]{
                 "https://api.unfoldingword.org/ta/txt/1/en/audio_2.json",
                 "https://api.unfoldingword.org/ta/txt/1/en/checking_1.json",
@@ -78,6 +78,14 @@ class LegacyTools {
         }
     }
 
+    /**
+     * Downloads the tA projects
+     * Continues from updateTA()
+     *
+     * @param library
+     * @param url
+     * @throws Exception
+     */
     private static void downloadTA(Library library, String url) throws Exception {
         GetRequest get = new GetRequest(new URL(url));
         String data = get.read();
