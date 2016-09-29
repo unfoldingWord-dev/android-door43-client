@@ -75,6 +75,13 @@ public interface Index {
     TargetLanguage getTargetLanguage(String targetLangaugeSlug);
 
     /**
+     * Searches for a target language by name.
+     * @param namequery
+     * @return
+     */
+    List<TargetLanguage> findTargetLanguage(final String namequery);
+
+    /**
      * Returns a list of every target language.
      * The result may include temp target languages.
      *

@@ -20,6 +20,8 @@ import org.unfoldingword.resourcecontainer.Resource;
 import org.unfoldingword.resourcecontainer.ResourceContainer;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -577,6 +579,7 @@ class Library implements Index {
     }
 
     public TargetLanguage getTargetLanguage(String targetLangaugeSlug) {
+        TargetLanguage targetLanguage = null;
         Cursor cursor = db.rawQuery("select * from (" +
                 "  select slug, name, anglicized_name, direction, region, is_gateway_language from target_language" +
                 "  union" +
@@ -593,13 +596,62 @@ class Library implements Index {
             String region = reader.getString("region");
             boolean isGateWay = reader.getBoolean("is_gateway_language");
 
-            TargetLanguage dummyTargetLanguage = new TargetLanguage(targetLangaugeSlug, name, anglicized, direction, region, isGateWay);
-            cursor.close();
-            return dummyTargetLanguage;
-        } else {
-            cursor.close();
-            return null;
+            targetLanguage = new TargetLanguage(targetLangaugeSlug, name, anglicized, direction, region, isGateWay);
         }
+        cursor.close();
+
+        return targetLanguage;
+    }
+
+    public List<TargetLanguage> findTargetLanguage(final String namequery) {
+        List<TargetLanguage> targetLanguages = new ArrayList<>();
+        Cursor cursor = db.rawQuery("select * from (" +
+                "  select slug, name, anglicized_name, direction, region, is_gateway_language from target_language" +
+                "  union" +
+                "  select slug, name, anglicized_name, direction, region, is_gateway_language from temp_target_language" +
+                "  where approved_target_language_slug is null" +
+                ") where lower(name) like ?" +
+                " order by slug asc, name desc", new String[]{"%" + namequery.toLowerCase() + "%"});
+
+        cursor.moveToFirst();
+        while(!cursor.isAfterLast()) {
+            CursorReader reader = new CursorReader(cursor);
+
+            String slug = reader.getString("slug");
+            String name = reader.getString("name");
+            String anglicized = reader.getString("anglicized_name");
+            String direction = reader.getString("direction");
+            String region = reader.getString("region");
+            boolean isGateWay = reader.getBoolean("is_gateway_language");
+
+            TargetLanguage targetLanguage = new TargetLanguage(slug, name, anglicized, direction, region, isGateWay);
+            targetLanguages.add(targetLanguage);
+        }
+        cursor.close();
+
+        Collections.sort(targetLanguages, new Comparator<TargetLanguage>() {
+            @Override
+            public int compare(TargetLanguage lhs, TargetLanguage rhs) {
+                String lhId = lhs.slug;
+                String rhId = rhs.slug;
+                // give priority to matches with the id
+                if(lhId.toLowerCase().startsWith(namequery.toLowerCase())) {
+                    lhId = "!!" + lhId;
+                }
+                if(rhId.toLowerCase().startsWith(namequery.toLowerCase())) {
+                    rhId = "!!" + rhId;
+                }
+                if(lhs.name.toLowerCase().startsWith(namequery.toLowerCase())) {
+                    lhId = "!" + lhId;
+                }
+                if(rhs.name.toLowerCase().startsWith(namequery.toLowerCase())) {
+                    rhId = "!" + rhId;
+                }
+                return lhId.compareToIgnoreCase(rhId);
+            }
+        });
+
+        return targetLanguages;
     }
 
     public List<TargetLanguage> getTargetLanguages() {
