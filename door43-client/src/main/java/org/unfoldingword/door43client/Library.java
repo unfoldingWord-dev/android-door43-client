@@ -636,10 +636,14 @@ class Library implements Index {
     }
 
     public Project getProject(String sourceLanguageSlug, String projectSlug) {
+        return getProject(sourceLanguageSlug, projectSlug, false);
+    }
+
+    public Project getProject(String sourceLanguageSlug, String projectSlug, boolean enableDefaultLanguage) {
         Project project = null;
-        Cursor cursor = db.rawQuery("select * from project" +
-                " where slug=? and source_language_id in (" +
-                " select id from source_language where slug=?)" +
+        Cursor cursor = db.rawQuery("select p.*, sl.slug as source_language_slug from project as p" +
+                " left join source_language as sl on sl.id=p.source_language_id" +
+                " where p.slug=? and sl.slug LIKE (?)" +
                 " limit 1", new String[]{projectSlug, sourceLanguageSlug});
 
         if(cursor.moveToFirst()) {
@@ -654,9 +658,14 @@ class Library implements Index {
 
             project = new Project(slug, name, desc, icon, sort, chunksUrl);
             project._dbInfo.rowId = reader.getLong("id");
-            //TODO: store the language slug for convenience
+            project._dbInfo.relatedSlugs.put("source_language_slug", reader.getString("source_language_slug"));
         }
         cursor.close();
+
+        // attempt to fetch the default language
+        if(project == null && enableDefaultLanguage) project = getProject("en", projectSlug, false);
+        if(project == null && enableDefaultLanguage) project = getProject("%", projectSlug, false);
+
         return project;
     }
 
@@ -686,6 +695,11 @@ class Library implements Index {
         return projects;
     }
 
+    // TODO: 9/28/16 or findProjectSourceLanguages(String projectSlug) so we can find languages that have this project
+    // TODO: 9/28/16 potentially add getTranslationProgress
+    // TODO: 9/28/16 allow filtering by checking level (resource containers, projects, resources).. maybe we could do with just resource containers.
+
+    // we can use this in place of
     public List<CategoryEntry> getProjectCategories(long parentCategoryId, String languageSlug, String translateMode) {
         Cursor categoryCursor;
         String[] preferredSlug = {languageSlug, "en", "%"};

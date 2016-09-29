@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -257,6 +258,14 @@ public class LibraryGettersUnitTest {
         assertNotNull(p1);
         assertNotNull(p2);
         assertNotNull(p3);
+    }
+
+    @Test
+    public void getProjectWithDefaultLanguage() throws Exception {
+        Project p1 = library.getProject("missing", "proj-no-cat-1", true);
+
+        assertNotNull(p1);
+//        assertNotEquals(p1.);
     }
 
     @Test

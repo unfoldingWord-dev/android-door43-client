@@ -100,6 +100,16 @@ public interface Index {
      *
      * @param sourceLanguageSlug the source language code for which the project will be returned
      * @param projectSlug the project code
+     * @param enableDefaultLanguage allows this method to use the default language if no project is found in this language
+     * @return the project object or null
+     */
+    Project getProject(String sourceLanguageSlug, String projectSlug, boolean enableDefaultLanguage);
+
+    /**
+     * Returns a project
+     *
+     * @param sourceLanguageSlug the source language code for which the project will be returned
+     * @param projectSlug the project code
      * @return the project object or null
      */
     Project getProject(String sourceLanguageSlug, String projectSlug);
