@@ -1034,6 +1034,36 @@ class Library implements Index {
         return chunkMarkers;
     }
 
+    public Questionnaire getQuestionnaire(long tdId) {
+        Questionnaire questionnaire = null;
+        Cursor cursor = db.rawQuery("select * from questionnaire" +
+                " where td_id=" + tdId, null);
+        cursor.moveToFirst();
+        if(!cursor.isAfterLast()) {
+            CursorReader reader = new CursorReader(cursor);
+
+            // load data fields
+            Cursor dataFieldsCursor = db.rawQuery("select field, question_td_id from questionnaire_data_field" +
+                    " where questionnaire_id=" + reader.getLong("id"), null);
+            Map<String, Long> dataFields = new HashMap<>();
+            dataFieldsCursor.moveToFirst();
+            while(!dataFieldsCursor.isAfterLast()) {
+                CursorReader dataFieldReader = new CursorReader(dataFieldsCursor);
+                dataFields.put(dataFieldReader.getString("field"), dataFieldReader.getLong("question_td_id"));
+                dataFieldsCursor.moveToNext();
+            }
+            dataFieldsCursor.close();;
+
+            questionnaire = new Questionnaire(reader.getString("language_slug"),
+                    reader.getString("language_name"),
+                    reader.getString("language_direction"),
+                    reader.getLong("td_id"),
+                    dataFields);
+        }
+        cursor.close();
+        return questionnaire;
+    }
+
     public List<Questionnaire> getQuestionnaires() {
         Cursor cursor = db.rawQuery("select * from questionnaire", null);
 
@@ -1070,7 +1100,8 @@ class Library implements Index {
 
     public List<Question> getQuestions(long questionnaireTDId) {
         Cursor cursor = db.rawQuery("select * from question where questionnaire_id in (" +
-                " select id from questionnaire where td_id=" + questionnaireTDId + ") LIMIT 1", null);
+                " select id from questionnaire where td_id=" + questionnaireTDId + ")" +
+                " order by sort asc", null);
 
         List<Question> questions = new ArrayList<>();
         cursor.moveToFirst();

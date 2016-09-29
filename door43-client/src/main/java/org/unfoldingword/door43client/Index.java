@@ -194,6 +194,13 @@ public interface Index {
     List<ChunkMarker> getChunkMarkers(String projectSlug, String versificationSlug);
 
     /**
+     * Returns a questionnaire
+     * @param tdId the translation database id (on the server) of the questionnaire
+     * @return
+     */
+    Questionnaire getQuestionnaire(long tdId);
+
+    /**
      * Returns a list of questionnaires
      *
      * @return a list of questionnaires

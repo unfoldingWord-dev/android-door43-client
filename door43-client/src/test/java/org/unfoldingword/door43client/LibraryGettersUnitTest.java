@@ -352,6 +352,9 @@ public class LibraryGettersUnitTest {
             List<Question> questions = library.getQuestions(q.tdId);
             assertTrue(questions.size() > 0);
             assertTrue(q.dataFields.size() > 0);
+
+            // test getting single questionnnaire
+            assertNotNull(library.getQuestionnaire(q.tdId));
         }
     }
 }
