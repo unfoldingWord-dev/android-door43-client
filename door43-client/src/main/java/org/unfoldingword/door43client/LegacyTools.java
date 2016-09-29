@@ -319,7 +319,7 @@ class LegacyTools {
             for(int i = 0; i < chunks.length(); i ++) {
                 JSONObject chunk = chunks.getJSONObject(i);
                 ChunkMarker cm = new ChunkMarker(chunk.getString("chp"), chunk.getString("firstvs"));
-                library.addChunkMarker(cm, projectSlug, v._dbInfo.rowId);
+                library.addChunkMarker(cm, projectSlug, v._dbInfo().rowId);
             }
         } else {
             System.console().writer().write("Unknown versification " + versificationSlug + " while downloading chunks for project " + projectSlug);

@@ -6,13 +6,9 @@ import org.json.JSONObject;
 /**
  * Represents a project to be translated
  */
-public class Project extends DatabaseObject {
-    public final String slug;
-    public final String name;
-    public final String description;
-    public final String icon;
-    public final int sort;
-    public final String chunksUrl;
+public class Project extends org.unfoldingword.resourcecontainer.Project implements DatabaseObject {
+
+    private DBInfo dbInfo = new DBInfo();
 
     /**
      *
@@ -24,26 +20,28 @@ public class Project extends DatabaseObject {
      * @param chunksUrl the url to the project chunks definition
      */
     public Project(String slug, String name, String description, String icon, int sort, String chunksUrl) {
-        this.slug = slug;
-        this.name = name;
+        super(slug, name, sort);
+
         this.description = description;
         this.icon = icon;
-        this.sort = sort;
         this.chunksUrl = chunksUrl;
     }
 
     /**
-     * Returns the object serialized to json
+     * Creates a new project from json
+     * @param json
      * @return
+     * @throws JSONException
      */
-    public JSONObject toJSON() throws JSONException {
-        JSONObject json = new JSONObject();
-        json.put("slug", slug);
-        json.put("name", name);
-        json.put("desc", description);
-        json.put("icon", icon);
-        json.put("sort", sort);
-        json.put("chunks_url", chunksUrl);
-        return json;
+    public static Project fromJSON(JSONObject json) throws JSONException {
+        // TRICKY: we cannot cast a base class to a child class so we must manually convert the object
+        org.unfoldingword.resourcecontainer.Project p = org.unfoldingword.resourcecontainer.Project.fromJSON(json);
+        Project project = new Project(p.slug, p.name, p.description, p.icon, p.sort, p.chunksUrl);
+        return project;
+    }
+
+    @Override
+    public DBInfo _dbInfo() {
+        return this.dbInfo;
     }
 }

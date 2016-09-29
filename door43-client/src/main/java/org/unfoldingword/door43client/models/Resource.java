@@ -10,9 +10,10 @@ import java.util.Map;
 /**
  * Represents a resource that can be translated
  */
-public class Resource extends org.unfoldingword.resourcecontainer.Resource {
+public class Resource extends org.unfoldingword.resourcecontainer.Resource implements DatabaseObject {
     public final List<Format> formats = new ArrayList<>();
     public String wordsAssignmentsUrl = "";
+    private DBInfo dbInfo = new DBInfo();
 
     public Resource(String slug, String name, String type, String translateMode, String checkingLevel, String version) {
         super(slug, name, type, translateMode, checkingLevel, version);
@@ -36,6 +37,11 @@ public class Resource extends org.unfoldingword.resourcecontainer.Resource {
         resource.pubDate = r.pubDate;
         resource.license = r.license;
         return resource;
+    }
+
+    @Override
+    public DBInfo _dbInfo() {
+        return dbInfo;
     }
 
     /**

@@ -2,14 +2,17 @@ package org.unfoldingword.door43client.models;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.unfoldingword.resourcecontainer.Language;
 
 /**
  * Represents a language that a resource will be translated into
  */
-public class TargetLanguage extends Language {
+public class TargetLanguage extends Language implements DatabaseObject {
     public final String anglicizedName;
     public final String region;
     public final boolean isGatewayLanguage;
+
+    private DBInfo dbInfo = new DBInfo();
 
     /**
      * Creates a new target language
@@ -34,5 +37,10 @@ public class TargetLanguage extends Language {
         json.put("region", region);
         json.put("is_gateway_language", isGatewayLanguage);
         return json;
+    }
+
+    @Override
+    public DBInfo _dbInfo() {
+        return dbInfo;
     }
 }

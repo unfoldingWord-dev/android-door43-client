@@ -340,9 +340,8 @@ public class LibraryGettersUnitTest {
         List<Questionnaire> list = library.getQuestionnaires();
         assertTrue(list.size() > 0);
         for(Questionnaire q:list) {
-            List<Question> questions = library.getQuestions(q._dbInfo.rowId);
+            List<Question> questions = library.getQuestions(q._dbInfo().rowId);
             assertTrue(questions.size() > 0);
         }
     }
-
 }
