@@ -3,13 +3,13 @@ package org.unfoldingword.door43client;
 import org.unfoldingword.door43client.models.Catalog;
 import org.unfoldingword.door43client.models.CategoryEntry;
 import org.unfoldingword.door43client.models.ChunkMarker;
-import org.unfoldingword.door43client.models.Project;
 import org.unfoldingword.door43client.models.Question;
 import org.unfoldingword.door43client.models.Questionnaire;
-import org.unfoldingword.door43client.models.Resource;
 import org.unfoldingword.door43client.models.SourceLanguage;
 import org.unfoldingword.door43client.models.TargetLanguage;
 import org.unfoldingword.door43client.models.Versification;
+import org.unfoldingword.resourcecontainer.Project;
+import org.unfoldingword.resourcecontainer.Resource;
 
 import java.util.HashMap;
 import java.util.List;
@@ -94,6 +94,16 @@ public interface Index {
      * @return the language object or null if it does not exist
      */
     TargetLanguage getApprovedTargetLanguage(String tempTargetLanguageSlug);
+
+    /**
+     * Returns a project with the option of falling back to a default language if not found
+     *
+     * @param sourceLanguageSlug the source language code for which the project will be returned
+     * @param projectSlug the project code
+     * @param enableDefaultLanguage allows this method to use the default language if no project is found in this language
+     * @return the project object or null
+     */
+    Project getProject(String sourceLanguageSlug, String projectSlug, boolean enableDefaultLanguage);
 
     /**
      * Returns a project

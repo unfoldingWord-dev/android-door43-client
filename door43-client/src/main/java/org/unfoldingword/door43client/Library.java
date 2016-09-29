@@ -10,13 +10,13 @@ import org.unfoldingword.door43client.models.Category;
 import org.unfoldingword.door43client.models.CategoryEntry;
 import org.unfoldingword.door43client.models.ChunkMarker;
 import org.unfoldingword.door43client.models.TargetLanguage;
-import org.unfoldingword.door43client.models.Project;
 import org.unfoldingword.door43client.models.Question;
-import org.unfoldingword.door43client.models.Resource;
 import org.unfoldingword.door43client.models.SourceLanguage;
 import org.unfoldingword.door43client.models.Versification;
 import org.unfoldingword.door43client.models.Catalog;
 import org.unfoldingword.door43client.models.Questionnaire;
+import org.unfoldingword.resourcecontainer.Project;
+import org.unfoldingword.resourcecontainer.Resource;
 import org.unfoldingword.resourcecontainer.ResourceContainer;
 
 import java.util.ArrayList;
@@ -381,20 +381,20 @@ class Library implements Index {
         validateNotEmpty(resource.name);
         validateNotEmpty(resource.type);
         validateNotEmpty(resource.formats.size() > 0 ? "good" : null);
-        validateNotEmpty((String)resource.status.get("translate_mode"));
-        validateNotEmpty((String)resource.status.get("checking_level"));
-        validateNotEmpty((String)resource.status.get("version"));
+        validateNotEmpty(resource.translateMode);
+        validateNotEmpty(resource.checkingLevel);
+        validateNotEmpty(resource.version);
 
         ContentValues values = new ContentValues();
         values.put("slug", resource.slug);
         values.put("name", resource.name);
         values.put("type", resource.type);
-        values.put("translate_mode", (String)resource.status.get("translate_mode"));
-        values.put("checking_level", (String)resource.status.get("checking_level"));
-        values.put("comments", deNull((String)resource.status.get("comments")));
-        values.put("pub_date", deNull((String)resource.status.get("pub_date")));
-        values.put("license", deNull((String)resource.status.get("license")));
-        values.put("version", (String)resource.status.get("version"));
+        values.put("translate_mode", resource.translateMode);
+        values.put("checking_level", resource.checkingLevel);
+        values.put("comments", deNull(resource.comments));
+        values.put("pub_date", deNull(resource.pubDate));
+        values.put("license", deNull(resource.license));
+        values.put("version", resource.version);
         values.put("project_id", projectId);
 
         long resourceId = insertOrUpdate("resource", values, new String[]{"slug", "project_id"});
@@ -413,9 +413,11 @@ class Library implements Index {
         }
 
         //add legacy data
-        if(resource.wordsAssignmentsUrl != null && !resource.wordsAssignmentsUrl.equals("")) {
+        if(resource._legacyData.containsKey(API.LEGACY_WORDS_ASSIGNMENTS_URL)
+                && resource._legacyData.get(API.LEGACY_WORDS_ASSIGNMENTS_URL) != null
+                && !resource._legacyData.get(API.LEGACY_WORDS_ASSIGNMENTS_URL).equals("")) {
             ContentValues legacyValues = new ContentValues();
-            legacyValues.put("translation_words_assignments_url", resource.wordsAssignmentsUrl);
+            legacyValues.put("translation_words_assignments_url", (String)resource._legacyData.get(API.LEGACY_WORDS_ASSIGNMENTS_URL));
             legacyValues.put("resource_id", resourceId);
             insertOrUpdate("legacy_resource_info", legacyValues, new String[]{"resource_id"});
         }
@@ -528,7 +530,6 @@ class Library implements Index {
             String direction = reader.getString("direction");
 
             SourceLanguage sourceLanguage = new SourceLanguage(sourceLanguageSlug, name, direction);
-            sourceLanguage._dbInfo.rowId = reader.getLong("id");
             cursor.close();
             return sourceLanguage;
         } else {
@@ -550,7 +551,6 @@ class Library implements Index {
             String direction = reader.getString("direction");
 
             SourceLanguage sourceLanguage = new SourceLanguage(slug, name, direction);
-            sourceLanguage._dbInfo.rowId = reader.getLong("id");
             sourceLanguages.add(sourceLanguage);
             cursor.moveToNext();
         }
@@ -636,10 +636,14 @@ class Library implements Index {
     }
 
     public Project getProject(String sourceLanguageSlug, String projectSlug) {
+        return getProject(sourceLanguageSlug, projectSlug, false);
+    }
+
+    public Project getProject(String sourceLanguageSlug, String projectSlug, boolean enableDefaultLanguage) {
         Project project = null;
-        Cursor cursor = db.rawQuery("select * from project" +
-                " where slug=? and source_language_id in (" +
-                " select id from source_language where slug=?)" +
+        Cursor cursor = db.rawQuery("select p.*, sl.slug as source_language_slug from project as p" +
+                " left join source_language as sl on sl.id=p.source_language_id" +
+                " where p.slug=? and sl.slug LIKE (?)" +
                 " limit 1", new String[]{projectSlug, sourceLanguageSlug});
 
         if(cursor.moveToFirst()) {
@@ -652,11 +656,18 @@ class Library implements Index {
             int sort = reader.getInt("sort");
             String chunksUrl = reader.getString("chunks_url");
 
-            project = new Project(slug, name, desc, icon, sort, chunksUrl);
-            project._dbInfo.rowId = reader.getLong("id");
-            //TODO: store the language slug for convenience
+            project = new Project(slug, name, sort);
+            project.description = desc;
+            project.icon = icon;
+            project.chunksUrl = chunksUrl;
+            project.languageSlug = reader.getString("source_language_slug");
         }
         cursor.close();
+
+        // attempt to fetch the default language
+        if(project == null && enableDefaultLanguage) project = getProject("en", projectSlug, false);
+        if(project == null && enableDefaultLanguage) project = getProject("%", projectSlug, false);
+
         return project;
     }
 
@@ -677,8 +688,12 @@ class Library implements Index {
             int sort = reader.getInt("sort");
             String chunksUrl = reader.getString("chunks_url");
 
-            Project project = new Project(slug, name, desc, icon, sort, chunksUrl);
-            project._dbInfo.rowId = reader.getLong("id");
+            Project project = new Project(slug, name, sort);
+            project.description = desc;
+            project.icon = icon;
+            project.chunksUrl = chunksUrl;
+            project.languageSlug = sourceLanguageSlug;
+
             projects.add(project);
             cursor.moveToNext();
         }
@@ -686,6 +701,11 @@ class Library implements Index {
         return projects;
     }
 
+    // TODO: 9/28/16 or findProjectSourceLanguages(String projectSlug) so we can find languages that have this project
+    // TODO: 9/28/16 potentially add getTranslationProgress
+    // TODO: 9/28/16 allow filtering by checking level (resource containers, projects, resources).. maybe we could do with just resource containers.
+
+    // we can use this in place of
     public List<CategoryEntry> getProjectCategories(long parentCategoryId, String languageSlug, String translateMode) {
         Cursor categoryCursor;
         String[] preferredSlug = {languageSlug, "en", "%"};
@@ -795,15 +815,11 @@ class Library implements Index {
             String version = reader.getString("version");
             String wordsAssignmentsUrl = reader.getString("translation_words_assignments_url");
 
-            HashMap status = new HashMap();
-            status.put("translateMode", translateMode);
-            status.put("checkingLevel", checkingLevel);
-            status.put("comments", comments);
-            status.put("pub_date", pubDate);
-            status.put("license", license);
-            status.put("version", version);
-
-            resource = new Resource(resourceSlug, name, type, wordsAssignmentsUrl, status);
+            resource = new Resource(resourceSlug, name, type, translateMode, checkingLevel, version);
+            resource._legacyData.put(API.LEGACY_WORDS_ASSIGNMENTS_URL, wordsAssignmentsUrl);
+            resource.comments = comments;
+            resource.pubDate = pubDate;
+            resource.license = license;
 
             // load formats and add to resource
             Cursor formatCursor = db.rawQuery("select * from resource_format where resource_id=" + resourceId, null);
@@ -858,7 +874,7 @@ class Library implements Index {
             String type = reader.getString("type");
             String checkingLevel = reader.getString("checking_level");
             String comments = reader.getString("comments");
-            int pubDate = reader.getInt("pub_date");
+            String pubDate = reader.getString("pub_date");
             String license = reader.getString("license");
             String version = reader.getString("version");
             String wordsAssignmentsUrl = reader.getString("translation_words_assignments_url");
@@ -871,7 +887,11 @@ class Library implements Index {
             status.put("license", license);
             status.put("version", version);
 
-            Resource resource = new Resource(slug, name, type, wordsAssignmentsUrl, status);
+            Resource resource = new Resource(slug, name, type, translateMode, checkingLevel, version);
+            resource._legacyData.put(API.LEGACY_WORDS_ASSIGNMENTS_URL, wordsAssignmentsUrl);
+            resource.comments = comments;
+            resource.pubDate = pubDate;
+            resource.license = license;
 
             // load formats and add to resource
             Cursor formatCursor = db.rawQuery("select * from resource_format where resource_id=" + resourceId, null);
@@ -907,7 +927,6 @@ class Library implements Index {
             int modifiedAt = reader.getInt("modified_at");
 
             catalog = new Catalog(catalogSlug, url, modifiedAt);
-            catalog._dbInfo.rowId = reader.getLong("id");
         }
         cursor.close();
         return catalog;
@@ -926,7 +945,6 @@ class Library implements Index {
             int modifiedAt = reader.getInt("modified_at");
 
             Catalog catalog = new Catalog(slug, url, modifiedAt);
-            catalog._dbInfo.rowId = reader.getLong("id");
             catalogs.add(catalog);
             cursor.moveToNext();
         }
@@ -948,7 +966,7 @@ class Library implements Index {
             String name = reader.getString("name");
 
             versification = new Versification(slug, name);
-            versification._dbInfo.rowId = reader.getLong("id");
+            versification.rowId = reader.getLong("id");
         }
         cursor.close();
         return versification;
@@ -969,7 +987,7 @@ class Library implements Index {
             String name = reader.getString("name");
 
             Versification versification = new Versification(slug, name);
-            versification._dbInfo.rowId = reader.getLong("id");
+            versification.rowId = reader.getLong("id");
             versifications.add(versification);
             cursor.moveToNext();
         }
@@ -991,7 +1009,6 @@ class Library implements Index {
             String verse = reader.getString("verse");
 
             ChunkMarker chunkMarker = new ChunkMarker(chapter, verse);
-            chunkMarker._dbInfo.rowId = reader.getLong("id");
             chunkMarkers.add(chunkMarker);
             cursor.moveToNext();
         }
@@ -1013,7 +1030,6 @@ class Library implements Index {
             long tdId = reader.getLong("td_id");
 
             Questionnaire questionnaire = new Questionnaire(slug, name, direction, tdId);
-            questionnaire._dbInfo.rowId = reader.getLong("id");
             questionnaires.add(questionnaire);
             cursor.moveToNext();
         }
@@ -1022,7 +1038,8 @@ class Library implements Index {
     }
 
     public List<Question> getQuestions(long questionnaireTDId) {
-        Cursor cursor = db.rawQuery("select * from question where questionnaire_id=" + questionnaireTDId, null);
+        Cursor cursor = db.rawQuery("select * from question where questionnaire_id in (" +
+                " select id from questionnaire where td_id=" + questionnaireTDId + ") LIMIT 1", null);
 
         List<Question> questions = new ArrayList<>();
         cursor.moveToFirst();
@@ -1038,7 +1055,6 @@ class Library implements Index {
             long tdId = reader.getInt("td_id");
 
             Question question = new Question(text, help, isRequired, inputType, sort, dependsOn, tdId);
-            question._dbInfo.rowId = reader.getLong("id");
             questions.add(question);
             cursor.moveToNext();
         }

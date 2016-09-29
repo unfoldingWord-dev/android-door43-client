@@ -2,6 +2,7 @@ package org.unfoldingword.door43client.models;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.unfoldingword.resourcecontainer.Language;
 
 /**
  * Represents a language that a resource will be translated into
@@ -35,4 +36,5 @@ public class TargetLanguage extends Language {
         json.put("is_gateway_language", isGatewayLanguage);
         return json;
     }
+
 }

@@ -1,5 +1,7 @@
 package org.unfoldingword.door43client.models;
 
+import org.unfoldingword.resourcecontainer.Language;
+
 /**
  * Represents a language that a resource exists in  (for the purpose of source content)
  */

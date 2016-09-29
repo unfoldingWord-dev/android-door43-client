@@ -10,19 +10,17 @@ import org.robolectric.RuntimeEnvironment;
 import org.unfoldingword.door43client.models.Catalog;
 import org.unfoldingword.door43client.models.Category;
 import org.unfoldingword.door43client.models.ChunkMarker;
-import org.unfoldingword.door43client.models.Project;
 import org.unfoldingword.door43client.models.Question;
 import org.unfoldingword.door43client.models.Questionnaire;
-import org.unfoldingword.door43client.models.Resource;
 import org.unfoldingword.door43client.models.TargetLanguage;
 import org.unfoldingword.door43client.models.SourceLanguage;
 import org.unfoldingword.door43client.models.Versification;
+import org.unfoldingword.resourcecontainer.Project;
+import org.unfoldingword.resourcecontainer.Resource;
 import org.unfoldingword.resourcecontainer.ResourceContainer;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import static org.junit.Assert.*;
 
@@ -146,7 +144,8 @@ public class LibrarySettersUnitTest {
     public void addProject() throws Exception {
         SourceLanguage language = new SourceLanguage("en", "English", "ltr");
         long languageId = library.addSourceLanguage(language);
-        Project project = new Project("gen", "Genesis", "The Book of Genesis", null, 1, null);
+        Project project = new Project("gen", "Genesis", 1);
+        project.description = "The Book of Genesis";
         List<Category> categories = new ArrayList<>();
         categories.add(new Category("bible-ot", "Old Testament"));
         long id = library.addProject(project, categories, languageId);
@@ -201,17 +200,15 @@ public class LibrarySettersUnitTest {
     public void addResource() throws Exception {
         SourceLanguage language = new SourceLanguage("en", "English", "ltr");
         long languageId = library.addSourceLanguage(language);
-        Project project = new Project("gen", "Genesis", "The Book of Genesis", null, 1, null);
+        Project project = new Project("gen", "Genesis", 1);
+        project.description = "The Book of Genesis";
         List<Category> categories = new ArrayList<>();
         categories.add(new Category("bible-ot", "Old Testament"));
         long projectId = library.addProject(project, categories, languageId);
 
-        Map<String, Object> status = new HashMap();
-        status.put("translate_mode", "all");
-        status.put("checking_level", "3");
-        status.put("version", "4");
         Resource.Format format = new Resource.Format(ResourceContainer.version, ResourceContainer.baseMimeType + "+book", 0, "some url");
-        Resource resource = new Resource("ulb", "Unlocked Literal Bible", "book", "some url", status);
+        Resource resource = new Resource("ulb", "Unlocked Literal Bible", "book", "all", "3", "4");
+
 
         // test invalid
         try {
@@ -227,7 +224,7 @@ public class LibrarySettersUnitTest {
         assertTrue(resourceId > 0);
 
         // test update
-        Resource newResource = new Resource("ulb", "Updated Unlocked Literal Bible", "book", "some url", status);
+        Resource newResource = new Resource("ulb", "Updated Unlocked Literal Bible", "book", "all", "3", "4");
         newResource.addFormat(format);
         long updatedResourceid = library.addResource(newResource, projectId);
         assertEquals(updatedResourceid, resourceId);

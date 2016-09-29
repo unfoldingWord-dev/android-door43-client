@@ -3,7 +3,7 @@ package org.unfoldingword.door43client.models;
 /**
  * Represents a single question in a questionnaire
  */
-public class Question extends DatabaseObject {
+public class Question {
     public final String text;
     public final String help;
     public final boolean isRequired;
@@ -31,4 +31,5 @@ public class Question extends DatabaseObject {
         this.dependsOn = dependsOn;
         this.tdId = tdId;
     }
+
 }
