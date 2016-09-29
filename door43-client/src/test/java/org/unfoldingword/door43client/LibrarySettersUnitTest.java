@@ -20,7 +20,9 @@ import org.unfoldingword.resourcecontainer.Resource;
 import org.unfoldingword.resourcecontainer.ResourceContainer;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.Assert.*;
 
@@ -232,7 +234,11 @@ public class LibrarySettersUnitTest {
 
     @Test
     public void addQuestionnaire() throws Exception {
-        Questionnaire questionnaire = new Questionnaire("en", "English", "ltr", 1);
+        Map<String, Long> dataFields = new HashMap<>();
+        dataFields.put("ln", (long)1);
+        dataFields.put("ld", (long)2);
+        dataFields.put("lr", (long)3);
+        Questionnaire questionnaire = new Questionnaire("en", "English", "ltr", 1, dataFields);
         long id = library.addQuestionnaire(questionnaire);
         assertTrue(id > 0);
 
@@ -243,7 +249,11 @@ public class LibrarySettersUnitTest {
 
     @Test
     public void addQuestion() throws Exception {
-        Questionnaire questionnaire = new Questionnaire("en", "English", "ltr", 1);
+        Map<String, Long> dataFields = new HashMap<>();
+        dataFields.put("ln", (long)1);
+        dataFields.put("ld", (long)2);
+        dataFields.put("lr", (long)3);
+        Questionnaire questionnaire = new Questionnaire("en", "English", "ltr", 1, dataFields);
         long questionnaireId = library.addQuestionnaire(questionnaire);
 
         Question question = new Question("MY question", "answer me!", true, "text", 0, 0, 1);

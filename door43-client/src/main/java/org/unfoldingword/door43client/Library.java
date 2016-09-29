@@ -43,6 +43,13 @@ class Library implements Index {
     }
 
     /**
+     * Temporary ends the transaction to let other threads run
+     */
+    public void  yieldSafely() {
+        db.yieldIfContendedSafely();
+    }
+
+    /**
      * Used to open a transaction
      */
     public void beginTransaction() {
@@ -442,7 +449,18 @@ class Library implements Index {
         values.put("language_direction", questionnaire.languageDirection);
         values.put("td_id", questionnaire.tdId);
 
-        return insertOrUpdate("questionnaire", values, new String[]{"td_id", "language_slug"});
+        long id = insertOrUpdate("questionnaire", values, new String[]{"td_id", "language_slug"});
+
+        // add data fields
+        for(String field:questionnaire.dataFields.keySet()) {
+            ContentValues fieldValues = new ContentValues();
+            fieldValues.put("questionnaire_id", id);
+            fieldValues.put("field", field);
+            fieldValues.put("question_td_id", (long)questionnaire.dataFields.get(field));
+            insertOrUpdate("questionnaire_data_field", fieldValues, new String[]{"field", "questionnaire_id"});
+        }
+
+        return id;
     }
 
     /**
@@ -1024,12 +1042,25 @@ class Library implements Index {
         while(!cursor.isAfterLast()) {
             CursorReader reader = new CursorReader(cursor);
 
+            long id = reader.getLong("id");
             String slug = reader.getString("language_slug");
             String name = reader.getString("language_name");
             String direction = reader.getString("language_direction");
             long tdId = reader.getLong("td_id");
 
-            Questionnaire questionnaire = new Questionnaire(slug, name, direction, tdId);
+            // load data fields
+            Cursor dataFieldsCursor = db.rawQuery("select field, question_td_id from questionnaire_data_field" +
+                    " where questionnaire_id=" + id, null);
+            Map<String, Long> dataFields = new HashMap<>();
+            dataFieldsCursor.moveToFirst();
+            while(!dataFieldsCursor.isAfterLast()) {
+                CursorReader dataFieldReader = new CursorReader(dataFieldsCursor);
+                dataFields.put(dataFieldReader.getString("field"), dataFieldReader.getLong("question_td_id"));
+                dataFieldsCursor.moveToNext();
+            }
+            dataFieldsCursor.close();;
+
+            Questionnaire questionnaire = new Questionnaire(slug, name, direction, tdId, dataFields);
             questionnaires.add(questionnaire);
             cursor.moveToNext();
         }

@@ -21,8 +21,10 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by joel on 8/30/16.
@@ -210,6 +212,7 @@ class API {
                 logListener.onWarning("Failed to add the target language: " + language.slug);
             }
             if(listener != null) listener.onProgress("langnames", languages.length(), i + 1);
+            library.yieldSafely();
         }
     }
 
@@ -223,7 +226,20 @@ class API {
         JSONArray languages = obj.getJSONArray("languages");
         for(int i = 0; i < languages.length(); i ++) {
             JSONObject qJson = languages.getJSONObject(i);
-            Questionnaire questionnaire = new Questionnaire(qJson.getString("slug"), qJson.getString("name"), qJson.getString("dir"), qJson.getLong("questionnaire_id"));
+            Map<String, Long> dataFields = new HashMap<>();
+            if(qJson.has("language_data")) {
+                JSONObject dataFieldJson = qJson.getJSONObject("language_data");
+                Iterator<String> keyIter = dataFieldJson.keys();
+                while (keyIter.hasNext()) {
+                    String key = keyIter.next();
+                    dataFields.put(key, dataFieldJson.getLong(key));
+                }
+            }
+            Questionnaire questionnaire = new Questionnaire(qJson.getString("slug"),
+                    qJson.getString("name"),
+                    qJson.getString("dir"),
+                    qJson.getLong("questionnaire_id"),
+                    dataFields);
             long questionnaireId = library.addQuestionnaire(questionnaire);
 
             // add questions
@@ -240,11 +256,13 @@ class API {
                 if(languages.length() == 1 && listener != null) {
                     listener.onProgress("new-language-questions", qJson.getJSONArray("questions").length(), j + 1);
                 }
+                library.yieldSafely();
             }
             // broadcast overall progress if there are multiple questionnaires.
             if(languages.length() > 1 && listener != null) {
                 listener.onProgress("new-language-questions", qJson.getJSONArray("questions").length(), i + 1);
             }
+            library.yieldSafely();
         }
     }
 
@@ -264,6 +282,7 @@ class API {
                 logListener.onWarning("Failed to add the temp target language: " + language.slug);
             }
             if(listener != null) listener.onProgress("temp-langnames", languages.length(), i + 1);
+            library.yieldSafely();
         }
     }
 
@@ -284,6 +303,7 @@ class API {
                 }
             }
             if(listener != null) listener.onProgress("approved-temp-langnames", languages.length(), i + 1);
+            library.yieldSafely();
         }
     }
 
