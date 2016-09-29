@@ -6,11 +6,11 @@ import org.json.JSONObject;
 import org.unfoldingword.door43client.models.Catalog;
 import org.unfoldingword.door43client.models.Category;
 import org.unfoldingword.door43client.models.ChunkMarker;
-import org.unfoldingword.door43client.models.Project;
-import org.unfoldingword.door43client.models.Resource;
 import org.unfoldingword.door43client.models.SourceLanguage;
 import org.unfoldingword.door43client.models.Versification;
 import org.unfoldingword.resourcecontainer.ContainerTools;
+import org.unfoldingword.resourcecontainer.Project;
+import org.unfoldingword.resourcecontainer.Resource;
 import org.unfoldingword.resourcecontainer.ResourceContainer;
 import org.unfoldingword.tools.http.GetRequest;
 
@@ -98,7 +98,7 @@ class LegacyTools {
         // add project
         String rawSlug = ta.getJSONObject("meta").getString("manual").replaceAll("\\_", "-");
         String name  = (rawSlug.charAt(0) + "").toUpperCase() + rawSlug.substring(1) + " Manual";
-        Project p = new Project("ta-" + rawSlug, name, "", "", 0, "");
+        Project p = new Project("ta-" + rawSlug, name, 0);
         List<Category> categories = new ArrayList<>();
         categories.add(new Category("ta", "translationAcademy"));
         long projectId = library.addProject(p, categories, languageId);
@@ -165,10 +165,9 @@ class LegacyTools {
 
             Project project = new Project(pJson.getString("slug"),
                     lJson.getJSONObject("project").getString("name"),
-                    lJson.getJSONObject("project").getString("desc"),
-                    null,
-                    pJson.getInt("sort"),
-                    chunksUrl);
+                    pJson.getInt("sort"));
+            project.description = lJson.getJSONObject("project").getString("desc");
+            project.chunksUrl = chunksUrl;
             List<Category> categories = new ArrayList<>();
             if(pJson.has("meta")) {
                 for(int j = 0; j < pJson.getJSONArray("meta").length(); j ++) {
@@ -223,7 +222,7 @@ class LegacyTools {
             rJson.getJSONObject("status").put("pub_date", rJson.getJSONObject("status").getString("publish_date"));
             rJson.put("type", "book");
             Resource resource = Resource.fromJSON(rJson);
-            resource.wordsAssignmentsUrl = rJson.getString("tw_cat");
+            resource._legacyData.put(API.LEGACY_WORDS_ASSIGNMENTS_URL, rJson.getString("tw_cat"));
 
             Resource.Format format = new Resource.Format(ResourceContainer.version, ContainerTools.typeToMime("book"), rJson.getInt("date_modified"), rJson.getString("source"));
             resource.addFormat(format);
@@ -276,7 +275,7 @@ class LegacyTools {
             if(rJson.has("terms") && !rJson.getString("terms").isEmpty()) {
                 String slug = pJson.getString("slug").equals("obs") ? "bible-obs" : "bible";
                 String name = "translationWords" + (pJson.getString("slug").equals("obs") ? " OBS" : "");
-                Project wordsProject = new Project(slug, name, "", null, 100, "");
+                Project wordsProject = new Project(slug, name, 100);
                 long wordsProjectId = library.addProject(wordsProject, null, languageId);
 
                 // add resource to words project
@@ -319,7 +318,7 @@ class LegacyTools {
             for(int i = 0; i < chunks.length(); i ++) {
                 JSONObject chunk = chunks.getJSONObject(i);
                 ChunkMarker cm = new ChunkMarker(chunk.getString("chp"), chunk.getString("firstvs"));
-                library.addChunkMarker(cm, projectSlug, v._dbInfo().rowId);
+                library.addChunkMarker(cm, projectSlug, v.rowId);
             }
         } else {
             System.console().writer().write("Unknown versification " + versificationSlug + " while downloading chunks for project " + projectSlug);

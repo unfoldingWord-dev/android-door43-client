@@ -3,13 +3,13 @@ package org.unfoldingword.door43client;
 import org.unfoldingword.door43client.models.Catalog;
 import org.unfoldingword.door43client.models.CategoryEntry;
 import org.unfoldingword.door43client.models.ChunkMarker;
-import org.unfoldingword.door43client.models.Project;
 import org.unfoldingword.door43client.models.Question;
 import org.unfoldingword.door43client.models.Questionnaire;
-import org.unfoldingword.door43client.models.Resource;
 import org.unfoldingword.door43client.models.SourceLanguage;
 import org.unfoldingword.door43client.models.TargetLanguage;
 import org.unfoldingword.door43client.models.Versification;
+import org.unfoldingword.resourcecontainer.Project;
+import org.unfoldingword.resourcecontainer.Resource;
 
 import java.util.HashMap;
 import java.util.List;

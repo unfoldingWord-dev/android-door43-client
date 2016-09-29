@@ -3,11 +3,10 @@ package org.unfoldingword.door43client.models;
 /**
  * Represents a global catalog
  */
-public class Catalog implements DatabaseObject {
+public class Catalog {
     public final String slug;
     public final String url;
     public final int modifiedAt;
-    private DBInfo dbInfo = new DBInfo();
 
     /**
      *
@@ -21,8 +20,4 @@ public class Catalog implements DatabaseObject {
         this.modifiedAt = modifiedAt;
     }
 
-    @Override
-    public DBInfo _dbInfo() {
-        return dbInfo;
-    }
 }

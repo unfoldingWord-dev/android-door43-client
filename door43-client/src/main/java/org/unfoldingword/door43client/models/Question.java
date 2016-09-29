@@ -3,7 +3,7 @@ package org.unfoldingword.door43client.models;
 /**
  * Represents a single question in a questionnaire
  */
-public class Question implements DatabaseObject {
+public class Question {
     public final String text;
     public final String help;
     public final boolean isRequired;
@@ -11,7 +11,6 @@ public class Question implements DatabaseObject {
     public final int sort;
     public final long dependsOn;
     public final long tdId;
-    private DBInfo dbInfo = new DBInfo();
 
     /**
      *
@@ -33,8 +32,4 @@ public class Question implements DatabaseObject {
         this.tdId = tdId;
     }
 
-    @Override
-    public DBInfo _dbInfo() {
-        return dbInfo;
-    }
 }

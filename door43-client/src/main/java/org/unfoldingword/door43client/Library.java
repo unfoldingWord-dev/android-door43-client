@@ -10,13 +10,13 @@ import org.unfoldingword.door43client.models.Category;
 import org.unfoldingword.door43client.models.CategoryEntry;
 import org.unfoldingword.door43client.models.ChunkMarker;
 import org.unfoldingword.door43client.models.TargetLanguage;
-import org.unfoldingword.door43client.models.Project;
 import org.unfoldingword.door43client.models.Question;
-import org.unfoldingword.door43client.models.Resource;
 import org.unfoldingword.door43client.models.SourceLanguage;
 import org.unfoldingword.door43client.models.Versification;
 import org.unfoldingword.door43client.models.Catalog;
 import org.unfoldingword.door43client.models.Questionnaire;
+import org.unfoldingword.resourcecontainer.Project;
+import org.unfoldingword.resourcecontainer.Resource;
 import org.unfoldingword.resourcecontainer.ResourceContainer;
 
 import java.util.ArrayList;
@@ -413,9 +413,11 @@ class Library implements Index {
         }
 
         //add legacy data
-        if(resource.wordsAssignmentsUrl != null && !resource.wordsAssignmentsUrl.equals("")) {
+        if(resource._legacyData.containsKey(API.LEGACY_WORDS_ASSIGNMENTS_URL)
+                && resource._legacyData.get(API.LEGACY_WORDS_ASSIGNMENTS_URL) != null
+                && !resource._legacyData.get(API.LEGACY_WORDS_ASSIGNMENTS_URL).equals("")) {
             ContentValues legacyValues = new ContentValues();
-            legacyValues.put("translation_words_assignments_url", resource.wordsAssignmentsUrl);
+            legacyValues.put("translation_words_assignments_url", (String)resource._legacyData.get(API.LEGACY_WORDS_ASSIGNMENTS_URL));
             legacyValues.put("resource_id", resourceId);
             insertOrUpdate("legacy_resource_info", legacyValues, new String[]{"resource_id"});
         }
@@ -528,7 +530,6 @@ class Library implements Index {
             String direction = reader.getString("direction");
 
             SourceLanguage sourceLanguage = new SourceLanguage(sourceLanguageSlug, name, direction);
-            sourceLanguage._dbInfo().rowId = reader.getLong("id");
             cursor.close();
             return sourceLanguage;
         } else {
@@ -550,7 +551,6 @@ class Library implements Index {
             String direction = reader.getString("direction");
 
             SourceLanguage sourceLanguage = new SourceLanguage(slug, name, direction);
-            sourceLanguage._dbInfo().rowId = reader.getLong("id");
             sourceLanguages.add(sourceLanguage);
             cursor.moveToNext();
         }
@@ -656,9 +656,11 @@ class Library implements Index {
             int sort = reader.getInt("sort");
             String chunksUrl = reader.getString("chunks_url");
 
-            project = new Project(slug, name, desc, icon, sort, chunksUrl);
-            project._dbInfo().rowId = reader.getLong("id");
-            project._dbInfo().relatedSlugs.put("source_language_slug", reader.getString("source_language_slug"));
+            project = new Project(slug, name, sort);
+            project.description = desc;
+            project.icon = icon;
+            project.chunksUrl = chunksUrl;
+            project.languageSlug = reader.getString("source_language_slug");
         }
         cursor.close();
 
@@ -686,8 +688,12 @@ class Library implements Index {
             int sort = reader.getInt("sort");
             String chunksUrl = reader.getString("chunks_url");
 
-            Project project = new Project(slug, name, desc, icon, sort, chunksUrl);
-            project._dbInfo().rowId = reader.getLong("id");
+            Project project = new Project(slug, name, sort);
+            project.description = desc;
+            project.icon = icon;
+            project.chunksUrl = chunksUrl;
+            project.languageSlug = sourceLanguageSlug;
+
             projects.add(project);
             cursor.moveToNext();
         }
@@ -810,7 +816,7 @@ class Library implements Index {
             String wordsAssignmentsUrl = reader.getString("translation_words_assignments_url");
 
             resource = new Resource(resourceSlug, name, type, translateMode, checkingLevel, version);
-            resource.wordsAssignmentsUrl = wordsAssignmentsUrl;
+            resource._legacyData.put(API.LEGACY_WORDS_ASSIGNMENTS_URL, wordsAssignmentsUrl);
             resource.comments = comments;
             resource.pubDate = pubDate;
             resource.license = license;
@@ -882,7 +888,7 @@ class Library implements Index {
             status.put("version", version);
 
             Resource resource = new Resource(slug, name, type, translateMode, checkingLevel, version);
-            resource.wordsAssignmentsUrl = wordsAssignmentsUrl;
+            resource._legacyData.put(API.LEGACY_WORDS_ASSIGNMENTS_URL, wordsAssignmentsUrl);
             resource.comments = comments;
             resource.pubDate = pubDate;
             resource.license = license;
@@ -921,7 +927,6 @@ class Library implements Index {
             int modifiedAt = reader.getInt("modified_at");
 
             catalog = new Catalog(catalogSlug, url, modifiedAt);
-            catalog._dbInfo().rowId = reader.getLong("id");
         }
         cursor.close();
         return catalog;
@@ -940,7 +945,6 @@ class Library implements Index {
             int modifiedAt = reader.getInt("modified_at");
 
             Catalog catalog = new Catalog(slug, url, modifiedAt);
-            catalog._dbInfo().rowId = reader.getLong("id");
             catalogs.add(catalog);
             cursor.moveToNext();
         }
@@ -962,7 +966,7 @@ class Library implements Index {
             String name = reader.getString("name");
 
             versification = new Versification(slug, name);
-            versification._dbInfo().rowId = reader.getLong("id");
+            versification.rowId = reader.getLong("id");
         }
         cursor.close();
         return versification;
@@ -983,7 +987,7 @@ class Library implements Index {
             String name = reader.getString("name");
 
             Versification versification = new Versification(slug, name);
-            versification._dbInfo().rowId = reader.getLong("id");
+            versification.rowId = reader.getLong("id");
             versifications.add(versification);
             cursor.moveToNext();
         }
@@ -1005,7 +1009,6 @@ class Library implements Index {
             String verse = reader.getString("verse");
 
             ChunkMarker chunkMarker = new ChunkMarker(chapter, verse);
-            chunkMarker._dbInfo().rowId = reader.getLong("id");
             chunkMarkers.add(chunkMarker);
             cursor.moveToNext();
         }
@@ -1027,7 +1030,6 @@ class Library implements Index {
             long tdId = reader.getLong("td_id");
 
             Questionnaire questionnaire = new Questionnaire(slug, name, direction, tdId);
-            questionnaire._dbInfo().rowId = reader.getLong("id");
             questionnaires.add(questionnaire);
             cursor.moveToNext();
         }
@@ -1036,7 +1038,8 @@ class Library implements Index {
     }
 
     public List<Question> getQuestions(long questionnaireTDId) {
-        Cursor cursor = db.rawQuery("select * from question where questionnaire_id=" + questionnaireTDId, null);
+        Cursor cursor = db.rawQuery("select * from question where questionnaire_id in (" +
+                " select id from questionnaire where td_id=" + questionnaireTDId + ") LIMIT 1", null);
 
         List<Question> questions = new ArrayList<>();
         cursor.moveToFirst();
@@ -1052,7 +1055,6 @@ class Library implements Index {
             long tdId = reader.getInt("td_id");
 
             Question question = new Question(text, help, isRequired, inputType, sort, dependsOn, tdId);
-            question._dbInfo().rowId = reader.getLong("id");
             questions.add(question);
             cursor.moveToNext();
         }

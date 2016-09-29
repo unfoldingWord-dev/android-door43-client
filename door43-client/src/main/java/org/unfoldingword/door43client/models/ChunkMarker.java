@@ -3,10 +3,9 @@ package org.unfoldingword.door43client.models;
 /**
  * Represents the beginning of a chunk in a chapter
  */
-public class ChunkMarker implements DatabaseObject {
-    public static String chapter;
-    public static String verse;
-    private DBInfo dbInfo = new DBInfo();
+public class ChunkMarker {
+    public final String chapter;
+    public final String verse;
 
     /**
      *
@@ -18,8 +17,4 @@ public class ChunkMarker implements DatabaseObject {
         this.verse = verse;
     }
 
-    @Override
-    public DBInfo _dbInfo() {
-        return dbInfo;
-    }
 }

@@ -13,13 +13,13 @@ import org.unfoldingword.door43client.models.Catalog;
 import org.unfoldingword.door43client.models.Category;
 import org.unfoldingword.door43client.models.CategoryEntry;
 import org.unfoldingword.door43client.models.ChunkMarker;
-import org.unfoldingword.door43client.models.Project;
 import org.unfoldingword.door43client.models.Question;
 import org.unfoldingword.door43client.models.Questionnaire;
-import org.unfoldingword.door43client.models.Resource;
 import org.unfoldingword.door43client.models.SourceLanguage;
 import org.unfoldingword.door43client.models.TargetLanguage;
 import org.unfoldingword.door43client.models.Versification;
+import org.unfoldingword.resourcecontainer.Project;
+import org.unfoldingword.resourcecontainer.Resource;
 import org.unfoldingword.resourcecontainer.ResourceContainer;
 
 import java.io.BufferedReader;
@@ -92,7 +92,8 @@ public class LibraryGettersUnitTest {
 
             // projects - no category
             for(String pSlug:stringGenerator("proj-no-cat-", GENERATOR_QTY)) {
-                Project p = new Project(pSlug, "Genesis", "The Book of Genesis", null, 1, null);
+                Project p = new Project(pSlug, "Genesis", 1);
+                p.description = "The Book of Genesis";
                 long projectId = library.addProject(p, new ArrayList(){}, sourceLanguageId);
                 buildResources(projectId);
                 buildChunks(pSlug, versificationId);
@@ -100,7 +101,8 @@ public class LibraryGettersUnitTest {
 
             // projects - level 1 category
             for(String pSlug:stringGenerator("proj-cat1-", GENERATOR_QTY)) {
-                Project p = new Project(pSlug, "Genesis", "The Book of Genesis", null, 1, null);
+                Project p = new Project(pSlug, "Genesis", 1);
+                p.description = "The Book of Genesis";
                 List<Category> categories = new ArrayList<>();
                 categories.add(new Category("cat1", "First level category"));
                 long projectId = library.addProject(p, categories, sourceLanguageId);
@@ -110,7 +112,8 @@ public class LibraryGettersUnitTest {
 
             // projects - level 2 category
             for(String pSlug:stringGenerator("proj-cat2-", GENERATOR_QTY)) {
-                Project p = new Project(pSlug, "Genesis", "The Book of Genesis", null, 1, null);
+                Project p = new Project(pSlug, "Genesis", 1);
+                p.description = "The Book of Genesis";
                 List<Category> categories = new ArrayList<>();
                 categories.add(new Category("cat1", "First level category"));
                 categories.add(new Category("cat2", "Second level category"));
@@ -340,7 +343,7 @@ public class LibraryGettersUnitTest {
         List<Questionnaire> list = library.getQuestionnaires();
         assertTrue(list.size() > 0);
         for(Questionnaire q:list) {
-            List<Question> questions = library.getQuestions(q._dbInfo().rowId);
+            List<Question> questions = library.getQuestions(q.tdId);
             assertTrue(questions.size() > 0);
         }
     }

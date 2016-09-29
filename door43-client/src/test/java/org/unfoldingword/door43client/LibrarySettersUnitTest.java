@@ -10,19 +10,17 @@ import org.robolectric.RuntimeEnvironment;
 import org.unfoldingword.door43client.models.Catalog;
 import org.unfoldingword.door43client.models.Category;
 import org.unfoldingword.door43client.models.ChunkMarker;
-import org.unfoldingword.door43client.models.Project;
 import org.unfoldingword.door43client.models.Question;
 import org.unfoldingword.door43client.models.Questionnaire;
-import org.unfoldingword.door43client.models.Resource;
 import org.unfoldingword.door43client.models.TargetLanguage;
 import org.unfoldingword.door43client.models.SourceLanguage;
 import org.unfoldingword.door43client.models.Versification;
+import org.unfoldingword.resourcecontainer.Project;
+import org.unfoldingword.resourcecontainer.Resource;
 import org.unfoldingword.resourcecontainer.ResourceContainer;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import static org.junit.Assert.*;
 
@@ -146,7 +144,8 @@ public class LibrarySettersUnitTest {
     public void addProject() throws Exception {
         SourceLanguage language = new SourceLanguage("en", "English", "ltr");
         long languageId = library.addSourceLanguage(language);
-        Project project = new Project("gen", "Genesis", "The Book of Genesis", null, 1, null);
+        Project project = new Project("gen", "Genesis", 1);
+        project.description = "The Book of Genesis";
         List<Category> categories = new ArrayList<>();
         categories.add(new Category("bible-ot", "Old Testament"));
         long id = library.addProject(project, categories, languageId);
@@ -201,7 +200,8 @@ public class LibrarySettersUnitTest {
     public void addResource() throws Exception {
         SourceLanguage language = new SourceLanguage("en", "English", "ltr");
         long languageId = library.addSourceLanguage(language);
-        Project project = new Project("gen", "Genesis", "The Book of Genesis", null, 1, null);
+        Project project = new Project("gen", "Genesis", 1);
+        project.description = "The Book of Genesis";
         List<Category> categories = new ArrayList<>();
         categories.add(new Category("bible-ot", "Old Testament"));
         long projectId = library.addProject(project, categories, languageId);

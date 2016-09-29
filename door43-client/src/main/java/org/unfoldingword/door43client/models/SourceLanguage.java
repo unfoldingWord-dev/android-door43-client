@@ -5,8 +5,7 @@ import org.unfoldingword.resourcecontainer.Language;
 /**
  * Represents a language that a resource exists in  (for the purpose of source content)
  */
-public class SourceLanguage extends Language implements DatabaseObject {
-    private DBInfo dbInfo = new DBInfo();
+public class SourceLanguage extends Language {
 
     /**
      * Creates a new source language
@@ -16,10 +15,5 @@ public class SourceLanguage extends Language implements DatabaseObject {
      */
     public SourceLanguage(String slug, String name, String direction) {
         super(slug, name, direction);
-    }
-
-    @Override
-    public DBInfo _dbInfo() {
-        return dbInfo;
     }
 }

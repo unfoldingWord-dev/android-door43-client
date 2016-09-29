@@ -3,12 +3,11 @@ package org.unfoldingword.door43client.models;
 /**
  * Represents a questionnaire that can be completed in the app
  */
-public class Questionnaire implements DatabaseObject {
+public class Questionnaire {
     public final String languageSlug;
     public final String languageName;
     public final String languageDirection;
     public final long tdId;
-    private DBInfo dbInfo = new DBInfo();
 
     /**
      *
@@ -24,8 +23,4 @@ public class Questionnaire implements DatabaseObject {
         this.tdId = tdId;
     }
 
-    @Override
-    public DBInfo _dbInfo() {
-        return dbInfo;
-    }
 }

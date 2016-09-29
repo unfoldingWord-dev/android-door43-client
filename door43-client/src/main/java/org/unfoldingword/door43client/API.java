@@ -5,13 +5,13 @@ import android.content.Context;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.unfoldingword.door43client.models.Catalog;
-import org.unfoldingword.door43client.models.Project;
 import org.unfoldingword.door43client.models.Question;
 import org.unfoldingword.door43client.models.Questionnaire;
-import org.unfoldingword.door43client.models.Resource;
 import org.unfoldingword.door43client.models.SourceLanguage;
 import org.unfoldingword.door43client.models.TargetLanguage;
 import org.unfoldingword.resourcecontainer.ContainerTools;
+import org.unfoldingword.resourcecontainer.Project;
+import org.unfoldingword.resourcecontainer.Resource;
 import org.unfoldingword.resourcecontainer.ResourceContainer;
 import org.unfoldingword.tools.http.GetRequest;
 
@@ -28,6 +28,7 @@ import java.util.List;
  * Created by joel on 8/30/16.
  */
 class API {
+    public static final String LEGACY_WORDS_ASSIGNMENTS_URL = "words_assignments_url";
     private static final OnLogListener defaultLogListener;
 
     static {
@@ -405,8 +406,10 @@ class API {
         properties.put("modified_at", format.modifiedAt);
 
         // grab the tW assignments
-        if(resource.wordsAssignmentsUrl != null && !resource.wordsAssignmentsUrl.isEmpty()) {
-            GetRequest request = new GetRequest(new URL(resource.wordsAssignmentsUrl));
+        if(resource._legacyData.containsKey(LEGACY_WORDS_ASSIGNMENTS_URL)
+                && resource._legacyData.get(LEGACY_WORDS_ASSIGNMENTS_URL) != null
+                && !resource._legacyData.get(LEGACY_WORDS_ASSIGNMENTS_URL).equals("")) {
+            GetRequest request = new GetRequest(new URL((String)resource._legacyData.get(LEGACY_WORDS_ASSIGNMENTS_URL)));
             String wordsData = request.read();
             if(request.getResponseCode() < 300) {
                 try {
