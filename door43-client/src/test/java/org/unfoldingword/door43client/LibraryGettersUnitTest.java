@@ -138,11 +138,7 @@ public class LibraryGettersUnitTest {
 
     private static void buildResources(long projectId) throws Exception {
         for(String slug:stringGenerator("res", GENERATOR_QTY)) {
-            Map<String, Object> status = new HashMap<>();
-            status.put("translate_mode", "all");
-            status.put("checking_level", "3");
-            status.put("version", "4");
-            Resource r = new Resource(slug, "Unlocked Literal Bible", "book", "some url", status);
+            Resource r = new Resource(slug, "Unlocked Literal Bible", "book", "all", "3", "4");
             Resource.Format format = new Resource.Format(ResourceContainer.version, ResourceContainer.baseMimeType + "+book", 0, "some url");
             r.addFormat(format);
             library.addResource(r, projectId);

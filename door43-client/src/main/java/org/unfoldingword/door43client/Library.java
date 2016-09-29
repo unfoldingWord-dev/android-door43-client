@@ -381,20 +381,20 @@ class Library implements Index {
         validateNotEmpty(resource.name);
         validateNotEmpty(resource.type);
         validateNotEmpty(resource.formats.size() > 0 ? "good" : null);
-        validateNotEmpty((String)resource.status.get("translate_mode"));
-        validateNotEmpty((String)resource.status.get("checking_level"));
-        validateNotEmpty((String)resource.status.get("version"));
+        validateNotEmpty(resource.translateMode);
+        validateNotEmpty(resource.checkingLevel);
+        validateNotEmpty(resource.version);
 
         ContentValues values = new ContentValues();
         values.put("slug", resource.slug);
         values.put("name", resource.name);
         values.put("type", resource.type);
-        values.put("translate_mode", (String)resource.status.get("translate_mode"));
-        values.put("checking_level", (String)resource.status.get("checking_level"));
-        values.put("comments", deNull((String)resource.status.get("comments")));
-        values.put("pub_date", deNull((String)resource.status.get("pub_date")));
-        values.put("license", deNull((String)resource.status.get("license")));
-        values.put("version", (String)resource.status.get("version"));
+        values.put("translate_mode", resource.translateMode);
+        values.put("checking_level", resource.checkingLevel);
+        values.put("comments", deNull(resource.comments));
+        values.put("pub_date", deNull(resource.pubDate));
+        values.put("license", deNull(resource.license));
+        values.put("version", resource.version);
         values.put("project_id", projectId);
 
         long resourceId = insertOrUpdate("resource", values, new String[]{"slug", "project_id"});
@@ -809,15 +809,11 @@ class Library implements Index {
             String version = reader.getString("version");
             String wordsAssignmentsUrl = reader.getString("translation_words_assignments_url");
 
-            HashMap status = new HashMap();
-            status.put("translateMode", translateMode);
-            status.put("checkingLevel", checkingLevel);
-            status.put("comments", comments);
-            status.put("pub_date", pubDate);
-            status.put("license", license);
-            status.put("version", version);
-
-            resource = new Resource(resourceSlug, name, type, wordsAssignmentsUrl, status);
+            resource = new Resource(resourceSlug, name, type, translateMode, checkingLevel, version);
+            resource.wordsAssignmentsUrl = wordsAssignmentsUrl;
+            resource.comments = comments;
+            resource.pubDate = pubDate;
+            resource.license = license;
 
             // load formats and add to resource
             Cursor formatCursor = db.rawQuery("select * from resource_format where resource_id=" + resourceId, null);
@@ -872,7 +868,7 @@ class Library implements Index {
             String type = reader.getString("type");
             String checkingLevel = reader.getString("checking_level");
             String comments = reader.getString("comments");
-            int pubDate = reader.getInt("pub_date");
+            String pubDate = reader.getString("pub_date");
             String license = reader.getString("license");
             String version = reader.getString("version");
             String wordsAssignmentsUrl = reader.getString("translation_words_assignments_url");
@@ -885,7 +881,11 @@ class Library implements Index {
             status.put("license", license);
             status.put("version", version);
 
-            Resource resource = new Resource(slug, name, type, wordsAssignmentsUrl, status);
+            Resource resource = new Resource(slug, name, type, translateMode, checkingLevel, version);
+            resource.wordsAssignmentsUrl = wordsAssignmentsUrl;
+            resource.comments = comments;
+            resource.pubDate = pubDate;
+            resource.license = license;
 
             // load formats and add to resource
             Cursor formatCursor = db.rawQuery("select * from resource_format where resource_id=" + resourceId, null);

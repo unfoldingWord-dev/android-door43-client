@@ -96,7 +96,7 @@ public interface Index {
     TargetLanguage getApprovedTargetLanguage(String tempTargetLanguageSlug);
 
     /**
-     * Returns a project
+     * Returns a project with the option of falling back to a default language if not found
      *
      * @param sourceLanguageSlug the source language code for which the project will be returned
      * @param projectSlug the project code

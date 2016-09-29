@@ -10,20 +10,12 @@ import java.util.Map;
 /**
  * Represents a resource that can be translated
  */
-public class Resource extends DatabaseObject {
-    public final String slug;
-    public final String name;
-    public final String type;
-    public final Map<String, Object> status;
+public class Resource extends org.unfoldingword.resourcecontainer.Resource {
     public final List<Format> formats = new ArrayList<>();
-    public final String wordsAssignmentsUrl;
+    public String wordsAssignmentsUrl = "";
 
-    public Resource(String slug, String name, String type, String wordsAssignmentsUrl, Map status) {
-        this.slug = slug;
-        this.name = name;
-        this.type = type;
-        this.status = status;
-        this.wordsAssignmentsUrl = wordsAssignmentsUrl;
+    public Resource(String slug, String name, String type, String translateMode, String checkingLevel, String version) {
+        super(slug, name, type, translateMode, checkingLevel, version);
     }
 
     public void addFormat(Format format) {
@@ -31,23 +23,19 @@ public class Resource extends DatabaseObject {
     }
 
     /**
-     * Returns the object serialized to json
+     * Creates a resource from json
+     * @param json
      * @return
+     * @throws JSONException
      */
-    public JSONObject toJSON() throws JSONException {
-        JSONObject json = new JSONObject();
-        json.put("slug", slug);
-        json.put("name", name);
-        json.put("type", type);
-        JSONObject statusJson = new JSONObject();
-        statusJson.put("translate_mode", status.get("translate_mode"));
-        statusJson.put("checking_level", status.get("checking_level"));
-        statusJson.put("license", status.get("license"));
-        statusJson.put("version", status.get("version"));
-        statusJson.put("pub_date", status.get("pub_date"));
-        statusJson.put("comments", status.get("comments"));
-        json.put("status", statusJson);
-        return json;
+    public static Resource fromJSON(JSONObject json) throws JSONException {
+        // TRICKY: we cannot cast a base class to a child class so we must manually convert the object
+        org.unfoldingword.resourcecontainer.Resource r = org.unfoldingword.resourcecontainer.Resource.fromJSON(json);
+        Resource resource = new Resource(r.slug, r.name, r.type, r.translateMode, r.checkingLevel, r.version);
+        resource.comments = r.comments;
+        resource.pubDate = r.pubDate;
+        resource.license = r.license;
+        return resource;
     }
 
     /**

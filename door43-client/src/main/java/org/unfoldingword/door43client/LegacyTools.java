@@ -115,15 +115,10 @@ class LegacyTools {
         String license = ta.getJSONObject("meta").getJSONObject("status").getString("license");
         String version = ta.getJSONObject("meta").getJSONObject("status").getString("version");
 
-        HashMap status = new HashMap();
-        status.put("translate_mode", "gl");
-        status.put("checking_level", checkingLevel);
-        status.put("comments", comments);
-        status.put("pub_date", pubDate);
-        status.put("license", license);
-        status.put("version", version);
-
-        Resource resource = new Resource(slug, resourceName, type, null, status);
+        Resource resource = new Resource(slug, resourceName, type, "gl", checkingLevel, version);
+        resource.comments = comments;
+        resource.pubDate = pubDate;
+        resource.license = license;
 
         String packageVersion = ResourceContainer.version;
         String mimType = ContainerTools.typeToMime("man");
@@ -224,14 +219,12 @@ class LegacyTools {
                     translateMode = "gl";
             }
 
-            Map<String, Object> status = jsonToMap(rJson.getJSONObject("status"));
-            status.put("translate_mode", translateMode);
-            status.put("pub_date", rJson.getJSONObject("status").getString("publish_date"));
-            Resource resource = new Resource(rJson.getString("slug"),
-                    rJson.getString("name"),
-                    "book",
-                    rJson.getString("tw_cat"),
-                    status);
+            rJson.getJSONObject("status").put("translate_mode", translateMode);
+            rJson.getJSONObject("status").put("pub_date", rJson.getJSONObject("status").getString("publish_date"));
+            rJson.put("type", "book");
+            Resource resource = Resource.fromJSON(rJson);
+            resource.wordsAssignmentsUrl = rJson.getString("tw_cat");
+
             Resource.Format format = new Resource.Format(ResourceContainer.version, ContainerTools.typeToMime("book"), rJson.getInt("date_modified"), rJson.getString("source"));
             resource.addFormat(format);
 
@@ -239,17 +232,19 @@ class LegacyTools {
 
             // coerce notes to resource
             if(rJson.has("notes") && !rJson.getString("notes").isEmpty()) {
-                status.put("translate_mode", "gl");
-
+                rJson.getJSONObject("status").put("translate_mode", "gl");
+                rJson.put("slug", "tn");
+                rJson.put("name", "translationNotes");
+                rJson.put("type", "help");
                 List<Map> sourceTranslations = new ArrayList();
                 Map<String, Object> tnSourceTranslation = new HashMap();
                 tnSourceTranslation.put("language_slug", lJson.getJSONObject("language").getString("slug"));
                 tnSourceTranslation.put("resource_slug", "tn");
-                tnSourceTranslation.put("version", resource.status.get("version"));
+                tnSourceTranslation.put("version", resource.version);
                 sourceTranslations.add(tnSourceTranslation);
-                status.put("source_translations", sourceTranslations);
+                rJson.getJSONObject("status").put("source_translations", sourceTranslations);
 
-                Resource tnResource = new Resource("tn", "translationNotes", "help", null, status);
+                Resource tnResource = (Resource) Resource.fromJSON(rJson);
                 Resource.Format tnFormat = new Resource.Format(ResourceContainer.version, ContainerTools.typeToMime("help"), rJson.getInt("date_modified"), rJson.getString("notes"));
                 tnResource.addFormat(tnFormat);
                 library.addResource(tnResource, projectId);
@@ -257,17 +252,20 @@ class LegacyTools {
 
             // coerce questions to resource
             if(rJson.has("checking_questions") && !rJson.getString("checking_questions").isEmpty()) {
-                status.put("translate_mode", "gl");
+                rJson.getJSONObject("status").put("translate_mode", "gl");
+                rJson.put("slug", "tq");
+                rJson.put("name", "translationQuestions");
+                rJson.put("type", "help");
 
                 List<Map> sourceTranslations = new ArrayList();
                 Map<String, Object> tnSourceTranslation = new HashMap();
                 tnSourceTranslation.put("language_slug", lJson.getJSONObject("language").getString("slug"));
                 tnSourceTranslation.put("resource_slug", "tq");
-                tnSourceTranslation.put("version", resource.status.get("version"));
+                tnSourceTranslation.put("version", resource.version);
                 sourceTranslations.add(tnSourceTranslation);
-                status.put("source_translations", sourceTranslations);
+                rJson.getJSONObject("status").put("source_translations", sourceTranslations);
 
-                Resource tqResource = new Resource("tq", "translationQuestions", "help", null, status);
+                Resource tqResource = (Resource) Resource.fromJSON(rJson);
                 Resource.Format tqFormat = new Resource.Format(ResourceContainer.version, ContainerTools.typeToMime("help"), rJson.getInt("date_modified"), rJson.getString("checking_questions"));
                 tqResource.addFormat(tqFormat);
                 library.addResource(tqResource, projectId);
@@ -282,17 +280,20 @@ class LegacyTools {
                 long wordsProjectId = library.addProject(wordsProject, null, languageId);
 
                 // add resource to words project
-                status.put("translate_mode", "gl");
+                rJson.getJSONObject("status").put("translate_mode", "gl");
+                rJson.put("slug", "tw");
+                rJson.put("name", "translationWords");
+                rJson.put("type", "dict");
 
                 List<Map> sourceTranslations = new ArrayList();
                 Map<String, Object> twSourceTranslation = new HashMap();
                 twSourceTranslation.put("language_slug", lJson.getJSONObject("language").getString("slug"));
                 twSourceTranslation.put("resource_slug", "tw");
-                twSourceTranslation.put("version", resource.status.get("version"));
+                twSourceTranslation.put("version", resource.version);
                 sourceTranslations.add(twSourceTranslation);
-                status.put("source_translations", sourceTranslations);
+                rJson.getJSONObject("status").put("source_translations", sourceTranslations);
 
-                Resource twResource = new Resource("tw", "translationWords", "dict", null, status);
+                Resource twResource = (Resource) Resource.fromJSON(rJson);
                 Resource.Format twFormat = new Resource.Format(ResourceContainer.version, ContainerTools.typeToMime("dict"), rJson.getInt("date_modified"), rJson.getString("terms"));
                 twResource.addFormat(twFormat);
                 library.addResource(twResource, wordsProjectId);
