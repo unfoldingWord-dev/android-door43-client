@@ -6,12 +6,12 @@ package org.unfoldingword.door43client.models;
  */
 public class CategoryEntry {
 
-    private final Type entryType;
-    private final long id;
-    private final String slug;
-    private final String name;
-    private final String sourceLanguageSlug;
-    private final long parentCategoryId;
+    public final Type entryType;
+    public final long id;
+    public final String slug;
+    public final String name;
+    public final String sourceLanguageSlug;
+    public final long parentCategoryId;
 
     /**
      *
