@@ -256,7 +256,7 @@ public class LibrarySettersUnitTest {
         Questionnaire questionnaire = new Questionnaire("en", "English", "ltr", 1, dataFields);
         long questionnaireId = library.addQuestionnaire(questionnaire);
 
-        Question question = new Question("MY question", "answer me!", true, "text", 0, 0, 1);
+        Question question = new Question("MY question", "answer me!", true, Question.InputType.String, 0, 0, 1);
         long id = library.addQuestion(question, questionnaireId);
         assertTrue(id > 0);
 

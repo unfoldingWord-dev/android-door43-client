@@ -473,13 +473,13 @@ class Library implements Index {
      */
     public long addQuestion(Question question, long questionnaireId) throws Exception {
         validateNotEmpty(question.text);
-        validateNotEmpty(question.inputType);
+        validateNotEmpty(question.inputType == null ? "" : "ok");
 
         ContentValues values = new ContentValues();
         values.put("text", question.text);
         values.put("help", deNull(question.help));
         values.put("is_required", question.isRequired ? 1 : 0);
-        values.put("input_type", question.inputType);
+        values.put("input_type", question.inputType.toString());
         values.put("sort", question.sort);
         values.put("depends_on", question.dependsOn);
         values.put("td_id", question.tdId);
@@ -1085,7 +1085,7 @@ class Library implements Index {
             long dependsOn = reader.getInt("depends_on");
             long tdId = reader.getInt("td_id");
 
-            Question question = new Question(text, help, isRequired, inputType, sort, dependsOn, tdId);
+            Question question = new Question(text, help, isRequired, Question.InputType.get(inputType), sort, dependsOn, tdId);
             questions.add(question);
             cursor.moveToNext();
         }

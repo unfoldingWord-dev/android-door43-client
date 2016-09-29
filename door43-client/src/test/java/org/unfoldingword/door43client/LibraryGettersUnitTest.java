@@ -139,7 +139,7 @@ public class LibraryGettersUnitTest {
             Questionnaire questionnaire = new Questionnaire("lang" + i, "Language name", "ltr", (long)i, dataFields);
             long questionnaireId = library.addQuestionnaire(questionnaire);
             for(int j = 0; j < GENERATOR_QTY; j ++) {
-                Question q = new Question("question", "help", true, "text", 0, 0, j);
+                Question q = new Question("question", "help", true, Question.InputType.String, 0, 0, j);
                 library.addQuestion(q, questionnaireId);
             }
         }

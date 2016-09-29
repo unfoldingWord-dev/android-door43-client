@@ -247,8 +247,10 @@ class API {
                 JSONObject questionJson = qJson.getJSONArray("questions").getJSONObject(j);
                 long dependsOnId = questionJson.isNull("depends_on") ? 0 : questionJson.getLong("depends_on");
                 Question question = new Question(questionJson.getString("text"),
-                        questionJson.getString("help"), questionJson.getBoolean("required"),
-                        questionJson.getString("input_type"), questionJson.getInt("sort"),
+                        questionJson.getString("help"),
+                        questionJson.getBoolean("required"),
+                        Question.InputType.get(questionJson.getString("input_type")),
+                        questionJson.getInt("sort"),
                         dependsOnId, questionJson.getLong("id"));
                 library.addQuestion(question, questionnaireId);
 
