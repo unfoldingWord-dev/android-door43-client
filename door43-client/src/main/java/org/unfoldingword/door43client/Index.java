@@ -75,6 +75,13 @@ public interface Index {
     TargetLanguage getTargetLanguage(String targetLangaugeSlug);
 
     /**
+     * Searches for a target language by name.
+     * @param namequery
+     * @return
+     */
+    List<TargetLanguage> findTargetLanguage(final String namequery);
+
+    /**
      * Returns a list of every target language.
      * The result may include temp target languages.
      *
@@ -192,6 +199,13 @@ public interface Index {
      * @return
      */
     List<ChunkMarker> getChunkMarkers(String projectSlug, String versificationSlug);
+
+    /**
+     * Returns a questionnaire
+     * @param tdId the translation database id (on the server) of the questionnaire
+     * @return
+     */
+    Questionnaire getQuestionnaire(long tdId);
 
     /**
      * Returns a list of questionnaires

@@ -49,6 +49,7 @@ class LegacyTools {
             JSONObject pJson = projects.getJSONObject(i);
             if(listener != null) listener.onProgress(pJson.getString("slug"), projects.length(), i + 1);
             downloadSourceLanguages(library, pJson, null);
+            library.yieldSafely();
         }
 
         // tA
@@ -75,6 +76,7 @@ class LegacyTools {
         for(int i = 0; i < urls.length; i ++) {
             downloadTA(library, urls[i]);
             if(listener != null) listener.onProgress("ta", urls.length, i + 1);
+            library.yieldSafely();
         }
     }
 
@@ -179,6 +181,7 @@ class LegacyTools {
             long projectId = library.addProject(project, categories, languageId);
 
             downloadResources(library, projectId, pJson, languageId, lJson);
+            library.yieldSafely();
         }
 
         // chunks
@@ -297,6 +300,7 @@ class LegacyTools {
                 twResource.addFormat(twFormat);
                 library.addResource(twResource, wordsProjectId);
             }
+            library.yieldSafely();
         }
     }
 
@@ -319,6 +323,7 @@ class LegacyTools {
                 JSONObject chunk = chunks.getJSONObject(i);
                 ChunkMarker cm = new ChunkMarker(chunk.getString("chp"), chunk.getString("firstvs"));
                 library.addChunkMarker(cm, projectSlug, v.rowId);
+                library.yieldSafely();
             }
         } else {
             System.console().writer().write("Unknown versification " + versificationSlug + " while downloading chunks for project " + projectSlug);

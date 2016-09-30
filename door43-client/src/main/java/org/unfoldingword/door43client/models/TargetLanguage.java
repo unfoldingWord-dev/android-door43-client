@@ -37,4 +37,21 @@ public class TargetLanguage extends Language {
         return json;
     }
 
+    /**
+     * Creates a target language from json
+     * @param json
+     * @return
+     * @throws JSONException
+     */
+    public static TargetLanguage fromJSON(JSONObject json) throws JSONException {
+        Language l = Language.fromJSON(json);
+        // TODO: 9/29/16  parse other info
+        TargetLanguage targetLanguage = new TargetLanguage(l.slug,
+                l.name,
+                json.getString("anglicized_name"),
+                l.direction,
+                json.getString("region"),
+                json.getBoolean("is_gateway_language"));
+        return targetLanguage;
+    }
 }

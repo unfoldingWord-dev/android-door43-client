@@ -3,6 +3,7 @@ package org.unfoldingword.door43client;
 import android.content.Context;
 import android.util.Log;
 
+import org.json.JSONObject;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -29,6 +30,7 @@ import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -130,10 +132,14 @@ public class LibraryGettersUnitTest {
         }
 
         for(int i = 0; i < GENERATOR_QTY; i ++) {
-            Questionnaire questionnaire = new Questionnaire("lang" + i, "Language name", "ltr", (long)i);
+            Map<String, Long> dataFields = new HashMap<>();
+            dataFields.put("ln", (long)1);
+            dataFields.put("ld", (long)2);
+            dataFields.put("lr", (long)3);
+            Questionnaire questionnaire = new Questionnaire("lang" + i, "Language name", "ltr", (long)i, dataFields);
             long questionnaireId = library.addQuestionnaire(questionnaire);
             for(int j = 0; j < GENERATOR_QTY; j ++) {
-                Question q = new Question("question", "help", true, "text", 0, 0, j);
+                Question q = new Question("question", "help", true, Question.InputType.String, 0, 0, j);
                 library.addQuestion(q, questionnaireId);
             }
         }
@@ -345,6 +351,10 @@ public class LibraryGettersUnitTest {
         for(Questionnaire q:list) {
             List<Question> questions = library.getQuestions(q.tdId);
             assertTrue(questions.size() > 0);
+            assertTrue(q.dataFields.size() > 0);
+
+            // test getting single questionnnaire
+            assertNotNull(library.getQuestionnaire(q.tdId));
         }
     }
 }

@@ -20,6 +20,8 @@ import org.unfoldingword.resourcecontainer.Resource;
 import org.unfoldingword.resourcecontainer.ResourceContainer;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,6 +42,13 @@ class Library implements Index {
     public Library(SQLiteHelper sqliteHelper) {
         this.sqliteHelper = sqliteHelper;
         this.db = sqliteHelper.getWritableDatabase();
+    }
+
+    /**
+     * Temporary ends the transaction to let other threads run
+     */
+    public void  yieldSafely() {
+        db.yieldIfContendedSafely();
     }
 
     /**
@@ -442,7 +451,18 @@ class Library implements Index {
         values.put("language_direction", questionnaire.languageDirection);
         values.put("td_id", questionnaire.tdId);
 
-        return insertOrUpdate("questionnaire", values, new String[]{"td_id", "language_slug"});
+        long id = insertOrUpdate("questionnaire", values, new String[]{"td_id", "language_slug"});
+
+        // add data fields
+        for(String field:questionnaire.dataFields.keySet()) {
+            ContentValues fieldValues = new ContentValues();
+            fieldValues.put("questionnaire_id", id);
+            fieldValues.put("field", field);
+            fieldValues.put("question_td_id", (long)questionnaire.dataFields.get(field));
+            insertOrUpdate("questionnaire_data_field", fieldValues, new String[]{"field", "questionnaire_id"});
+        }
+
+        return id;
     }
 
     /**
@@ -455,13 +475,13 @@ class Library implements Index {
      */
     public long addQuestion(Question question, long questionnaireId) throws Exception {
         validateNotEmpty(question.text);
-        validateNotEmpty(question.inputType);
+        validateNotEmpty(question.inputType == null ? "" : "ok");
 
         ContentValues values = new ContentValues();
         values.put("text", question.text);
         values.put("help", deNull(question.help));
         values.put("is_required", question.isRequired ? 1 : 0);
-        values.put("input_type", question.inputType);
+        values.put("input_type", question.inputType.toString());
         values.put("sort", question.sort);
         values.put("depends_on", question.dependsOn);
         values.put("td_id", question.tdId);
@@ -559,6 +579,7 @@ class Library implements Index {
     }
 
     public TargetLanguage getTargetLanguage(String targetLangaugeSlug) {
+        TargetLanguage targetLanguage = null;
         Cursor cursor = db.rawQuery("select * from (" +
                 "  select slug, name, anglicized_name, direction, region, is_gateway_language from target_language" +
                 "  union" +
@@ -575,13 +596,62 @@ class Library implements Index {
             String region = reader.getString("region");
             boolean isGateWay = reader.getBoolean("is_gateway_language");
 
-            TargetLanguage dummyTargetLanguage = new TargetLanguage(targetLangaugeSlug, name, anglicized, direction, region, isGateWay);
-            cursor.close();
-            return dummyTargetLanguage;
-        } else {
-            cursor.close();
-            return null;
+            targetLanguage = new TargetLanguage(targetLangaugeSlug, name, anglicized, direction, region, isGateWay);
         }
+        cursor.close();
+
+        return targetLanguage;
+    }
+
+    public List<TargetLanguage> findTargetLanguage(final String namequery) {
+        List<TargetLanguage> targetLanguages = new ArrayList<>();
+        Cursor cursor = db.rawQuery("select * from (" +
+                "  select slug, name, anglicized_name, direction, region, is_gateway_language from target_language" +
+                "  union" +
+                "  select slug, name, anglicized_name, direction, region, is_gateway_language from temp_target_language" +
+                "  where approved_target_language_slug is null" +
+                ") where lower(name) like ?" +
+                " order by slug asc, name desc", new String[]{"%" + namequery.toLowerCase() + "%"});
+
+        cursor.moveToFirst();
+        while(!cursor.isAfterLast()) {
+            CursorReader reader = new CursorReader(cursor);
+
+            String slug = reader.getString("slug");
+            String name = reader.getString("name");
+            String anglicized = reader.getString("anglicized_name");
+            String direction = reader.getString("direction");
+            String region = reader.getString("region");
+            boolean isGateWay = reader.getBoolean("is_gateway_language");
+
+            TargetLanguage targetLanguage = new TargetLanguage(slug, name, anglicized, direction, region, isGateWay);
+            targetLanguages.add(targetLanguage);
+        }
+        cursor.close();
+
+        Collections.sort(targetLanguages, new Comparator<TargetLanguage>() {
+            @Override
+            public int compare(TargetLanguage lhs, TargetLanguage rhs) {
+                String lhId = lhs.slug;
+                String rhId = rhs.slug;
+                // give priority to matches with the id
+                if(lhId.toLowerCase().startsWith(namequery.toLowerCase())) {
+                    lhId = "!!" + lhId;
+                }
+                if(rhId.toLowerCase().startsWith(namequery.toLowerCase())) {
+                    rhId = "!!" + rhId;
+                }
+                if(lhs.name.toLowerCase().startsWith(namequery.toLowerCase())) {
+                    lhId = "!" + lhId;
+                }
+                if(rhs.name.toLowerCase().startsWith(namequery.toLowerCase())) {
+                    rhId = "!" + rhId;
+                }
+                return lhId.compareToIgnoreCase(rhId);
+            }
+        });
+
+        return targetLanguages;
     }
 
     public List<TargetLanguage> getTargetLanguages() {
@@ -1016,6 +1086,36 @@ class Library implements Index {
         return chunkMarkers;
     }
 
+    public Questionnaire getQuestionnaire(long tdId) {
+        Questionnaire questionnaire = null;
+        Cursor cursor = db.rawQuery("select * from questionnaire" +
+                " where td_id=" + tdId, null);
+        cursor.moveToFirst();
+        if(!cursor.isAfterLast()) {
+            CursorReader reader = new CursorReader(cursor);
+
+            // load data fields
+            Cursor dataFieldsCursor = db.rawQuery("select field, question_td_id from questionnaire_data_field" +
+                    " where questionnaire_id=" + reader.getLong("id"), null);
+            Map<String, Long> dataFields = new HashMap<>();
+            dataFieldsCursor.moveToFirst();
+            while(!dataFieldsCursor.isAfterLast()) {
+                CursorReader dataFieldReader = new CursorReader(dataFieldsCursor);
+                dataFields.put(dataFieldReader.getString("field"), dataFieldReader.getLong("question_td_id"));
+                dataFieldsCursor.moveToNext();
+            }
+            dataFieldsCursor.close();;
+
+            questionnaire = new Questionnaire(reader.getString("language_slug"),
+                    reader.getString("language_name"),
+                    reader.getString("language_direction"),
+                    reader.getLong("td_id"),
+                    dataFields);
+        }
+        cursor.close();
+        return questionnaire;
+    }
+
     public List<Questionnaire> getQuestionnaires() {
         Cursor cursor = db.rawQuery("select * from questionnaire", null);
 
@@ -1024,12 +1124,25 @@ class Library implements Index {
         while(!cursor.isAfterLast()) {
             CursorReader reader = new CursorReader(cursor);
 
+            long id = reader.getLong("id");
             String slug = reader.getString("language_slug");
             String name = reader.getString("language_name");
             String direction = reader.getString("language_direction");
             long tdId = reader.getLong("td_id");
 
-            Questionnaire questionnaire = new Questionnaire(slug, name, direction, tdId);
+            // load data fields
+            Cursor dataFieldsCursor = db.rawQuery("select field, question_td_id from questionnaire_data_field" +
+                    " where questionnaire_id=" + id, null);
+            Map<String, Long> dataFields = new HashMap<>();
+            dataFieldsCursor.moveToFirst();
+            while(!dataFieldsCursor.isAfterLast()) {
+                CursorReader dataFieldReader = new CursorReader(dataFieldsCursor);
+                dataFields.put(dataFieldReader.getString("field"), dataFieldReader.getLong("question_td_id"));
+                dataFieldsCursor.moveToNext();
+            }
+            dataFieldsCursor.close();;
+
+            Questionnaire questionnaire = new Questionnaire(slug, name, direction, tdId, dataFields);
             questionnaires.add(questionnaire);
             cursor.moveToNext();
         }
@@ -1039,7 +1152,8 @@ class Library implements Index {
 
     public List<Question> getQuestions(long questionnaireTDId) {
         Cursor cursor = db.rawQuery("select * from question where questionnaire_id in (" +
-                " select id from questionnaire where td_id=" + questionnaireTDId + ") LIMIT 1", null);
+                " select id from questionnaire where td_id=" + questionnaireTDId + ")" +
+                " order by sort asc", null);
 
         List<Question> questions = new ArrayList<>();
         cursor.moveToFirst();
@@ -1054,7 +1168,7 @@ class Library implements Index {
             long dependsOn = reader.getInt("depends_on");
             long tdId = reader.getInt("td_id");
 
-            Question question = new Question(text, help, isRequired, inputType, sort, dependsOn, tdId);
+            Question question = new Question(text, help, isRequired, Question.InputType.get(inputType), sort, dependsOn, tdId);
             questions.add(question);
             cursor.moveToNext();
         }

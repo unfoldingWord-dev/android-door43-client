@@ -86,6 +86,15 @@ public class Door43Client {
     }
 
     /**
+     * Opens a resource container archive so it's contents can be read.
+     * @param containerSlug
+     * @return
+     */
+    public ResourceContainer open(String containerSlug) throws Exception {
+        return api.openResourceContainer(containerSlug);
+    }
+
+    /**
      * Closes a resource container directory
      * @param sourceLanguageSlug
      * @param projectSlug
