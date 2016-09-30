@@ -578,6 +578,30 @@ class Library implements Index {
         return sourceLanguages;
     }
 
+    public List<SourceLanguage> getSourceLanguages(String projectSlug) {
+        Cursor cursor = db.rawQuery("select * from source_language where id in (" +
+                " select source_language_id from project" +
+                " where slug=?" +
+                " group by source_language_id" +
+                ") order by slug desc", new String[]{projectSlug});
+
+        List<SourceLanguage> sourceLanguages = new ArrayList<>();
+        cursor.moveToFirst();
+        while(!cursor.isAfterLast()) {
+            CursorReader reader = new CursorReader(cursor);
+
+            String slug = reader.getString("id");
+            String name = reader.getString("name");
+            String direction = reader.getString("direction");
+
+            SourceLanguage sourceLanguage = new SourceLanguage(slug, name, direction);
+            sourceLanguages.add(sourceLanguage);
+            cursor.moveToNext();
+        }
+        cursor.close();
+        return sourceLanguages;
+    }
+
     public TargetLanguage getTargetLanguage(String targetLangaugeSlug) {
         TargetLanguage targetLanguage = null;
         Cursor cursor = db.rawQuery("select * from (" +

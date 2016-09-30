@@ -64,6 +64,13 @@ public interface Index {
     List<SourceLanguage> getSourceLanguages();
 
     /**
+     * Returns a list of source languages in which the project exists.
+     *
+     * @return an array of source languages
+     */
+    List<SourceLanguage> getSourceLanguages(String projectSlug);
+
+    /**
      * Returns a target language.
      * The result may be a temp target language.
      *
