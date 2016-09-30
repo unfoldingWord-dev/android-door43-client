@@ -485,6 +485,19 @@ class API {
     }
 
     /**
+     * Opens a resource container archive so it's contents can be read.
+     * This will NOT check with the index to validate the resource container.
+     * @param containerSlug
+     * @return
+     * @throws Exception
+     */
+    public ResourceContainer openResourceContainer(String containerSlug) throws Exception {
+        File directory = new File(resourceDir + containerSlug);
+        File archive = new File(directory + "." + ResourceContainer.fileExtension);
+        return ResourceContainer.open(archive, directory);
+    }
+
+    /**
      * Closes a resource container archive.
      *
      * @param sourceLanguageSlug
