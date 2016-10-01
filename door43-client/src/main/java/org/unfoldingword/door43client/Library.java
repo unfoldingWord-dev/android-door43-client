@@ -773,68 +773,50 @@ class Library implements Index {
         List<Project> projects = new ArrayList<>();
         Cursor cursor;
         if(enableDefaultLanguage) {
-            // TRICKY: the below query should be perfectly valid, however due to limitations in andrew we need to perform hack below
-//            select p.*, sl.slug as source_language_slug from project as p
-//            left join source_language as sl on sl.id=p.source_language_id
-//            where p.id in (
-//                    select max(weight), id, slug from (
-//                    select *, 3 as weight from project where source_language_id in (
-//                            select id from source_language where slug=?
-//            )
-//            union
-//            select *, 2 as weight from project where source_language_id in (
-//                    select id from source_language where slug=?
-//            )
-//            union
-//            select *, 1 as weight from project
-//            )
-//            group by p.slug
-//            )
-//            order by p.sort asc left
+            // TRICKY: this should work on android but is not working on the tests
+            cursor = db.rawQuery("select p.*, sl.slug as source_language_slug," +
+                " max(case sl.slug when ? then 3 when ? then 2 else 1 end) as weight" +
+                " from project as p" +
+                " left join source_language as sl on sl.id=p.source_language_id" +
+                " group by p.slug" +
+                " order by p.sort asc", new String[]{sourceLanguageSlug, "en"});
 
-            // select the project ids
-            List<Long> projectIds = new ArrayList<>();
-            Cursor projectIdCursor = db.rawQuery("select max(weight), id from" +
-                    " (" +
-                    "   select *, 3 as weight from project where source_language_id in (" +
-                    "     select id from source_language where slug=?" +
-                    "   )" +
-                    "   union" +
-                    "   select *, 2 as weight from project where source_language_id in (" +
-                    "     select id from source_language where slug=?" +
-                    "   )" +
-                    "   union" +
-                    "   select *, 1 as weight from project" +
-                    " )" +
-                    " group by slug", new String[]{sourceLanguageSlug, "en"}
-            );
-            projectIdCursor.moveToFirst();
-            while(!projectIdCursor.isAfterLast()) {
-                CursorReader reader = new CursorReader(projectIdCursor);
-                projectIds.add(reader.getLong("id"));
-                projectIdCursor.moveToNext();
-            }
-            projectIdCursor.close();
+            // another alternative that "should" work
+//            cursor = db.rawQuery("select p.*, sl.slug as source_language_slug, max(weight) from (" +
+//                    "  select *, 3 as weight from project where source_language_id in (" +
+//                    "    select id from source_language where slug=?" +
+//                    "  )" +
+//                    "  union" +
+//                    "  select *, 2 as weight from project where source_language_id in (" +
+//                    "    select id from source_language where slug=?" +
+//                    "  )" +
+//                    "  union" +
+//                    "  select *, 1 as weight from project" +
+//                    " ) as p" +
+//                    " left join source_language as sl on sl.id=p.source_language_id" +
+//                    " group by p.slug" +
+//                    " order by p.sort asc", new String[]{sourceLanguageSlug, "en"});
 
-            cursor = db.rawQuery("select p.*, sl.slug as source_language_slug from project as p" +
-                    " left join source_language as sl on sl.id=p.source_language_id" +
-                    " where p.id in (" +
-                    "   select id from (" +
-                    "     select max(weight), id from (" +
-                    "       select *, 3 as weight from project where source_language_id in (" +
-                    "         select id from source_language where slug=?" +
-                    "       )" +
-                    "       union" +
-                    "       select *, 2 as weight from project where source_language_id in (" +
-                    "         select id from source_language where slug=?" +
-                    "       )" +
-                    "       union" +
-                    "       select *, 1 as weight from project" +
-                    "     )" +
-                    "     group by slug" +
-                    "   )" +
-                    " )" +
-                    " order by p.sort asc", new String[]{sourceLanguageSlug, "en"});
+            // another alternative that "should" work
+//            cursor = db.rawQuery("select p.*, sl.slug as source_language_slug from project as p" +
+//                    " left join source_language as sl on sl.id=p.source_language_id" +
+//                    " where p.id in (" +
+//                    "   select id from (" +
+//                    "     select max(weight), id from (" +
+//                    "       select *, 3 as weight from project where source_language_id in (" +
+//                    "         select id from source_language where slug=?" +
+//                    "       )" +
+//                    "       union" +
+//                    "       select *, 2 as weight from project where source_language_id in (" +
+//                    "         select id from source_language where slug=?" +
+//                    "       )" +
+//                    "       union" +
+//                    "       select *, 1 as weight from project" +
+//                    "     )" +
+//                    "     group by slug" +
+//                    "   )" +
+//                    " )" +
+//                    " order by p.sort asc", new String[]{sourceLanguageSlug, "en"});
         } else {
             cursor = db.rawQuery("select * from project" +
                     " where source_language_id in (select id from source_language where slug=?)" +
