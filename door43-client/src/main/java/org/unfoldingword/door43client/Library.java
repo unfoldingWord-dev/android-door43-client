@@ -773,19 +773,67 @@ class Library implements Index {
         List<Project> projects = new ArrayList<>();
         Cursor cursor;
         if(enableDefaultLanguage) {
-            cursor = db.rawQuery("select p.*, sl.slug as source_language_slug, max(weight) from (" +
-                    "  select *, 3 as weight from project where source_language_id in (" +
-                    "    select id from source_language where slug=?" +
-                    "  )" +
-                    "  union" +
-                    "  select *, 2 as weight from project where source_language_id in (" +
-                    "    select id from source_language where slug=?" +
-                    "  )" +
-                    "  union" +
-                    "  select *, 1 as weight from project" +
-                    " ) as p" +
+            // TRICKY: the below query should be perfectly valid, however due to limitations in andrew we need to perform hack below
+//            select p.*, sl.slug as source_language_slug from project as p
+//            left join source_language as sl on sl.id=p.source_language_id
+//            where p.id in (
+//                    select max(weight), id, slug from (
+//                    select *, 3 as weight from project where source_language_id in (
+//                            select id from source_language where slug=?
+//            )
+//            union
+//            select *, 2 as weight from project where source_language_id in (
+//                    select id from source_language where slug=?
+//            )
+//            union
+//            select *, 1 as weight from project
+//            )
+//            group by p.slug
+//            )
+//            order by p.sort asc left
+
+            // select the project ids
+            List<Long> projectIds = new ArrayList<>();
+            Cursor projectIdCursor = db.rawQuery("select max(weight), id from" +
+                    " (" +
+                    "   select *, 3 as weight from project where source_language_id in (" +
+                    "     select id from source_language where slug=?" +
+                    "   )" +
+                    "   union" +
+                    "   select *, 2 as weight from project where source_language_id in (" +
+                    "     select id from source_language where slug=?" +
+                    "   )" +
+                    "   union" +
+                    "   select *, 1 as weight from project" +
+                    " )" +
+                    " group by slug", new String[]{sourceLanguageSlug, "en"}
+            );
+            projectIdCursor.moveToFirst();
+            while(!projectIdCursor.isAfterLast()) {
+                CursorReader reader = new CursorReader(projectIdCursor);
+                projectIds.add(reader.getLong("id"));
+                projectIdCursor.moveToNext();
+            }
+            projectIdCursor.close();
+
+            cursor = db.rawQuery("select p.*, sl.slug as source_language_slug from project as p" +
                     " left join source_language as sl on sl.id=p.source_language_id" +
-                    " group by p.slug" +
+                    " where p.id in (" +
+                    "   select id from (" +
+                    "     select max(weight), id from (" +
+                    "       select *, 3 as weight from project where source_language_id in (" +
+                    "         select id from source_language where slug=?" +
+                    "       )" +
+                    "       union" +
+                    "       select *, 2 as weight from project where source_language_id in (" +
+                    "         select id from source_language where slug=?" +
+                    "       )" +
+                    "       union" +
+                    "       select *, 1 as weight from project" +
+                    "     )" +
+                    "     group by slug" +
+                    "   )" +
+                    " )" +
                     " order by p.sort asc", new String[]{sourceLanguageSlug, "en"});
         } else {
             cursor = db.rawQuery("select * from project" +
