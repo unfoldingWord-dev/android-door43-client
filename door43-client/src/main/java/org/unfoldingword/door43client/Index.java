@@ -137,6 +137,16 @@ public interface Index {
     List<Project> getProjects(String sourceLanguageSlug);
 
     /**
+     * Returns a list of projects in the given language or (if enabled) a default language.
+     * The affect is a list of all unique projects with preference given to the specified language
+     *
+     * @param sourceLanguageSlug the source language code for which projects will be returned
+     * @param enableDefaultLanguage if true the default language will be used to fetch the remaining projects
+     * @return an array of projects that are available in the source language
+     */
+    List<Project> getProjects(String sourceLanguageSlug, boolean enableDefaultLanguage);
+
+    /**
      * Returns an array of categories that exist underneath the parent category.
      * The results of this method are a combination of categories and projects.
      *

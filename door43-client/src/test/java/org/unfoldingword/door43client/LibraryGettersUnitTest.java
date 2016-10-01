@@ -48,6 +48,7 @@ public class LibraryGettersUnitTest {
     private static final int GENERATOR_QTY = 5;
     private static Context context;
     private static Library library;
+    private static int testCounter = 0;
 
     /**
      * Generates a bunch of unique strings
@@ -80,6 +81,7 @@ public class LibraryGettersUnitTest {
         library.setApprovedTargetLanguage("temp-en1", "en1");
 
         // source languages
+        int langCount = 0;
         for(String lSlug:stringGenerator("en", GENERATOR_QTY)) {
             SourceLanguage l = new SourceLanguage(lSlug, "English", "ltr");
             long sourceLanguageId = library.addSourceLanguage(l);
@@ -90,6 +92,17 @@ public class LibraryGettersUnitTest {
                 Versification v = new Versification(slug, "Versification");
                 long id = library.addVersification(v, sourceLanguageId);
                 if(versificationId == 0) versificationId = id; // keep the first one for projects
+            }
+
+            if(langCount > 0) {
+                // project missing from first language
+                for(String pSlug:stringGenerator("proj-", GENERATOR_QTY)) {
+                    Project p = new Project(pSlug, "Genesis", 1);
+                    p.description = "The Book of Genesis";
+                    long projectId = library.addProject(p, new ArrayList(){}, sourceLanguageId);
+                    buildResources(projectId);
+                    buildChunks(pSlug, versificationId);
+                }
             }
 
             // projects - no category
@@ -123,6 +136,7 @@ public class LibraryGettersUnitTest {
                 buildResources(projectId);
                 buildChunks(pSlug, versificationId);
             }
+            langCount ++;
         }
 
         // catalogs
@@ -164,7 +178,8 @@ public class LibraryGettersUnitTest {
     }
 
     @Before
-    public void initialize() throws Exception {
+    synchronized public void initialize() throws Exception {
+        testCounter ++;
         context = RuntimeEnvironment.application;
         Log.d("Tests", "Initializing");
 
@@ -182,10 +197,10 @@ public class LibraryGettersUnitTest {
         }
 
         // clean up old index
-        context.deleteDatabase("index");
+//        context.deleteDatabase("index");
 
         // initialize library
-        SQLiteHelper helper = new SQLiteHelper(context, sb.toString(), "index");
+        SQLiteHelper helper = new SQLiteHelper(context, sb.toString(), "index" + testCounter);
         library = new Library(helper);
 
         library.beginTransaction();
@@ -277,7 +292,20 @@ public class LibraryGettersUnitTest {
     public void getProjects() throws Exception {
         List<Project> projects = library.getProjects("en1");
         assertTrue(projects.size() > 0);
+        for(Project p:projects) {
+            assertEquals("en1", p.languageSlug);
+        }
     }
+
+    @Test
+    public void getProjectsWithDefaultLanguage() throws Exception {
+        List<Project> projects = library.getProjects("en1", true);
+        assertTrue(projects.size() > 0);
+        for(Project p:projects) {
+            assertEquals("en1", p.languageSlug);
+        }
+    }
+
 
     @Test
     public void getProjectCategories() throws Exception {

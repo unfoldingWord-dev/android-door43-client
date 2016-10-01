@@ -104,7 +104,7 @@ class Library implements Index {
      * @param uniqueColumns
      * @return the id of the inserted row or the id of the existing row.
      */
-    private long insertOrIgnore(String table, ContentValues values, String[] uniqueColumns) {
+    synchronized private long insertOrIgnore(String table, ContentValues values, String[] uniqueColumns) {
         // try to insert
         Exception error = null;
         try {
@@ -137,7 +137,7 @@ class Library implements Index {
      * @param uniqueColumns an array of unique columns on this table. This should be a subset of the values.
      * @return the id of the inserted/updated row
      */
-    private long insertOrUpdate(String table, ContentValues values, String[] uniqueColumns) throws Exception {
+    synchronized private long insertOrUpdate(String table, ContentValues values, String[] uniqueColumns) throws Exception {
         // insert
         long id = insertOrIgnore(table, values, uniqueColumns);
         if(id == -1) {
@@ -766,27 +766,50 @@ class Library implements Index {
     }
 
     public List<Project> getProjects(String sourceLanguageSlug) {
-        Cursor cursor = db.rawQuery("select * from project" +
-                " where source_language_id in (select id from source_language where slug=?)" +
-                " order by sort asc", new String[]{sourceLanguageSlug});
+        return getProjects(sourceLanguageSlug, false);
+    }
 
+    public List<Project> getProjects(String sourceLanguageSlug, boolean enableDefaultLanguage) {
         List<Project> projects = new ArrayList<>();
+        Cursor cursor;
+        if(enableDefaultLanguage) {
+            cursor = db.rawQuery("select p.*, sl.slug as source_language_slug, max(weight) from (" +
+                    "  select *, 3 as weight from project where source_language_id in (" +
+                    "    select id from source_language where slug=?" +
+                    "  )" +
+                    "  union" +
+                    "  select *, 2 as weight from project where source_language_id in (" +
+                    "    select id from source_language where slug=?" +
+                    "  )" +
+                    "  union" +
+                    "  select *, 1 as weight from project" +
+                    " ) as p" +
+                    " left join source_language as sl on sl.id=p.source_language_id" +
+                    " group by p.slug" +
+                    " order by p.sort asc", new String[]{sourceLanguageSlug, "en"});
+        } else {
+            cursor = db.rawQuery("select * from project" +
+                    " where source_language_id in (select id from source_language where slug=?)" +
+                    " order by sort asc", new String[]{sourceLanguageSlug});
+        }
+
         cursor.moveToFirst();
         while(!cursor.isAfterLast()) {
             CursorReader reader = new CursorReader(cursor);
 
             String slug = reader.getString("slug");
             String name = reader.getString("name");
-            String desc = reader.getString("desc");
-            String icon = reader.getString("icon");
             int sort = reader.getInt("sort");
-            String chunksUrl = reader.getString("chunks_url");
 
             Project project = new Project(slug, name, sort);
-            project.description = desc;
-            project.icon = icon;
-            project.chunksUrl = chunksUrl;
-            project.languageSlug = sourceLanguageSlug;
+            project.description = reader.getString("desc");
+            project.icon = reader.getString("icon");
+            project.chunksUrl = reader.getString("chunks_url");
+            if(enableDefaultLanguage) {
+                project.languageSlug = reader.getString("source_language_slug");
+            } else {
+                project.languageSlug = sourceLanguageSlug;
+            }
 
             projects.add(project);
             cursor.moveToNext();
