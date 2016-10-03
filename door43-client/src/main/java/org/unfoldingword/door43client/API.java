@@ -63,7 +63,9 @@ class API {
      */
     public API(Context context, String schema, File databasePath, File resourceDir) throws IOException {
         this.resourceDir = resourceDir;
-        DatabaseContext databaseContext = new DatabaseContext(context, databasePath);
+        String[] nameParts = databasePath.getName().split("\\.");
+        String dbExt = nameParts[nameParts.length - 1];
+        DatabaseContext databaseContext = new DatabaseContext(context, databasePath.getParentFile(), dbExt);
         String dbName = databasePath.getName().replaceFirst("\\.[^\\.]+$", "");
         SQLiteHelper helper = new SQLiteHelper(databaseContext, schema, dbName);
         this.library = new Library(helper);

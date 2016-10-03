@@ -15,18 +15,30 @@ import java.io.File;
 class DatabaseContext extends ContextWrapper {
 
     private final File dir;
+    private final String dbExt;
 
-    public DatabaseContext(Context base, File databaseDir) {
+    /**
+     *
+     * @param base
+     * @param databaseDir the directory where databases will be stored
+     * @param dbExt the file extension to use for databases
+     */
+    public DatabaseContext(Context base, File databaseDir, String dbExt) {
         super(base);
         this.dir = databaseDir;
+        if(dbExt == null || dbExt.isEmpty()) {
+            this.dbExt = "db";
+        } else {
+            this.dbExt = dbExt;
+        }
     }
 
     @Override
     public File getDatabasePath(String name) {
         String dbfile = dir.getAbsolutePath() + File.separator + name;
 
-        if (!dbfile.endsWith(".db")) {
-            dbfile += ".db" ;
+        if (!dbfile.endsWith("." + dbExt)) {
+            dbfile += "." + dbExt;
         }
 
         File result = new File(dbfile);
