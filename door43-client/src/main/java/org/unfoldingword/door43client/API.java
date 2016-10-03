@@ -29,7 +29,7 @@ import java.util.Map;
 class API {
     public static final String LEGACY_WORDS_ASSIGNMENTS_URL = "words_assignments_url";
     private static final OnLogListener defaultLogListener;
-    private static SQLiteHelper sqLiteHelper;
+    private static SQLiteHelper sqLiteHelper = null;
 
     static {
         defaultLogListener = new OnLogListener() {

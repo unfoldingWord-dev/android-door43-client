@@ -18,6 +18,7 @@ import java.io.InputStreamReader;
 public class Door43Client {
 
     private final API api;
+    private static String schema = null;
 
     /**
      * Initializes a new Door43 client
@@ -28,15 +29,18 @@ public class Door43Client {
      */
     public Door43Client(Context context, File databasePath, File resourceDir) throws IOException {
         // load schema
-        InputStream is = context.getAssets().open("schema.sqlite");
-        BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-        StringBuilder sb = new StringBuilder();
-        String line;
-        while((line = reader.readLine()) != null) {
-            sb.append(line).append("\n");
+        if(this.schema == null) {
+            InputStream is = context.getAssets().open("schema.sqlite");
+            BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+            StringBuilder sb = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                sb.append(line).append("\n");
+            }
+            this.schema = sb.toString();
         }
 
-        this.api = new API(context, sb.toString(), databasePath, resourceDir);
+        this.api = new API(context, this.schema, databasePath, resourceDir);
     }
 
     /**
