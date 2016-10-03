@@ -80,6 +80,7 @@ class API {
     public void tearDown() {
         if(this.sqLiteHelper != null) {
             this.sqLiteHelper.close();
+            this.sqLiteHelper = null;
         }
     }
 
