@@ -4,8 +4,12 @@ import android.content.Context;
 
 import org.unfoldingword.resourcecontainer.ResourceContainer;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 
 /**
  * Provides a interface to the Door43 resource api
@@ -23,7 +27,16 @@ public class Door43Client {
      * @throws IOException
      */
     public Door43Client(Context context, File databasePath, File resourceDir) throws IOException {
-        this.api = new API(context, databasePath, resourceDir);
+        // load schema
+        InputStream is = context.getAssets().open("schema.sqlite");
+        BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+        StringBuilder sb = new StringBuilder();
+        String line;
+        while((line = reader.readLine()) != null) {
+            sb.append(line).append("\n");
+        }
+
+        this.api = new API(context, sb.toString(), databasePath, resourceDir);
     }
 
     /**

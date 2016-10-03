@@ -57,27 +57,15 @@ class API {
     /**
      * Initializes the new api client
      * @param context the application context
+     * @param schema the database schema for the index
      * @param databasePath the name of the database where information will be indexed
      * @param resourceDir the directory where resource containers will be stored
      */
-    public API(Context context, File databasePath, File resourceDir) throws IOException {
+    public API(Context context, String schema, File databasePath, File resourceDir) throws IOException {
         this.resourceDir = resourceDir;
-
-        // load schema
-        URL resource = this.getClass().getClassLoader().getResource("schema.sqlite");
-        File sqliteFile = new File(resource.getPath());
-
-        // read schema
-        BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(sqliteFile)));
-        StringBuilder sb = new StringBuilder();
-        String line;
-        while((line = reader.readLine()) != null) {
-            sb.append(line).append("\n");
-        }
-
         DatabaseContext databaseContext = new DatabaseContext(context, databasePath);
         String dbName = databasePath.getName().replaceFirst("\\.[^\\.]+$", "");
-        SQLiteHelper helper = new SQLiteHelper(databaseContext, sb.toString(), dbName);
+        SQLiteHelper helper = new SQLiteHelper(databaseContext, schema, dbName);
         this.library = new Library(helper);
     }
 
