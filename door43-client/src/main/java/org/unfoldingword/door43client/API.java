@@ -482,7 +482,7 @@ class API {
             throw new Exception("Unknown Resource");
         }
         String containerSlug = ContainerTools.makeSlug(sourceLanguageSlug, projectSlug, resourceSlug);
-        File directory = new File(resourceDir + containerSlug);
+        File directory = new File(resourceDir, containerSlug);
         File archive = new File(directory + "." + ResourceContainer.fileExtension);
         return ResourceContainer.open(archive, directory);
     }
@@ -495,7 +495,7 @@ class API {
      * @throws Exception
      */
     public ResourceContainer openResourceContainer(String containerSlug) throws Exception {
-        File directory = new File(resourceDir + containerSlug);
+        File directory = new File(resourceDir, containerSlug);
         File archive = new File(directory + "." + ResourceContainer.fileExtension);
         return ResourceContainer.open(archive, directory);
     }
@@ -514,7 +514,7 @@ class API {
             throw new Exception("Unknown Resource");
         }
         String containerSlug = ContainerTools.makeSlug(sourceLanguageSlug, projectSlug, resourceSlug);
-        File directory = new File(resourceDir + containerSlug);
+        File directory = new File(resourceDir, containerSlug);
         return ResourceContainer.close(directory);
     }
 
