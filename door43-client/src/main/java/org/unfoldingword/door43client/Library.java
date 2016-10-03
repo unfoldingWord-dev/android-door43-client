@@ -115,14 +115,22 @@ class Library implements Index {
 
         WhereClause where = WhereClause.prepare(values, uniqueColumns);
 
-        Cursor cursor = db.rawQuery("select id from " + table + " where " + where.statement, where.arguments);
-        if(cursor.moveToFirst()) {
-            long id = cursor.getLong(0);
-            cursor.close();
-            return id;
-        } else {
-            cursor.close();
+        Cursor cursor = null;
+        try {
+            cursor = db.rawQuery("select id from " + table + " where " + where.statement, where.arguments);
+            if (cursor.moveToFirst()) {
+                long id = cursor.getLong(0);
+                cursor.close();
+                return id;
+            } else {
+                cursor.close();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            if(cursor != null) cursor.close();
         }
+
+        // TRICKY: print the insert stacktrace only if the select failed.
         if(error != null) error.printStackTrace();
         return -1;
     }
