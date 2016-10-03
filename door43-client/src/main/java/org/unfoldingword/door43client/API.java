@@ -15,11 +15,8 @@ import org.unfoldingword.resourcecontainer.Resource;
 import org.unfoldingword.resourcecontainer.ResourceContainer;
 import org.unfoldingword.tools.http.GetRequest;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -32,6 +29,7 @@ import java.util.Map;
 class API {
     public static final String LEGACY_WORDS_ASSIGNMENTS_URL = "words_assignments_url";
     private static final OnLogListener defaultLogListener;
+    private static SQLiteHelper sqLiteHelper;
 
     static {
         defaultLogListener = new OnLogListener() {
@@ -67,8 +65,22 @@ class API {
         String dbExt = nameParts[nameParts.length - 1];
         DatabaseContext databaseContext = new DatabaseContext(context, databasePath.getParentFile(), dbExt);
         String dbName = databasePath.getName().replaceFirst("\\.[^\\.]+$", "");
-        SQLiteHelper helper = new SQLiteHelper(databaseContext, schema, dbName);
-        this.library = new Library(helper);
+        synchronized (this) {
+            if (this.sqLiteHelper == null) {
+                sqLiteHelper = new SQLiteHelper(databaseContext, schema, dbName);
+            }
+        }
+        this.library = new Library(sqLiteHelper);
+    }
+
+    /**
+     * Performs closing operations.
+     * e.g. closing the db, etc.
+     */
+    public void tearDown() {
+        if(this.sqLiteHelper != null) {
+            this.sqLiteHelper.close();
+        }
     }
 
     /**

@@ -117,4 +117,11 @@ public class Door43Client {
     public void close(String sourceLanguageSlug, String projectSlug, String resourceSlug) throws Exception {
         api.closeResourceContainer(sourceLanguageSlug, projectSlug, resourceSlug);
     }
+
+    /**
+     * Closes the api
+     */
+    public void tearDown() {
+        api.tearDown();
+    }
 }

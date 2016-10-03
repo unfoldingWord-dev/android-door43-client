@@ -73,7 +73,7 @@ class Library implements Index {
      * Closes the database
      */
     public void closeDatabase() {
-        db.close();
+        sqliteHelper.close();
     }
 
     /**

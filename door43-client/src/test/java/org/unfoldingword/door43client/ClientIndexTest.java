@@ -4,6 +4,7 @@ import android.app.Application;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -59,6 +60,11 @@ public class ClientIndexTest {
         }
 
         client = new API(context, sb.toString(), resourceDir.getRoot(), resourceDir.getRoot());
+    }
+
+    @After
+    public void tearDown() {
+        client.tearDown();
     }
 
     private void stubAPI() throws IOException {
