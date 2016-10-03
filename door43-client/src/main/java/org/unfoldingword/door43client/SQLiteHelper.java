@@ -65,6 +65,12 @@ class SQLiteHelper extends SQLiteOpenHelper {
     }
 
     @Override
+    public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        // TRICKY: if this is used to manage downgrades care must be taken to ensure the correct DATABASE_VERSION
+        // is set in the db that is packaged with an android app. Otherwise the packaged db may get overwritten.
+    }
+
+    @Override
     public void onOpen(SQLiteDatabase db) {
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
             db.setForeignKeyConstraintsEnabled(true);
