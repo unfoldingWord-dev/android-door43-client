@@ -2,6 +2,7 @@ package org.unfoldingword.door43client;
 
 import android.content.Context;
 
+import org.unfoldingword.resourcecontainer.Resource;
 import org.unfoldingword.resourcecontainer.ResourceContainer;
 
 import java.io.BufferedReader;
@@ -57,6 +58,17 @@ public class Door43Client {
      */
     public Index index() {
         return api.index();
+    }
+
+    /**
+     * Checks when a resource container was last modified.
+     * @param sourceLanguageSlug
+     * @param projectSlug
+     * @param resourceSlug
+     * @return
+     */
+    public int getResourceContainerLastModified(String sourceLanguageSlug, String projectSlug, String resourceSlug) {
+        return api.getResourceContainerLastModified(sourceLanguageSlug, projectSlug, resourceSlug);
     }
 
     /**
