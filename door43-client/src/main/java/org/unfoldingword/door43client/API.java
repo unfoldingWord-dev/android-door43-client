@@ -526,6 +526,22 @@ class API {
     }
 
     /**
+     * Checks when a resource container was last modified.
+     * @param sourceLanguageSlug
+     * @param projectSlug
+     * @param resourceSlug
+     * @return
+     */
+    public int getResourceContainerLastModified(String sourceLanguageSlug, String projectSlug, String resourceSlug) {
+        Resource resource = library.getResource(sourceLanguageSlug, projectSlug, resourceSlug);
+        if(resource != null) {
+            Resource.Format format = getResourceContainerFormat(resource.formats);
+            if(format != null) return format.modifiedAt;
+        }
+        return -1;
+    }
+
+    /**
      * Returns a list of resource containers that have been downloaded
      * @return an array of resource container info objects (package.json).
      */
