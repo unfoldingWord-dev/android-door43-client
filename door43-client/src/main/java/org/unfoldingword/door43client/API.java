@@ -435,8 +435,13 @@ class API {
                 && resource._legacyData.get(LEGACY_WORDS_ASSIGNMENTS_URL) != null
                 && !resource._legacyData.get(LEGACY_WORDS_ASSIGNMENTS_URL).equals("")) {
             GetRequest request = new GetRequest(new URL((String)resource._legacyData.get(LEGACY_WORDS_ASSIGNMENTS_URL)));
-            String wordsData = request.read();
-            if(request.getResponseCode() < 300) {
+            String wordsData = null;
+            try {
+                wordsData = request.read();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            if(wordsData != null && request.getResponseCode() < 300) {
                 try {
                     JSONArray words = new JSONArray(wordsData);
                     JSONObject assignmentsJson = new JSONObject();
