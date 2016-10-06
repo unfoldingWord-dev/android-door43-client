@@ -12,9 +12,11 @@ import org.unfoldingword.door43client.models.ChunkMarker;
 import org.unfoldingword.door43client.models.TargetLanguage;
 import org.unfoldingword.door43client.models.Question;
 import org.unfoldingword.door43client.models.SourceLanguage;
+import org.unfoldingword.door43client.models.Translation;
 import org.unfoldingword.door43client.models.Versification;
 import org.unfoldingword.door43client.models.Catalog;
 import org.unfoldingword.door43client.models.Questionnaire;
+import org.unfoldingword.resourcecontainer.Language;
 import org.unfoldingword.resourcecontainer.Project;
 import org.unfoldingword.resourcecontainer.Resource;
 import org.unfoldingword.resourcecontainer.ResourceContainer;
@@ -547,6 +549,61 @@ class Library implements Index {
         }
         cursor.close();
         return projectsLastModifiedList;
+    }
+
+    public List<Translation> getTranslations(String projectSlug, int minCheckingLevel, String resourceType) {
+        if(resourceType == null) resourceType = "";
+        List<Translation> translations = new ArrayList<>();
+        Cursor cursor = db.rawQuery("select l.slug as language_slug, l.name as language_name, l.direction," +
+                " p.slug as project_slug, p.name as project_name, p.desc, p.icon, p.sort, p.chunks_url," +
+                " r.id as resource_id, r.slug as resource_slug, r.name as resource_name, r.type, r.translate_mode, r.checking_level, r.comments, r.pub_date, r.license, r.version," +
+                " lri.translation_words_assignments_url" +
+                " from source_language as l" +
+                " left join project as p on p.source_language_id=l.id" +
+                " left join resource as r on r.project_id=p.id" +
+                " left join legacy_resource_info as lri on lri.resource_id=r.id" +
+                " where p.slug=? and r.checking_level >= " + minCheckingLevel + " and r.type like(?)", new String[]{projectSlug, "%" + resourceType + "%"});
+
+        cursor.moveToFirst();
+        while(!cursor.isAfterLast()) {
+            CursorReader reader = new CursorReader(cursor);
+
+            Language l = new Language(reader.getString("language_slug"), reader.getString("language_name"), reader.getString("direction"));
+
+            Project p = new Project(reader.getString("project_slug"), reader.getString("project_name"), reader.getInt("sort"));
+            p.description = reader.getString("desc");
+            p.icon = reader.getString("icon");
+            p.chunksUrl = reader.getString("chunks_url");
+            p.languageSlug = reader.getString("language_slug");
+
+            Resource r = new Resource(reader.getString("resource_slug"), reader.getString("resource_name"),
+                    reader.getString("type"), reader.getString("translate_mode"), reader.getString("checking_level"), reader.getString("version"));
+            r.comments = reader.getString("comments");
+            r.pubDate = reader.getString("pub_date");
+            r.license = reader.getString("license");
+            r._legacyData.put(API.LEGACY_WORDS_ASSIGNMENTS_URL, reader.getString("translation_words_assignments_url"));
+
+            // load formats and add to resource
+            Cursor formatCursor = db.rawQuery("select * from resource_format where resource_id=" + reader.getLong("resource_id"), null);
+            formatCursor.moveToFirst();
+            while(!formatCursor.isAfterLast()) {
+                CursorReader formatReader = new CursorReader(formatCursor);
+
+                String packageVersion = formatReader.getString("package_version");
+                String mimeType = formatReader.getString("mime_type");
+                int modifiedAt = formatReader.getInt("modified_at");
+                String url = formatReader.getString("url");
+
+                Resource.Format format = new Resource.Format(packageVersion, mimeType, modifiedAt, url);
+                r.addFormat(format);
+                formatCursor.moveToNext();
+            }
+            formatCursor.close();
+            translations.add(new Translation(l, p, r));
+            cursor.moveToNext();
+        }
+        cursor.close();
+        return translations;
     }
 
     public SourceLanguage getSourceLanguage(String sourceLanguageSlug) {

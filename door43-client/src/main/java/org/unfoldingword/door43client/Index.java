@@ -7,6 +7,7 @@ import org.unfoldingword.door43client.models.Question;
 import org.unfoldingword.door43client.models.Questionnaire;
 import org.unfoldingword.door43client.models.SourceLanguage;
 import org.unfoldingword.door43client.models.TargetLanguage;
+import org.unfoldingword.door43client.models.Translation;
 import org.unfoldingword.door43client.models.Versification;
 import org.unfoldingword.resourcecontainer.Project;
 import org.unfoldingword.resourcecontainer.Resource;
@@ -47,6 +48,16 @@ public interface Index {
      * @return
      */
     Map<String, Integer> listProjectsLastModified(String languageSlug);
+
+    /**
+     * Returns a list of translations available for the project
+     *
+     * @param projectSlug the project for whome these translations are available
+     * @param minCheckingLevel the minimum checking level allowed for returned translations
+     * @param resourceType the resource type allowed for returned translations. Leave null for all.
+     * @return
+     */
+    List<Translation> getTranslations(String projectSlug, int minCheckingLevel, String resourceType);
 
     /**
      * Returns a source language.

@@ -18,6 +18,7 @@ import org.unfoldingword.door43client.models.Question;
 import org.unfoldingword.door43client.models.Questionnaire;
 import org.unfoldingword.door43client.models.SourceLanguage;
 import org.unfoldingword.door43client.models.TargetLanguage;
+import org.unfoldingword.door43client.models.Translation;
 import org.unfoldingword.door43client.models.Versification;
 import org.unfoldingword.resourcecontainer.Project;
 import org.unfoldingword.resourcecontainer.Resource;
@@ -233,6 +234,21 @@ public class LibraryGettersUnitTest {
         SourceLanguage found2 = library.getSourceLanguage("en2");
         assertNotNull(found2);
         assertEquals(found2.slug, "en2");
+    }
+
+    @Test
+    public void getTranslation() throws Exception {
+        List<Translation> translations = library.getTranslations("proj-1", 0, "book");
+        assertTrue(translations.size() > 0);
+
+        translations = library.getTranslations("proj-1", 3, "book");
+        assertTrue(translations.size() > 0);
+
+        translations = library.getTranslations("proj-1", 4, "book");
+        assertEquals(0, translations.size());
+
+        translations = library.getTranslations("proj-1", 0, "missing");
+        assertEquals(0, translations.size());
     }
 
     @Test
