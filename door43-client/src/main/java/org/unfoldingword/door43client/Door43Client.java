@@ -2,6 +2,7 @@ package org.unfoldingword.door43client;
 
 import android.content.Context;
 
+import org.unfoldingword.resourcecontainer.ContainerTools;
 import org.unfoldingword.resourcecontainer.Resource;
 import org.unfoldingword.resourcecontainer.ResourceContainer;
 
@@ -141,6 +142,24 @@ public class Door43Client {
      */
     public boolean exists(String containerSlug) {
         return api.resourceContainerExists(containerSlug);
+    }
+
+    /**
+     * Deletes a resource container
+     * @param languageSlug
+     * @param projectSlug
+     * @param resourceSlug
+     */
+    public void delete(String languageSlug, String projectSlug, String resourceSlug) {
+        delete(ContainerTools.makeSlug(languageSlug, projectSlug, resourceSlug));
+    }
+
+    /**
+     * Deletes a resource container
+     * @param containerSlug
+     */
+    public void delete(String containerSlug) {
+        return api.deleteResourceContainer(containerSlug);
     }
 
     /**

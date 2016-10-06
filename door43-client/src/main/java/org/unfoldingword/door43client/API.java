@@ -563,4 +563,19 @@ class API {
         String containerSlug = ContainerTools.makeSlug(languageSlug, projectSlug, resourceSlug);
         return resourceContainerExists(containerSlug);
     }
+
+    /**
+     * Deletes a resource container from the disk
+     * @param containerSlug
+     */
+    public void deleteResourceContainer(String containerSlug) {
+        File directory = new File(resourceDir, containerSlug);
+        File archive = new File(directory + "." + ResourceContainer.fileExtension);
+        if(directory.exists() && directory.isDirectory()) {
+            FileUtil.deleteQuietly(directory);
+        }
+        if(archive.exists() && archive.isFile()) {
+            FileUtil.deleteQuietly(archive);
+        }
+    }
 }
