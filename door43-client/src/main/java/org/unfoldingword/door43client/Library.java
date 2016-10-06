@@ -977,6 +977,8 @@ class Library implements Index {
 
                     CategoryEntry categoryEntry = new CategoryEntry(CategoryEntry.Type.CATEGORY, catId, catSlug, catName, catSourceLanguageSlug, parentCategoryId);
                     projectCategories.add(categoryEntry);
+                    cursor.close();
+                    break;
                 }
                 cursor.close();
             }
@@ -1010,6 +1012,8 @@ class Library implements Index {
 
                     CategoryEntry categoryEntry = new CategoryEntry(CategoryEntry.Type.PROJECT, projectId, projectSlug, projectName, projSourceLangSlug, parentCategoryId);
                     projectCategories.add(categoryEntry);
+                    cursor.close();
+                    break;
                 }
                 cursor.close();
             }
