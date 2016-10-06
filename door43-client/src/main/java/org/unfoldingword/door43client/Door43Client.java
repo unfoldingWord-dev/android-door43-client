@@ -159,7 +159,7 @@ public class Door43Client {
      * @param containerSlug
      */
     public void delete(String containerSlug) {
-        return api.deleteResourceContainer(containerSlug);
+        api.deleteResourceContainer(containerSlug);
     }
 
     /**
