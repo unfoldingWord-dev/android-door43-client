@@ -63,9 +63,10 @@ public interface Index {
      * @param projectSlug the project for whome these translations are available
      * @param minCheckingLevel the minimum checking level allowed for returned translations
      * @param resourceType the resource type allowed for returned translations. Leave null for all.
+     * @param translateMode limit the results to just those with the given translate mode. Leave this falsy to not filter
      * @return
      */
-    List<Translation> getTranslations(String projectSlug, int minCheckingLevel, String resourceType);
+    List<Translation> getTranslations(String projectSlug, int minCheckingLevel, String resourceType, String translateMode);
 
     /**
      * Returns a source language.
