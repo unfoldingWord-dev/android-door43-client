@@ -21,7 +21,7 @@ public class Translation {
     /**
      * The slug of the resource container represented by this translation
      */
-    private final String resourceContainerSlug;
+    public final String resourceContainerSlug;
 
     public Translation(Language language, Project project, Resource resource) {
         this.language = language;
