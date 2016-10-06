@@ -11,7 +11,7 @@ import java.io.File;
  * A SQLite database helper
  */
 class SQLiteHelper extends SQLiteOpenHelper {
-    private static final int DATABASE_VERSION = 0;
+    private static final int DATABASE_VERSION = 1;
     private final String schema;
 
     /**
