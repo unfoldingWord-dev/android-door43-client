@@ -574,7 +574,7 @@ class Library implements Index {
         while(!cursor.isAfterLast()) {
             CursorReader reader = new CursorReader(cursor);
 
-            String slug = reader.getString("id");
+            String slug = reader.getString("slug");
             String name = reader.getString("name");
             String direction = reader.getString("direction");
 
@@ -598,7 +598,7 @@ class Library implements Index {
         while(!cursor.isAfterLast()) {
             CursorReader reader = new CursorReader(cursor);
 
-            String slug = reader.getString("id");
+            String slug = reader.getString("slug");
             String name = reader.getString("name");
             String direction = reader.getString("direction");
 
