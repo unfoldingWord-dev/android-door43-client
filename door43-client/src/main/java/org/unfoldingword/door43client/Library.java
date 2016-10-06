@@ -941,15 +941,17 @@ class Library implements Index {
         // load categories
         if(!translateMode.isEmpty()) {
             categoryCursor = db.rawQuery("select \'category\' as type, c.slug as name, \'\' as source_language_slug," +
-                    " c.id, c.slug, c.parent_id, count(p.id) as num from category as c" +
+                    " c.id, c.slug, c.parent_id, count(p.id) as num, max(p.sort) as csort from category as c" +
                     " left join (" +
-                    "  select p.id, p.category_id, count(r.id) as num from project as p" +
+                    "  select p.id, p.category_id, p.sort, count(r.id) as num from project as p" +
                     "  left join resource as r on r.project_id=p.id and r.translate_mode like(?)" +
                     "  group by p.slug" +
                     " ) p on p.category_id=c.id and p.num > 0" +
                     " where parent_id=" + parentCategoryId + " and num > 0 " +
-                    "group by c.slug", new String[]{translateMode});
+                    " group by c.slug" +
+                    " order by csort", new String[]{translateMode});
         } else {
+            // TODO: left join projects were so we can max the sort so we can order the categories.
             categoryCursor = db.rawQuery("select \'category\' as type, category.slug as name, \'\'" +
                     " as source_language_slug, *" +
                     " from category" +
@@ -991,7 +993,8 @@ class Library implements Index {
                 " select \'project\' as type, \'\' as source_language_slug," +
                 " p.id, p.slug, p.sort, p.name, count(r.id) as num from project as p" +
                 " left join resource as r on r.project_id=p.id and r.translate_mode like (?)" +
-                " where p.category_id=" + parentCategoryId + " group by p.slug)" + (!translateMode.isEmpty() ? " where num > 0" : ""),
+                " where p.category_id=" + parentCategoryId + " group by p.slug" +
+                " order by p.sort asc)" + (!translateMode.isEmpty() ? " where num > 0" : ""),
                 new String[]{(!translateMode.isEmpty() ? translateMode : "%")});
 
         //find best name
