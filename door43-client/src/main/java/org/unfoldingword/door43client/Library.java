@@ -950,8 +950,11 @@ class Library implements Index {
                     " where parent_id=" + parentCategoryId + " and num > 0 " +
                     "group by c.slug", new String[]{translateMode});
         } else {
-            categoryCursor = db.rawQuery("select \'category\' as type, category.slug as name, \'\' " +
-                    "as source_language_slug, * from category where parent_id=" + parentCategoryId, null);
+            categoryCursor = db.rawQuery("select \'category\' as type, category.slug as name, \'\'" +
+                    " as source_language_slug, *" +
+                    " from category" +
+                    " where parent_id=" + parentCategoryId +
+                    " group by category.slug", null);
         }
 
         //find best name
