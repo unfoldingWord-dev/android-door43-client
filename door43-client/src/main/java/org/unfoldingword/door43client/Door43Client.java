@@ -62,7 +62,10 @@ public class Door43Client {
     }
 
     /**
-     * Checks when a resource container was last modified.
+     * Checks when an indexed (not downloaded) resource container was last modified.
+     * This looks at the modified date in the resource format.
+     * The result is the last known modification date of what's available in the api.
+     *
      * @param sourceLanguageSlug
      * @param projectSlug
      * @param resourceSlug
