@@ -50,6 +50,14 @@ public interface Index {
     Map<String, Integer> listProjectsLastModified(String languageSlug);
 
     /**
+     * Returns a translation that matches the resource container slug
+     *
+     * @param containerSlug
+     * @return
+     */
+    Translation getTranslation(String containerSlug);
+
+    /**
      * Returns a list of translations available for the project
      *
      * @param projectSlug the project for whome these translations are available

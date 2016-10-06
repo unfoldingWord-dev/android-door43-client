@@ -104,14 +104,14 @@ public class Door43Client {
 
     /**
      * Opens a resource container archive so it's contents can be read.
-     * @param sourceLanguageSlug
+     * @param languageSlug
      * @param projectSlug
      * @param resourceSlug
      * @return
      * @throws Exception
      */
-    public ResourceContainer open(String sourceLanguageSlug, String projectSlug, String resourceSlug) throws Exception {
-        return api.openResourceContainer(sourceLanguageSlug, projectSlug, resourceSlug);
+    public ResourceContainer open(String languageSlug, String projectSlug, String resourceSlug) throws Exception {
+        return api.openResourceContainer(languageSlug, projectSlug, resourceSlug);
     }
 
     /**
@@ -121,6 +121,26 @@ public class Door43Client {
      */
     public ResourceContainer open(String containerSlug) throws Exception {
         return api.openResourceContainer(containerSlug);
+    }
+
+    /**
+     * Checks if a resource container has been downloaded
+     * @param languageSlug
+     * @param projectSlug
+     * @param resourceSlug
+     * @return
+     */
+    public boolean exists(String languageSlug, String projectSlug, String resourceSlug) {
+        return api.resourceContainerExists(languageSlug, projectSlug, resourceSlug);
+    }
+
+    /**
+     * Checks if a resource container has been downloaded
+     * @param containerSlug
+     * @return
+     */
+    public boolean exists(String containerSlug) {
+        return api.resourceContainerExists(containerSlug);
     }
 
     /**

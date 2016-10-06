@@ -16,6 +16,7 @@ import org.unfoldingword.door43client.models.Translation;
 import org.unfoldingword.door43client.models.Versification;
 import org.unfoldingword.door43client.models.Catalog;
 import org.unfoldingword.door43client.models.Questionnaire;
+import org.unfoldingword.resourcecontainer.ContainerTools;
 import org.unfoldingword.resourcecontainer.Language;
 import org.unfoldingword.resourcecontainer.Project;
 import org.unfoldingword.resourcecontainer.Resource;
@@ -549,6 +550,19 @@ class Library implements Index {
         }
         cursor.close();
         return projectsLastModifiedList;
+    }
+
+    public Translation getTranslation(String containerSlug) {
+        try {
+            String[] slugs = ContainerTools.explodeSlug(containerSlug);
+            SourceLanguage l = getSourceLanguage(slugs[0]);
+            Project p = getProject(slugs[0], slugs[1]);
+            Resource r = getResource(slugs[0], slugs[1], slugs[2]);
+            return new Translation(l, p, r);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     public List<Translation> getTranslations(String projectSlug, int minCheckingLevel, String resourceType) {

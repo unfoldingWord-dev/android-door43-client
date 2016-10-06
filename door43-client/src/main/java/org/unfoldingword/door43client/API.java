@@ -542,33 +542,25 @@ class API {
     }
 
     /**
-     * Returns a list of resource containers that have been downloaded
-     * @return an array of resource container info objects (package.json).
+     * Checks if the resource container has been downloaded
+     * @param containerSlug
+     * @return
      */
-    public List<JSONObject> listResourceContainers() {
-        return null;
+    public boolean resourceContainerExists(String containerSlug) {
+        File directory = new File(resourceDir, containerSlug);
+        File archive = new File(directory + "." + ResourceContainer.fileExtension);
+        return (directory.exists() && directory.isDirectory()) || (archive.exists() && archive.isFile());
     }
 
     /**
-     * Returns a list of projects that are eligible for updates.
-     * If the language is given as null the results will include all projects in all languages.
-     * This is helpful if you need to view updates based on project first rather than source language first.
-     *
-     * @param sourceLanguageSlug the slug of a source language who's projects will be checked.
-     * @return An array of project slugs
+     * Checks if the resource container has been downloaded
+     * @param languageSlug
+     * @param projectSlug
+     * @param resourceSlug
+     * @return
      */
-    @Deprecated
-    public List<String> getProjectUpdates(String sourceLanguageSlug) {
-        return null;
-    }
-
-    /**
-     * Returns a list of source languages that are eligible for updates.
-     *
-     * @return An array of source language slugs
-     */
-    @Deprecated
-    public List<String> getSourceLanguageUpdates() {
-        return null;
+    public boolean resourceContainerExists(String languageSlug, String projectSlug, String resourceSlug) {
+        String containerSlug = ContainerTools.makeSlug(languageSlug, projectSlug, resourceSlug);
+        return resourceContainerExists(containerSlug);
     }
 }
