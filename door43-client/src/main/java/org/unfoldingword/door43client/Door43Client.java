@@ -2,10 +2,16 @@ package org.unfoldingword.door43client;
 
 import android.content.Context;
 
+import org.unfoldingword.resourcecontainer.ContainerTools;
+import org.unfoldingword.resourcecontainer.Resource;
 import org.unfoldingword.resourcecontainer.ResourceContainer;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 
 /**
  * Provides a interface to the Door43 resource api
@@ -14,6 +20,7 @@ import java.io.IOException;
 public class Door43Client {
 
     private final API api;
+    private static String schema = null;
 
     /**
      * Initializes a new Door43 client
@@ -23,7 +30,19 @@ public class Door43Client {
      * @throws IOException
      */
     public Door43Client(Context context, File databasePath, File resourceDir) throws IOException {
-        this.api = new API(context, databasePath, resourceDir);
+        // load schema
+        if(this.schema == null) {
+            InputStream is = context.getAssets().open("schema.sqlite");
+            BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+            StringBuilder sb = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                sb.append(line).append("\n");
+            }
+            this.schema = sb.toString();
+        }
+
+        this.api = new API(context, this.schema, databasePath, resourceDir);
     }
 
     /**
@@ -40,6 +59,17 @@ public class Door43Client {
      */
     public Index index() {
         return api.index();
+    }
+
+    /**
+     * Checks when a resource container was last modified.
+     * @param sourceLanguageSlug
+     * @param projectSlug
+     * @param resourceSlug
+     * @return
+     */
+    public int getResourceContainerLastModified(String sourceLanguageSlug, String projectSlug, String resourceSlug) {
+        return api.getResourceContainerLastModified(sourceLanguageSlug, projectSlug, resourceSlug);
     }
 
     /**
@@ -75,14 +105,14 @@ public class Door43Client {
 
     /**
      * Opens a resource container archive so it's contents can be read.
-     * @param sourceLanguageSlug
+     * @param languageSlug
      * @param projectSlug
      * @param resourceSlug
      * @return
      * @throws Exception
      */
-    public ResourceContainer open(String sourceLanguageSlug, String projectSlug, String resourceSlug) throws Exception {
-        return api.openResourceContainer(sourceLanguageSlug, projectSlug, resourceSlug);
+    public ResourceContainer open(String languageSlug, String projectSlug, String resourceSlug) throws Exception {
+        return api.openResourceContainer(languageSlug, projectSlug, resourceSlug);
     }
 
     /**
@@ -95,6 +125,44 @@ public class Door43Client {
     }
 
     /**
+     * Checks if a resource container has been downloaded
+     * @param languageSlug
+     * @param projectSlug
+     * @param resourceSlug
+     * @return
+     */
+    public boolean exists(String languageSlug, String projectSlug, String resourceSlug) {
+        return api.resourceContainerExists(languageSlug, projectSlug, resourceSlug);
+    }
+
+    /**
+     * Checks if a resource container has been downloaded
+     * @param containerSlug
+     * @return
+     */
+    public boolean exists(String containerSlug) {
+        return api.resourceContainerExists(containerSlug);
+    }
+
+    /**
+     * Deletes a resource container
+     * @param languageSlug
+     * @param projectSlug
+     * @param resourceSlug
+     */
+    public void delete(String languageSlug, String projectSlug, String resourceSlug) {
+        delete(ContainerTools.makeSlug(languageSlug, projectSlug, resourceSlug));
+    }
+
+    /**
+     * Deletes a resource container
+     * @param containerSlug
+     */
+    public void delete(String containerSlug) {
+        api.deleteResourceContainer(containerSlug);
+    }
+
+    /**
      * Closes a resource container directory
      * @param sourceLanguageSlug
      * @param projectSlug
@@ -103,5 +171,12 @@ public class Door43Client {
      */
     public void close(String sourceLanguageSlug, String projectSlug, String resourceSlug) throws Exception {
         api.closeResourceContainer(sourceLanguageSlug, projectSlug, resourceSlug);
+    }
+
+    /**
+     * Closes the api
+     */
+    public void tearDown() {
+        api.tearDown();
     }
 }

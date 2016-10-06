@@ -15,11 +15,8 @@ import org.unfoldingword.resourcecontainer.Resource;
 import org.unfoldingword.resourcecontainer.ResourceContainer;
 import org.unfoldingword.tools.http.GetRequest;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -32,6 +29,7 @@ import java.util.Map;
 class API {
     public static final String LEGACY_WORDS_ASSIGNMENTS_URL = "words_assignments_url";
     private static final OnLogListener defaultLogListener;
+    private static SQLiteHelper sqLiteHelper = null;
 
     static {
         defaultLogListener = new OnLogListener() {
@@ -57,28 +55,33 @@ class API {
     /**
      * Initializes the new api client
      * @param context the application context
+     * @param schema the database schema for the index
      * @param databasePath the name of the database where information will be indexed
      * @param resourceDir the directory where resource containers will be stored
      */
-    public API(Context context, File databasePath, File resourceDir) throws IOException {
+    public API(Context context, String schema, File databasePath, File resourceDir) throws IOException {
         this.resourceDir = resourceDir;
-
-        // load schema
-        URL resource = this.getClass().getClassLoader().getResource("schema.sqlite");
-        File sqliteFile = new File(resource.getPath());
-
-        // read schema
-        BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(sqliteFile)));
-        StringBuilder sb = new StringBuilder();
-        String line;
-        while((line = reader.readLine()) != null) {
-            sb.append(line).append("\n");
-        }
-
-        DatabaseContext databaseContext = new DatabaseContext(context, databasePath);
+        String[] nameParts = databasePath.getName().split("\\.");
+        String dbExt = nameParts[nameParts.length - 1];
+        DatabaseContext databaseContext = new DatabaseContext(context, databasePath.getParentFile(), dbExt);
         String dbName = databasePath.getName().replaceFirst("\\.[^\\.]+$", "");
-        SQLiteHelper helper = new SQLiteHelper(databaseContext, sb.toString(), dbName);
-        this.library = new Library(helper);
+        synchronized (this) {
+            if (this.sqLiteHelper == null) {
+                sqLiteHelper = new SQLiteHelper(databaseContext, schema, dbName);
+            }
+        }
+        this.library = new Library(sqLiteHelper);
+    }
+
+    /**
+     * Performs closing operations.
+     * e.g. closing the db, etc.
+     */
+    public void tearDown() {
+        if(this.sqLiteHelper != null) {
+            this.sqLiteHelper.close();
+            this.sqLiteHelper = null;
+        }
     }
 
     /**
@@ -479,9 +482,7 @@ class API {
             throw new Exception("Unknown Resource");
         }
         String containerSlug = ContainerTools.makeSlug(sourceLanguageSlug, projectSlug, resourceSlug);
-        File directory = new File(resourceDir + containerSlug);
-        File archive = new File(directory + "." + ResourceContainer.fileExtension);
-        return ResourceContainer.open(archive, directory);
+        return openResourceContainer(containerSlug);
     }
 
     /**
@@ -492,8 +493,17 @@ class API {
      * @throws Exception
      */
     public ResourceContainer openResourceContainer(String containerSlug) throws Exception {
-        File directory = new File(resourceDir + containerSlug);
+        File directory = new File(resourceDir, containerSlug);
         File archive = new File(directory + "." + ResourceContainer.fileExtension);
+
+        // try to load already opened container first
+        try {
+            if(directory.exists() && directory.isDirectory()) {
+                return ResourceContainer.load(directory);
+            }
+        } catch (Exception e) {}
+
+        // open archive as last resource
         return ResourceContainer.open(archive, directory);
     }
 
@@ -511,38 +521,61 @@ class API {
             throw new Exception("Unknown Resource");
         }
         String containerSlug = ContainerTools.makeSlug(sourceLanguageSlug, projectSlug, resourceSlug);
-        File directory = new File(resourceDir + containerSlug);
+        File directory = new File(resourceDir, containerSlug);
         return ResourceContainer.close(directory);
     }
 
     /**
-     * Returns a list of resource containers that have been downloaded
-     * @return an array of resource container info objects (package.json).
+     * Checks when a resource container was last modified.
+     * @param sourceLanguageSlug
+     * @param projectSlug
+     * @param resourceSlug
+     * @return
      */
-    public List<JSONObject> listResourceContainers() {
-        return null;
+    public int getResourceContainerLastModified(String sourceLanguageSlug, String projectSlug, String resourceSlug) {
+        Resource resource = library.getResource(sourceLanguageSlug, projectSlug, resourceSlug);
+        if(resource != null) {
+            Resource.Format format = getResourceContainerFormat(resource.formats);
+            if(format != null) return format.modifiedAt;
+        }
+        return -1;
     }
 
     /**
-     * Returns a list of projects that are eligible for updates.
-     * If the language is given as null the results will include all projects in all languages.
-     * This is helpful if you need to view updates based on project first rather than source language first.
-     *
-     * @param sourceLanguageSlug the slug of a source language who's projects will be checked.
-     * @return An array of project slugs
+     * Checks if the resource container has been downloaded
+     * @param containerSlug
+     * @return
      */
-    @Deprecated
-    public List<String> getProjectUpdates(String sourceLanguageSlug) {
-        return null;
+    public boolean resourceContainerExists(String containerSlug) {
+        File directory = new File(resourceDir, containerSlug);
+        File archive = new File(directory + "." + ResourceContainer.fileExtension);
+        return (directory.exists() && directory.isDirectory()) || (archive.exists() && archive.isFile());
     }
 
     /**
-     * Returns a list of source languages that are eligible for updates.
-     *
-     * @return An array of source language slugs
+     * Checks if the resource container has been downloaded
+     * @param languageSlug
+     * @param projectSlug
+     * @param resourceSlug
+     * @return
      */
-    @Deprecated
-    public List<String> getSourceLanguageUpdates() {
-        return null;
+    public boolean resourceContainerExists(String languageSlug, String projectSlug, String resourceSlug) {
+        String containerSlug = ContainerTools.makeSlug(languageSlug, projectSlug, resourceSlug);
+        return resourceContainerExists(containerSlug);
+    }
+
+    /**
+     * Deletes a resource container from the disk
+     * @param containerSlug
+     */
+    public void deleteResourceContainer(String containerSlug) {
+        File directory = new File(resourceDir, containerSlug);
+        File archive = new File(directory + "." + ResourceContainer.fileExtension);
+        if(directory.exists() && directory.isDirectory()) {
+            FileUtil.deleteQuietly(directory);
+        }
+        if(archive.exists() && archive.isFile()) {
+            FileUtil.deleteQuietly(archive);
+        }
     }
 }

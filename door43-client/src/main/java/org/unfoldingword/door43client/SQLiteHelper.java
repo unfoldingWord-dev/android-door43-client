@@ -60,14 +60,14 @@ class SQLiteHelper extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        if(newVersion == 1) {
-            onCreate(db);
-        }
+        // TRICKY: if this is used to manage upgrades care must be taken to ensure the correct DATABASE_VERSION
+        // is set in the db that is packaged with an android app. Otherwise the packaged db may get overwritten.
     }
 
     @Override
-    public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVesrion) {
-        onCreate(db);
+    public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        // TRICKY: if this is used to manage downgrades care must be taken to ensure the correct DATABASE_VERSION
+        // is set in the db that is packaged with an android app. Otherwise the packaged db may get overwritten.
     }
 
     @Override

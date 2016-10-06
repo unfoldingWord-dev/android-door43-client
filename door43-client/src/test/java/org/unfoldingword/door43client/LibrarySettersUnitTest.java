@@ -2,6 +2,7 @@ package org.unfoldingword.door43client;
 
 import android.content.Context;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -46,6 +47,12 @@ public class LibrarySettersUnitTest {
         // initialize library
         SQLiteHelper helper = new SQLiteHelper(context, schema, "index");
         this.library = new Library(helper);
+    }
+
+
+    @After
+    public void tearDown() {
+        library.closeDatabase();
     }
 
     @Test

@@ -12,9 +12,12 @@ import org.unfoldingword.door43client.models.ChunkMarker;
 import org.unfoldingword.door43client.models.TargetLanguage;
 import org.unfoldingword.door43client.models.Question;
 import org.unfoldingword.door43client.models.SourceLanguage;
+import org.unfoldingword.door43client.models.Translation;
 import org.unfoldingword.door43client.models.Versification;
 import org.unfoldingword.door43client.models.Catalog;
 import org.unfoldingword.door43client.models.Questionnaire;
+import org.unfoldingword.resourcecontainer.ContainerTools;
+import org.unfoldingword.resourcecontainer.Language;
 import org.unfoldingword.resourcecontainer.Project;
 import org.unfoldingword.resourcecontainer.Resource;
 import org.unfoldingword.resourcecontainer.ResourceContainer;
@@ -73,7 +76,7 @@ class Library implements Index {
      * Closes the database
      */
     public void closeDatabase() {
-        db.close();
+        sqliteHelper.close();
     }
 
     /**
@@ -104,7 +107,7 @@ class Library implements Index {
      * @param uniqueColumns
      * @return the id of the inserted row or the id of the existing row.
      */
-    private long insertOrIgnore(String table, ContentValues values, String[] uniqueColumns) {
+    synchronized private long insertOrIgnore(String table, ContentValues values, String[] uniqueColumns) {
         // try to insert
         Exception error = null;
         try {
@@ -115,14 +118,22 @@ class Library implements Index {
 
         WhereClause where = WhereClause.prepare(values, uniqueColumns);
 
-        Cursor cursor = db.rawQuery("select id from " + table + " where " + where.statement, where.arguments);
-        if(cursor.moveToFirst()) {
-            long id = cursor.getLong(0);
-            cursor.close();
-            return id;
-        } else {
-            cursor.close();
+        Cursor cursor = null;
+        try {
+            cursor = db.rawQuery("select id from " + table + " where " + where.statement, where.arguments);
+            if (cursor.moveToFirst()) {
+                long id = cursor.getLong(0);
+                cursor.close();
+                return id;
+            } else {
+                cursor.close();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            if(cursor != null) cursor.close();
         }
+
+        // TRICKY: print the insert stacktrace only if the select failed.
         if(error != null) error.printStackTrace();
         return -1;
     }
@@ -137,7 +148,7 @@ class Library implements Index {
      * @param uniqueColumns an array of unique columns on this table. This should be a subset of the values.
      * @return the id of the inserted/updated row
      */
-    private long insertOrUpdate(String table, ContentValues values, String[] uniqueColumns) throws Exception {
+    synchronized private long insertOrUpdate(String table, ContentValues values, String[] uniqueColumns) throws Exception {
         // insert
         long id = insertOrIgnore(table, values, uniqueColumns);
         if(id == -1) {
@@ -541,6 +552,74 @@ class Library implements Index {
         return projectsLastModifiedList;
     }
 
+    public Translation getTranslation(String containerSlug) {
+        try {
+            String[] slugs = ContainerTools.explodeSlug(containerSlug);
+            SourceLanguage l = getSourceLanguage(slugs[0]);
+            Project p = getProject(slugs[0], slugs[1]);
+            Resource r = getResource(slugs[0], slugs[1], slugs[2]);
+            return new Translation(l, p, r);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public List<Translation> getTranslations(String projectSlug, int minCheckingLevel, String resourceType) {
+        if(resourceType == null) resourceType = "";
+        List<Translation> translations = new ArrayList<>();
+        Cursor cursor = db.rawQuery("select l.slug as language_slug, l.name as language_name, l.direction," +
+                " p.slug as project_slug, p.name as project_name, p.desc, p.icon, p.sort, p.chunks_url," +
+                " r.id as resource_id, r.slug as resource_slug, r.name as resource_name, r.type, r.translate_mode, r.checking_level, r.comments, r.pub_date, r.license, r.version," +
+                " lri.translation_words_assignments_url" +
+                " from source_language as l" +
+                " left join project as p on p.source_language_id=l.id" +
+                " left join resource as r on r.project_id=p.id" +
+                " left join legacy_resource_info as lri on lri.resource_id=r.id" +
+                " where p.slug=? and r.checking_level >= " + minCheckingLevel + " and r.type like(?)", new String[]{projectSlug, "%" + resourceType + "%"});
+
+        cursor.moveToFirst();
+        while(!cursor.isAfterLast()) {
+            CursorReader reader = new CursorReader(cursor);
+
+            Language l = new Language(reader.getString("language_slug"), reader.getString("language_name"), reader.getString("direction"));
+
+            Project p = new Project(reader.getString("project_slug"), reader.getString("project_name"), reader.getInt("sort"));
+            p.description = reader.getString("desc");
+            p.icon = reader.getString("icon");
+            p.chunksUrl = reader.getString("chunks_url");
+            p.languageSlug = reader.getString("language_slug");
+
+            Resource r = new Resource(reader.getString("resource_slug"), reader.getString("resource_name"),
+                    reader.getString("type"), reader.getString("translate_mode"), reader.getString("checking_level"), reader.getString("version"));
+            r.comments = reader.getString("comments");
+            r.pubDate = reader.getString("pub_date");
+            r.license = reader.getString("license");
+            r._legacyData.put(API.LEGACY_WORDS_ASSIGNMENTS_URL, reader.getString("translation_words_assignments_url"));
+
+            // load formats and add to resource
+            Cursor formatCursor = db.rawQuery("select * from resource_format where resource_id=" + reader.getLong("resource_id"), null);
+            formatCursor.moveToFirst();
+            while(!formatCursor.isAfterLast()) {
+                CursorReader formatReader = new CursorReader(formatCursor);
+
+                String packageVersion = formatReader.getString("package_version");
+                String mimeType = formatReader.getString("mime_type");
+                int modifiedAt = formatReader.getInt("modified_at");
+                String url = formatReader.getString("url");
+
+                Resource.Format format = new Resource.Format(packageVersion, mimeType, modifiedAt, url);
+                r.addFormat(format);
+                formatCursor.moveToNext();
+            }
+            formatCursor.close();
+            translations.add(new Translation(l, p, r));
+            cursor.moveToNext();
+        }
+        cursor.close();
+        return translations;
+    }
+
     public SourceLanguage getSourceLanguage(String sourceLanguageSlug) {
         Cursor cursor = db.rawQuery("select * from source_language where slug=? limit 1", new String[]{sourceLanguageSlug});
         if(cursor.moveToFirst()) {
@@ -566,7 +645,7 @@ class Library implements Index {
         while(!cursor.isAfterLast()) {
             CursorReader reader = new CursorReader(cursor);
 
-            String slug = reader.getString("id");
+            String slug = reader.getString("slug");
             String name = reader.getString("name");
             String direction = reader.getString("direction");
 
@@ -590,7 +669,7 @@ class Library implements Index {
         while(!cursor.isAfterLast()) {
             CursorReader reader = new CursorReader(cursor);
 
-            String slug = reader.getString("id");
+            String slug = reader.getString("slug");
             String name = reader.getString("name");
             String direction = reader.getString("direction");
 
@@ -766,27 +845,80 @@ class Library implements Index {
     }
 
     public List<Project> getProjects(String sourceLanguageSlug) {
-        Cursor cursor = db.rawQuery("select * from project" +
-                " where source_language_id in (select id from source_language where slug=?)" +
-                " order by sort asc", new String[]{sourceLanguageSlug});
+        return getProjects(sourceLanguageSlug, false);
+    }
 
+    public List<Project> getProjects(String sourceLanguageSlug, boolean enableDefaultLanguage) {
         List<Project> projects = new ArrayList<>();
+        Cursor cursor;
+        if(enableDefaultLanguage) {
+            // TRICKY: this should work on android but is not working on the tests
+            cursor = db.rawQuery("select p.*, sl.slug as source_language_slug," +
+                " max(case sl.slug when ? then 3 when ? then 2 else 1 end) as weight" +
+                " from project as p" +
+                " left join source_language as sl on sl.id=p.source_language_id" +
+                " group by p.slug" +
+                " order by p.sort asc", new String[]{sourceLanguageSlug, "en"});
+
+            // another alternative that "should" work
+//            cursor = db.rawQuery("select p.*, sl.slug as source_language_slug, max(weight) from (" +
+//                    "  select *, 3 as weight from project where source_language_id in (" +
+//                    "    select id from source_language where slug=?" +
+//                    "  )" +
+//                    "  union" +
+//                    "  select *, 2 as weight from project where source_language_id in (" +
+//                    "    select id from source_language where slug=?" +
+//                    "  )" +
+//                    "  union" +
+//                    "  select *, 1 as weight from project" +
+//                    " ) as p" +
+//                    " left join source_language as sl on sl.id=p.source_language_id" +
+//                    " group by p.slug" +
+//                    " order by p.sort asc", new String[]{sourceLanguageSlug, "en"});
+
+            // another alternative that "should" work
+//            cursor = db.rawQuery("select p.*, sl.slug as source_language_slug from project as p" +
+//                    " left join source_language as sl on sl.id=p.source_language_id" +
+//                    " where p.id in (" +
+//                    "   select id from (" +
+//                    "     select max(weight), id from (" +
+//                    "       select *, 3 as weight from project where source_language_id in (" +
+//                    "         select id from source_language where slug=?" +
+//                    "       )" +
+//                    "       union" +
+//                    "       select *, 2 as weight from project where source_language_id in (" +
+//                    "         select id from source_language where slug=?" +
+//                    "       )" +
+//                    "       union" +
+//                    "       select *, 1 as weight from project" +
+//                    "     )" +
+//                    "     group by slug" +
+//                    "   )" +
+//                    " )" +
+//                    " order by p.sort asc", new String[]{sourceLanguageSlug, "en"});
+        } else {
+            cursor = db.rawQuery("select * from project" +
+                    " where source_language_id in (select id from source_language where slug=?)" +
+                    " order by sort asc", new String[]{sourceLanguageSlug});
+        }
+
         cursor.moveToFirst();
         while(!cursor.isAfterLast()) {
             CursorReader reader = new CursorReader(cursor);
 
             String slug = reader.getString("slug");
             String name = reader.getString("name");
-            String desc = reader.getString("desc");
-            String icon = reader.getString("icon");
             int sort = reader.getInt("sort");
-            String chunksUrl = reader.getString("chunks_url");
 
             Project project = new Project(slug, name, sort);
-            project.description = desc;
-            project.icon = icon;
-            project.chunksUrl = chunksUrl;
-            project.languageSlug = sourceLanguageSlug;
+            project.description = reader.getString("desc");
+            project.icon = reader.getString("icon");
+            project.chunksUrl = reader.getString("chunks_url");
+            if(enableDefaultLanguage) {
+                project.languageSlug = reader.getString("source_language_slug");
+            } else {
+                project.languageSlug = sourceLanguageSlug;
+            }
 
             projects.add(project);
             cursor.moveToNext();
@@ -1198,65 +1330,6 @@ class Library implements Index {
         }
         cursor.close();
         return questions;
-    }
-
-    /**
-     * This is a utility class for preparing a where clause
-     */
-    private static class WhereClause {
-        public final String statement;
-        public final String[] arguments;
-
-        private WhereClause(String statement, String[] values) {
-            this.statement = statement;
-            this.arguments = values;
-        }
-
-        /**
-         * Performs a bunch of magical operations to convert a set of values and the specified unique columns
-         * into a valid where clause with supporting values.
-         *
-         *
-         *
-         * @param values
-         * @param uniqueColumns
-         * @return
-         */
-        public static WhereClause prepare(ContentValues values, String[] uniqueColumns) {
-            List<String> stringColumns = new ArrayList<>();
-            List<String> numberColumns = new ArrayList<>();
-
-            // split columns into sets by type
-            for(String key:uniqueColumns) {
-                if(values.get(key) instanceof String) {
-                    stringColumns.add(key);
-                } else {
-                    numberColumns.add(key);
-                }
-            }
-
-            // build the statement
-            String whereStmt = "";
-            if(stringColumns.size() > 0) {
-                whereStmt = TextUtils.join("=? and ", stringColumns) + "=?";
-            }
-            if(numberColumns.size() > 0) {
-                if (!whereStmt.isEmpty()) whereStmt += " and ";
-                List<String> expressions = new ArrayList<>();
-                for(String key:numberColumns) {
-                    expressions.add(key + "=" + values.get(key));
-                }
-                whereStmt += TextUtils.join(" and ", expressions);
-            }
-
-            // build the values
-            String[] uniqueValues = new String[stringColumns.size()];
-            for(int i = 0; i < stringColumns.size(); i ++) {
-                uniqueValues[i] = String.valueOf(values.get(stringColumns.get(i)));
-            }
-
-            return new WhereClause(whereStmt, uniqueValues);
-        }
     }
 
     /**

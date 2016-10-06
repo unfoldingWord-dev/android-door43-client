@@ -7,6 +7,7 @@ import org.unfoldingword.door43client.models.Question;
 import org.unfoldingword.door43client.models.Questionnaire;
 import org.unfoldingword.door43client.models.SourceLanguage;
 import org.unfoldingword.door43client.models.TargetLanguage;
+import org.unfoldingword.door43client.models.Translation;
 import org.unfoldingword.door43client.models.Versification;
 import org.unfoldingword.resourcecontainer.Project;
 import org.unfoldingword.resourcecontainer.Resource;
@@ -47,6 +48,24 @@ public interface Index {
      * @return
      */
     Map<String, Integer> listProjectsLastModified(String languageSlug);
+
+    /**
+     * Returns a translation that matches the resource container slug
+     *
+     * @param containerSlug
+     * @return
+     */
+    Translation getTranslation(String containerSlug);
+
+    /**
+     * Returns a list of translations available for the project
+     *
+     * @param projectSlug the project for whome these translations are available
+     * @param minCheckingLevel the minimum checking level allowed for returned translations
+     * @param resourceType the resource type allowed for returned translations. Leave null for all.
+     * @return
+     */
+    List<Translation> getTranslations(String projectSlug, int minCheckingLevel, String resourceType);
 
     /**
      * Returns a source language.
@@ -135,6 +154,16 @@ public interface Index {
      * @return an array of projects that are available in the source language
      */
     List<Project> getProjects(String sourceLanguageSlug);
+
+    /**
+     * Returns a list of projects in the given language or (if enabled) a default language.
+     * The affect is a list of all unique projects with preference given to the specified language
+     *
+     * @param sourceLanguageSlug the source language code for which projects will be returned
+     * @param enableDefaultLanguage if true the default language will be used to fetch the remaining projects
+     * @return an array of projects that are available in the source language
+     */
+    List<Project> getProjects(String sourceLanguageSlug, boolean enableDefaultLanguage);
 
     /**
      * Returns an array of categories that exist underneath the parent category.
