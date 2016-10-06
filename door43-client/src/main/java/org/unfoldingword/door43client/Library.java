@@ -936,9 +936,10 @@ class Library implements Index {
         Cursor categoryCursor;
         String[] preferredSlug = {languageSlug, "en", "%"};
         List<CategoryEntry> projectCategories = new ArrayList<>();
+        if(translateMode == null) translateMode = "";
 
         // load categories
-        if(translateMode != null && !translateMode.isEmpty()) {
+        if(!translateMode.isEmpty()) {
             categoryCursor = db.rawQuery("select \'category\' as type, c.slug as name, \'\' as source_language_slug," +
                     " c.id, c.slug, c.parent_id, count(p.id) as num from category as c" +
                     " left join (" +
