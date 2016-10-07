@@ -565,7 +565,9 @@ class Library implements Index {
         return null;
     }
 
-    public List<Translation> getTranslations(String projectSlug, int minCheckingLevel, String resourceType, String translateMode) {
+    public List<Translation> findTranslations(String languageSlug, String projectSlug, int minCheckingLevel, int maxCheckingLevel, String resourceType, String translateMode) {
+        if(languageSlug == null || languageSlug.isEmpty()) languageSlug = "%";
+        if(projectSlug == null || projectSlug.isEmpty()) projectSlug = "%";
         if(resourceType == null || resourceType.isEmpty()) resourceType = "%";
         if(translateMode == null || translateMode.isEmpty()) translateMode = "%";
         List<Translation> translations = new ArrayList<>();
@@ -577,7 +579,7 @@ class Library implements Index {
                 " left join project as p on p.source_language_id=l.id" +
                 " left join resource as r on r.project_id=p.id" +
                 " left join legacy_resource_info as lri on lri.resource_id=r.id" +
-                " where p.slug=? and r.checking_level >= " + minCheckingLevel + " and r.type like(?) and r.translate_mode like(?)", new String[]{projectSlug, resourceType, translateMode});
+                " where l.slug like(?) and p.slug like(?) and r.checking_level >= " + minCheckingLevel + " and r.checking_level <= " + maxCheckingLevel + " and r.type like(?) and r.translate_mode like(?)", new String[]{languageSlug, projectSlug, resourceType, translateMode});
 
         cursor.moveToFirst();
         while(!cursor.isAfterLast()) {
