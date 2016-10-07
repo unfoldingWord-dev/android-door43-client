@@ -565,11 +565,17 @@ class Library implements Index {
         return null;
     }
 
-    public List<Translation> findTranslations(String languageSlug, String projectSlug, int minCheckingLevel, int maxCheckingLevel, String resourceType, String translateMode) {
+    public List<Translation> findTranslations(String languageSlug, String projectSlug, String resourceSlug, String resourceType, String translateMode, int minCheckingLevel, int maxCheckingLevel) {
+        String conditionMaxChecking = "";
+
         if(languageSlug == null || languageSlug.isEmpty()) languageSlug = "%";
         if(projectSlug == null || projectSlug.isEmpty()) projectSlug = "%";
+        if(resourceSlug == null || resourceSlug.isEmpty()) resourceSlug = "%";
         if(resourceType == null || resourceType.isEmpty()) resourceType = "%";
         if(translateMode == null || translateMode.isEmpty()) translateMode = "%";
+
+        if(maxCheckingLevel >= 0) conditionMaxChecking = " and r.checking_level <= " + maxCheckingLevel;
+
         List<Translation> translations = new ArrayList<>();
         Cursor cursor = db.rawQuery("select l.slug as language_slug, l.name as language_name, l.direction," +
                 " p.slug as project_slug, p.name as project_name, p.desc, p.icon, p.sort, p.chunks_url," +
@@ -579,7 +585,11 @@ class Library implements Index {
                 " left join project as p on p.source_language_id=l.id" +
                 " left join resource as r on r.project_id=p.id" +
                 " left join legacy_resource_info as lri on lri.resource_id=r.id" +
-                " where l.slug like(?) and p.slug like(?) and r.checking_level >= " + minCheckingLevel + " and r.checking_level <= " + maxCheckingLevel + " and r.type like(?) and r.translate_mode like(?)", new String[]{languageSlug, projectSlug, resourceType, translateMode});
+                " where l.slug like(?) and p.slug like(?) and r.slug like(?)" +
+                " and r.checking_level >= " + minCheckingLevel + "" +
+                conditionMaxChecking +
+                " and r.type like(?) and r.translate_mode like(?)",
+                new String[]{languageSlug, projectSlug, resourceSlug, resourceType, translateMode});
 
         cursor.moveToFirst();
         while(!cursor.isAfterLast()) {

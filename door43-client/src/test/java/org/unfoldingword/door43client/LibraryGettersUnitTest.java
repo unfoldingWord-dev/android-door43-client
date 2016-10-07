@@ -236,16 +236,22 @@ public class LibraryGettersUnitTest {
 
     @Test
     public void getTranslation() throws Exception {
-        List<Translation> translations = library.findTranslations(null, "proj-1", 0, 3, "book", "");
+        List<Translation> translations = library.findTranslations(null, "proj-1", null, "book", "", 0, 3);
         assertTrue(translations.size() > 0);
 
-        translations = library.findTranslations(null, "proj-1", 3, 3, "book", "");
-        assertTrue(translations.size() > 0);
-
-        translations = library.findTranslations(null, "proj-1", 4, 4, "book", "");
+        translations = library.findTranslations(null, "proj-1", "missing-res", "book", "", 0, 3);
         assertEquals(0, translations.size());
 
-        translations = library.findTranslations(null, "proj-1", 0, 3, "missing", "");
+        translations = library.findTranslations("missing-lang", "proj-1", null, "book", "", 0, 3);
+        assertEquals(0, translations.size());
+
+        translations = library.findTranslations(null, "proj-1", null, "book", "", 3, 3);
+        assertTrue(translations.size() > 0);
+
+        translations = library.findTranslations(null, "proj-1", null, "book", "", 4, 4);
+        assertEquals(0, translations.size());
+
+        translations = library.findTranslations(null, "proj-1", null, "missing", "", 0, 3);
         assertEquals(0, translations.size());
     }
 
