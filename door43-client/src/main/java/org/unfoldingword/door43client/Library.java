@@ -565,8 +565,17 @@ class Library implements Index {
         return null;
     }
 
-    public List<Translation> getTranslations(String projectSlug, int minCheckingLevel, String resourceType) {
-        if(resourceType == null) resourceType = "";
+    public List<Translation> findTranslations(String languageSlug, String projectSlug, String resourceSlug, String resourceType, String translateMode, int minCheckingLevel, int maxCheckingLevel) {
+        String conditionMaxChecking = "";
+
+        if(languageSlug == null || languageSlug.isEmpty()) languageSlug = "%";
+        if(projectSlug == null || projectSlug.isEmpty()) projectSlug = "%";
+        if(resourceSlug == null || resourceSlug.isEmpty()) resourceSlug = "%";
+        if(resourceType == null || resourceType.isEmpty()) resourceType = "%";
+        if(translateMode == null || translateMode.isEmpty()) translateMode = "%";
+
+        if(maxCheckingLevel >= 0) conditionMaxChecking = " and r.checking_level <= " + maxCheckingLevel;
+
         List<Translation> translations = new ArrayList<>();
         Cursor cursor = db.rawQuery("select l.slug as language_slug, l.name as language_name, l.direction," +
                 " p.slug as project_slug, p.name as project_name, p.desc, p.icon, p.sort, p.chunks_url," +
@@ -576,7 +585,11 @@ class Library implements Index {
                 " left join project as p on p.source_language_id=l.id" +
                 " left join resource as r on r.project_id=p.id" +
                 " left join legacy_resource_info as lri on lri.resource_id=r.id" +
-                " where p.slug=? and r.checking_level >= " + minCheckingLevel + " and r.type like(?)", new String[]{projectSlug, "%" + resourceType + "%"});
+                " where l.slug like(?) and p.slug like(?) and r.slug like(?)" +
+                " and r.checking_level >= " + minCheckingLevel + "" +
+                conditionMaxChecking +
+                " and r.type like(?) and r.translate_mode like(?)",
+                new String[]{languageSlug, projectSlug, resourceSlug, resourceType, translateMode});
 
         cursor.moveToFirst();
         while(!cursor.isAfterLast()) {
@@ -936,21 +949,27 @@ class Library implements Index {
         Cursor categoryCursor;
         String[] preferredSlug = {languageSlug, "en", "%"};
         List<CategoryEntry> projectCategories = new ArrayList<>();
+        if(translateMode == null) translateMode = "";
 
         // load categories
-        if(translateMode != null && !translateMode.isEmpty()) {
+        if(!translateMode.isEmpty()) {
             categoryCursor = db.rawQuery("select \'category\' as type, c.slug as name, \'\' as source_language_slug," +
-                    " c.id, c.slug, c.parent_id, count(p.id) as num from category as c" +
+                    " c.id, c.slug, c.parent_id, count(p.id) as num, max(p.sort) as csort from category as c" +
                     " left join (" +
-                    "  select p.id, p.category_id, count(r.id) as num from project as p" +
+                    "  select p.id, p.category_id, p.sort, count(r.id) as num from project as p" +
                     "  left join resource as r on r.project_id=p.id and r.translate_mode like(?)" +
                     "  group by p.slug" +
                     " ) p on p.category_id=c.id and p.num > 0" +
                     " where parent_id=" + parentCategoryId + " and num > 0 " +
-                    "group by c.slug", new String[]{translateMode});
+                    " group by c.slug" +
+                    " order by csort", new String[]{translateMode});
         } else {
-            categoryCursor = db.rawQuery("select \'category\' as type, category.slug as name, \'\' " +
-                    "as source_language_slug, * from category where parent_id=" + parentCategoryId, null);
+            // TODO: left join projects were so we can max the sort so we can order the categories.
+            categoryCursor = db.rawQuery("select \'category\' as type, category.slug as name, \'\'" +
+                    " as source_language_slug, *" +
+                    " from category" +
+                    " where parent_id=" + parentCategoryId +
+                    " group by category.slug", null);
         }
 
         //find best name
@@ -973,6 +992,8 @@ class Library implements Index {
 
                     CategoryEntry categoryEntry = new CategoryEntry(CategoryEntry.Type.CATEGORY, catId, catSlug, catName, catSourceLanguageSlug, parentCategoryId);
                     projectCategories.add(categoryEntry);
+                    cursor.close();
+                    break;
                 }
                 cursor.close();
             }
@@ -985,7 +1006,8 @@ class Library implements Index {
                 " select \'project\' as type, \'\' as source_language_slug," +
                 " p.id, p.slug, p.sort, p.name, count(r.id) as num from project as p" +
                 " left join resource as r on r.project_id=p.id and r.translate_mode like (?)" +
-                " where p.category_id=" + parentCategoryId + " group by p.slug)" + (!translateMode.isEmpty() ? " where num > 0" : ""),
+                " where p.category_id=" + parentCategoryId + " group by p.slug" +
+                " order by p.sort asc)" + (!translateMode.isEmpty() ? " where num > 0" : ""),
                 new String[]{(!translateMode.isEmpty() ? translateMode : "%")});
 
         //find best name
@@ -1006,6 +1028,8 @@ class Library implements Index {
 
                     CategoryEntry categoryEntry = new CategoryEntry(CategoryEntry.Type.PROJECT, projectId, projectSlug, projectName, projSourceLangSlug, parentCategoryId);
                     projectCategories.add(categoryEntry);
+                    cursor.close();
+                    break;
                 }
                 cursor.close();
             }

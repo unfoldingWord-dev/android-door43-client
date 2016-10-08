@@ -3,7 +3,6 @@ package org.unfoldingword.door43client;
 import android.content.Context;
 import android.util.Log;
 
-import org.json.JSONObject;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -31,7 +30,6 @@ import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -238,16 +236,22 @@ public class LibraryGettersUnitTest {
 
     @Test
     public void getTranslation() throws Exception {
-        List<Translation> translations = library.getTranslations("proj-1", 0, "book");
+        List<Translation> translations = library.findTranslations(null, "proj-1", null, "book", "", 0, 3);
         assertTrue(translations.size() > 0);
 
-        translations = library.getTranslations("proj-1", 3, "book");
-        assertTrue(translations.size() > 0);
-
-        translations = library.getTranslations("proj-1", 4, "book");
+        translations = library.findTranslations(null, "proj-1", "missing-res", "book", "", 0, 3);
         assertEquals(0, translations.size());
 
-        translations = library.getTranslations("proj-1", 0, "missing");
+        translations = library.findTranslations("missing-lang", "proj-1", null, "book", "", 0, 3);
+        assertEquals(0, translations.size());
+
+        translations = library.findTranslations(null, "proj-1", null, "book", "", 3, 3);
+        assertTrue(translations.size() > 0);
+
+        translations = library.findTranslations(null, "proj-1", null, "book", "", 4, 4);
+        assertEquals(0, translations.size());
+
+        translations = library.findTranslations(null, "proj-1", null, "missing", "", 0, 3);
         assertEquals(0, translations.size());
     }
 
