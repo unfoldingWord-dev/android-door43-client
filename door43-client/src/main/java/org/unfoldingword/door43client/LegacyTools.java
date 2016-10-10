@@ -14,6 +14,7 @@ import org.unfoldingword.resourcecontainer.Resource;
 import org.unfoldingword.resourcecontainer.ResourceContainer;
 import org.unfoldingword.tools.http.GetRequest;
 
+import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -183,11 +184,6 @@ class LegacyTools {
             downloadResources(library, projectId, pJson, languageId, lJson);
             library.yieldSafely();
         }
-
-        // chunks
-        if(!chunksUrl.isEmpty()) {
-            downloadChunks(library, chunksUrl, "en", pJson.getString("slug"));
-        }
     }
 
     /**
@@ -308,13 +304,12 @@ class LegacyTools {
      * Downloads chunks for a project
      * @param library
      * @param chunksUrl
-     * @param sourceLanguageSlug
      * @param projectSlug
      * @throws Exception
      */
-    private static void downloadChunks(Library library, String chunksUrl, String sourceLanguageSlug, String projectSlug) throws Exception {
-        String versificationSlug = "en-US"; // TODO: pull the correct versification slug from the data. For now there is only one versification
-        Versification v = library.getVersification(sourceLanguageSlug, versificationSlug);
+    private static void downloadChunks(Library library, String chunksUrl, String projectSlug) throws Exception {
+        // TODO: pull the correct versification slug from the data. For now there is only one versification
+        Versification v = library.getVersification("en", "en-US");
         if(v != null) {
             GetRequest request = new GetRequest(new URL(chunksUrl));
             String data = request.read();
@@ -326,7 +321,7 @@ class LegacyTools {
                 library.yieldSafely();
             }
         } else {
-            System.console().writer().write("Unknown versification " + versificationSlug + " while downloading chunks for project " + projectSlug);
+            System.console().writer().write("Unknown versification while downloading chunks for project " + projectSlug);
         }
     }
 
@@ -380,5 +375,24 @@ class LegacyTools {
             list.add(value);
         }
         return list;
+    }
+
+    public static void processChunks(Library library, OnProgressListener listener) throws Exception {
+        // TRICKY: currently all chunk markers are defined according to the english versification system
+        Map<String, String> markers = new HashMap<>();
+        for(SourceLanguage l:library.getSourceLanguages()) {
+            for(Project p:library.getProjects(l.slug)) {
+                if(p.chunksUrl != null && !p.chunksUrl.isEmpty()) {
+                    markers.put(p.slug, p.chunksUrl);
+                }
+            }
+        }
+
+        int pos = 0;
+        for(String key:markers.keySet()) {
+            downloadChunks(library, markers.get(key), key);
+            pos ++;
+            if(listener != null) listener.onProgress("chunk_markers", markers.size(), pos);
+        }
     }
 }

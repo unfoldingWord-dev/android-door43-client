@@ -5,6 +5,7 @@ import android.content.Context;
 import org.unfoldingword.resourcecontainer.ContainerTools;
 import org.unfoldingword.resourcecontainer.Resource;
 import org.unfoldingword.resourcecontainer.ResourceContainer;
+import org.unfoldingword.tools.http.Request;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -76,7 +77,7 @@ public class Door43Client {
     }
 
     /**
-     * Indexes the Door43 catalog.
+     * Indexes the source content
      *
      * @param url the entry resource api catalog
      * @param listener an optional progress listener. This should receive progress id, total, completed
@@ -92,6 +93,15 @@ public class Door43Client {
      */
     public void updateCatalogs(OnProgressListener listener) throws Exception {
         api.updateCatalogs(listener);
+    }
+
+    /**
+     * Indexes the chunk markers
+     * @param listener
+     * @throws Exception
+     */
+    public void updateChunks(OnProgressListener listener) throws Exception {
+        api.updateChunks(listener);
     }
 
     /**

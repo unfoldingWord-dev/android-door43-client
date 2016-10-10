@@ -117,7 +117,7 @@ class API {
     }
 
     /**
-     * Indexes the Door43 catalog.
+     * Indexes the source content
      *
      * @param url the entry resource api catalog
      * @param listener an optional progress listener. This should receive progress id, total, completed
@@ -135,6 +135,15 @@ class API {
             throw e;
         }
         library.endTransaction(true);
+    }
+
+    /**
+     * Indexes the chunk markers
+     * @param listener
+     * @throws Exception
+     */
+    public void updateChunks(OnProgressListener listener) throws Exception {
+        LegacyTools.processChunks(library, listener);
     }
 
     /**
