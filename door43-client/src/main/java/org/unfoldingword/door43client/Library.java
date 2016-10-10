@@ -115,6 +115,7 @@ class Library implements Index {
         } catch (SQLException e) {
             error = e;
         }
+        long id = -1;
 
         WhereClause where = WhereClause.prepare(values, uniqueColumns);
 
@@ -122,9 +123,8 @@ class Library implements Index {
         try {
             cursor = db.rawQuery("select id from " + table + " where " + where.statement, where.arguments);
             if (cursor.moveToFirst()) {
-                long id = cursor.getLong(0);
+                id = cursor.getLong(0);
                 cursor.close();
-                return id;
             } else {
                 cursor.close();
             }
@@ -134,8 +134,8 @@ class Library implements Index {
         }
 
         // TRICKY: print the insert stacktrace only if the select failed.
-//        if(error != null) error.printStackTrace();
-        return -1;
+        if(error != null && id == -1) error.printStackTrace();
+        return id;
     }
 
     /**
