@@ -134,7 +134,7 @@ class Library implements Index {
         }
 
         // TRICKY: print the insert stacktrace only if the select failed.
-        if(error != null) error.printStackTrace();
+//        if(error != null) error.printStackTrace();
         return -1;
     }
 
