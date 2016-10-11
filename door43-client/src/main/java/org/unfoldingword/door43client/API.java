@@ -143,7 +143,14 @@ class API {
      * @throws Exception
      */
     public void updateChunks(OnProgressListener listener) throws Exception {
-        LegacyTools.processChunks(library, listener);
+        library.beginTransaction();
+        try {
+            LegacyTools.processChunks(library, listener);
+        } catch (Exception e) {
+            library.endTransaction(false);
+            throw e;
+        }
+        library.endTransaction(true);
     }
 
     /**
