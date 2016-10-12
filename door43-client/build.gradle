@@ -53,7 +53,7 @@ dependencies {
     testCompile 'org.robolectric:robolectric:3.1.2'
     testCompile 'com.github.tomakehurst:wiremock-standalone:2.1.12'
     testCompile 'org.slf4j:slf4j-simple:1.6.4'
-    compile 'org.unfoldingword.tools:resource-container:0.6.5'
+    compile 'org.unfoldingword.tools:resource-container:0.6.6'
     compile 'org.unfoldingword.tools:http:2.4.0'
 }
 
