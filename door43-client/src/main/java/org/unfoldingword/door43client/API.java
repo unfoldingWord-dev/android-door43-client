@@ -509,6 +509,11 @@ class API {
         ResourceContainer rc = ResourceContainer.load(directory);
         File destination = new File(resourceDir, rc.slug);
 
+        // validate project
+        // TRICKY: we currently only support importing known projects. Only the language and resource can vary.
+        JSONObject meta = library.getProjectMeta(rc.project.slug);
+        if(meta == null) throw new Exception("Unsupported project");
+
         // delete the old container
         deleteResourceContainer(rc.slug);
 

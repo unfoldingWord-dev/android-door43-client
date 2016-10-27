@@ -6,6 +6,8 @@ import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.text.TextUtils;
 
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.unfoldingword.door43client.models.Category;
 import org.unfoldingword.door43client.models.CategoryEntry;
 import org.unfoldingword.door43client.models.ChunkMarker;
@@ -563,6 +565,32 @@ class Library implements Index {
         }
         cursor.close();
         return projectsLastModifiedList;
+    }
+
+    /**
+     * Returns meta data about a project without any localized information such as the title or description
+     * @param projectSlug the slug of the project who's meta will be returned
+     * @return the project meta data
+     */
+    public JSONObject getProjectMeta(String projectSlug) {
+        Cursor cursor = db.rawQuery("select * from project where slug=? limit 1", new String[]{projectSlug});
+        JSONObject meta = null;
+        if(cursor.moveToFirst()) {
+            CursorReader reader = new CursorReader(cursor);
+            try {
+                meta = new JSONObject();
+                meta.put("slug", reader.getString("slug"));
+                meta.put("icon", reader.getString("icon"));
+                meta.put("sort", reader.getString("sort"));
+                meta.put("chunks_url", reader.getString("chunks_url"));
+                meta.put("category_id", reader.getString("category_id"));
+            } catch (JSONException e) {
+                e.printStackTrace();
+                meta = null;
+            }
+        }
+        cursor.close();
+        return meta;
     }
 
     public Translation getTranslation(String containerSlug) {
