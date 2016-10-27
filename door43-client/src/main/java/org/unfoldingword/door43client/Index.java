@@ -268,9 +268,18 @@ public interface Index {
      * This will return null if there is no matching localized category.
      * This does not necessarily mean the category does not exist.
      *
-     * @param slug the category slug
      * @param languageSlug the language slug in which the category title will be given
+     * @param slug the category slug
      * @return the category or null
      */
-    Category getCategory(String slug, String languageSlug);
+    Category getCategory(String languageSlug, String slug);
+
+    /**
+     * Returns a list of categories in a project
+     *
+     * @param languageSlug the project slug
+     * @param projectSlug the language in which the category title will be given
+     * @return a list of categories in the project
+     */
+    List<Category> getCategories(String languageSlug, String projectSlug);
 }

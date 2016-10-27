@@ -1369,8 +1369,8 @@ class Library implements Index {
         return questions;
     }
 
-    public Category getCategory(String slug, String languageSlug) {
-        Cursor cursor = db.rawQuery("select * from category as c" +
+    public Category getCategory(String languageSlug, String slug) {
+        Cursor cursor = db.rawQuery("select cn.name, c.slug from category as c" +
                 " left join category_name as cn on cn.category_id=c.id" +
                 " left join source_language as sl on sl.id=cn.source_language_id" +
                 " where c.slug=? and sl.slug=?", new String[]{slug, languageSlug});
@@ -1381,6 +1381,57 @@ class Library implements Index {
         }
         cursor.close();
         return cat;
+    }
+
+    /**
+     * Returns the parent category of the given category
+     * @param languageSlug the language of the parent category name
+     * @param childCategorySlug the slug of the child category
+     * @return the parent category of null if there is no parent
+     */
+    private Category getParentCategory(String languageSlug, String childCategorySlug) {
+        Cursor cursor = db.rawQuery("select pcn.name, pc.slug from category as pc" +
+                " left join category as cc on cc.parent_id=pc.id" +
+                " left join category_name as pcn on pcn.category_id=pc.id" +
+                " left join source_language as sl on sl.id=pcn.source_language_id" +
+                " where cc.slug=? and sl.slug=?", new String[]{childCategorySlug, languageSlug});
+        Category cat = null;
+        if(cursor.moveToFirst()) {
+            CursorReader reader = new CursorReader(cursor);
+            cat = new Category(reader.getString("slug"), reader.getString("name"));
+        }
+        cursor.close();
+        return cat;
+    }
+
+    public List<Category> getCategories(String languageSlug, String projectSlug) {
+        List<Category> categories = new ArrayList<>();
+        Cursor cursor = db.rawQuery("select c.slug, cn.name from category as c" +
+                " left join category_name as cn on cn.category_id=c.id" +
+                " left join source_language as sl on sl.id=cn.source_language_id" +
+                " left join project as p on p.source_language_id=sl.id and p.category_id=c.id" +
+                " where p.slug=? and sl.slug=?", new String[]{projectSlug, languageSlug});
+        if(cursor.moveToFirst()) {
+            CursorReader reader = new CursorReader(cursor);
+            Category cat = new Category(reader.getString("slug"), reader.getString("name"));
+            categories.add(cat);
+            cursor.close();
+
+            // find the rest of the categories
+            String previousSlug = cat.slug;
+            Category nextCat;
+            do {
+                nextCat = getParentCategory(languageSlug, previousSlug);
+                if(nextCat != null) {
+                    previousSlug = nextCat.slug;
+                    categories.add(0, nextCat);
+                }
+            } while (nextCat != null);
+        } else {
+            cursor.close();
+        }
+
+        return categories;
     }
 
     /**

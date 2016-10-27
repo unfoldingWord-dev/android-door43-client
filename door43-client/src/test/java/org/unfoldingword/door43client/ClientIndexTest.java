@@ -234,5 +234,6 @@ public class ClientIndexTest {
 
         ResourceContainer container = client.convertLegacyResource("en", "gen", "ulb", data);
         assertNotNull(container);
+        assertTrue(container.info.getJSONObject("project").getJSONArray("categories").length() > 0);
     }
 }

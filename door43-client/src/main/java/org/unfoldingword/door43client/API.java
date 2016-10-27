@@ -434,8 +434,12 @@ class API {
         Project project = library.getProject(sourceLanguageSlug, projectSlug);
         if(project == null) throw new Exception("Missing project");
         JSONObject pJson = project.toJSON();
-        // TODO: 9/20/16 need to load the project categories into the json
-//        List<Category> categories = library.getCategories(project.slug);
+        JSONArray pCatJson = new JSONArray();
+        List<Category> categories = library.getCategories(sourceLanguageSlug, projectSlug);
+        for(Category cat:categories) {
+            pCatJson.put(cat.slug);
+        }
+        pJson.put("categories", pCatJson);
 
         Resource resource = library.getResource(sourceLanguageSlug, projectSlug, resourceSlug);
         if(resource == null) throw new Exception("Missing resource");
@@ -524,7 +528,7 @@ class API {
                 for(int i = 0; i < catJson.length(); i ++) {
                     String catSlug = catJson.getString(i);
                     // use known name if available
-                    Category existingCat = library.getCategory(catSlug, rc.language.slug);
+                    Category existingCat = library.getCategory(rc.language.slug, catSlug);
                     String catName = existingCat == null ? catSlug : existingCat.name;
                     categories.add(new Category(catSlug, catName));
                 }

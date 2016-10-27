@@ -391,8 +391,22 @@ public class LibraryGettersUnitTest {
             assertTrue(questions.size() > 0);
             assertTrue(q.dataFields.size() > 0);
 
-            // test getting single questionnnaire
+            // test getting single questionnaire
             assertNotNull(library.getQuestionnaire(q.tdId));
         }
+    }
+
+    @Test
+    public void getCategory() throws Exception {
+        Category cat = library.getCategory("en1", "cat1");
+        assertNotNull(cat);
+    }
+
+    @Test
+    public void getCategories() throws Exception {
+        List<Category> categories = library.getCategories("en1", "proj-cat2-1");
+        assertTrue(categories.size() > 1);
+        assertEquals("cat1", categories.get(0).slug);
+        assertEquals("cat2", categories.get(1).slug);
     }
 }
