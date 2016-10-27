@@ -277,8 +277,8 @@ public interface Index {
     /**
      * Returns a list of categories in a project
      *
-     * @param languageSlug the project slug
-     * @param projectSlug the language in which the category title will be given
+     * @param languageSlug the language in which the category title will be given
+     * @param projectSlug the project slug
      * @return a list of categories in the project
      */
     List<Category> getCategories(String languageSlug, String projectSlug);

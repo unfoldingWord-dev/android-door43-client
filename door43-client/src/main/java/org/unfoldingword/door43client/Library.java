@@ -1419,7 +1419,7 @@ class Library implements Index {
 
             // find the rest of the categories
             String previousSlug = cat.slug;
-            Category nextCat;
+            Category nextCat = null;
             do {
                 nextCat = getParentCategory(languageSlug, previousSlug);
                 if(nextCat != null) {
