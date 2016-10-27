@@ -1,0 +1,36 @@
+[
+  {
+    language: {
+      date_modified: "20160620",
+      direction: "ltr",
+      name: "Русский",
+      slug: "ru"
+    },
+    project: {
+      desc: "",
+      meta: [
+        "Bible: OT"
+      ],
+      name: "Genesis",
+      sort: "01"
+    },
+    res_catalog: "http://localhost:8090/ts/txt/2/gen/ru/resources.json"
+  },
+  {
+    language: {
+      date_modified: "20160901",
+      direction: "ltr",
+      name: "English",
+      slug: "en"
+    },
+    project: {
+      desc: "",
+      meta: [
+        "Bible: OT"
+      ],
+      name: "Genesis",
+      sort: "01"
+    },
+    res_catalog: "http://localhost:8090/ts/txt/2/gen/en/resources.json"
+  }
+]

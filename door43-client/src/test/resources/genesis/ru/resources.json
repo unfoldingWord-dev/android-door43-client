@@ -1,0 +1,23 @@
+[
+  {
+    checking_questions: "",
+    date_modified: "20160620",
+    name: "Russian Synodal Bible",
+    notes: "",
+    slug: "rsb",
+    source: "http://localhost:8090/ts/txt/2/gen/ru/rsb/source.json",
+    status: {
+      checking_entity: "Samuel (Elder Church of Kharkov)",
+      checking_level: "3",
+      comments: "Public Domain, originally published in 1876",
+      contributors: "Dima Saifidinov, Maksim Murzamuratov, Samuel Kim",
+      publish_date: "20160620",
+      source_text: "",
+      source_text_version: "1",
+      version: "1"
+    },
+    terms: "",
+    tw_cat: "",
+    usfm: "http://localhost:8090/pdb/txt/1/rsb-ru/01-GEN.usfm"
+  }
+]

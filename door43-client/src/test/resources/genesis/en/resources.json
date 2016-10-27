@@ -1,0 +1,44 @@
+[
+  {
+    "checking_questions": "http://localhost:8090/ts/txt/2/gen/en/questions.json",
+    "date_modified": "20160901",
+    "name": "Unlocked Literal Bible",
+    "notes": "http://localhost:8090/ts/txt/2/gen/en/notes.json",
+    "slug": "ulb",
+    "source": "http://localhost:8090/ts/txt/2/gen/en/ulb/source.json",
+    "status": {
+      "checking_entity": "Wycliffe Associates",
+      "checking_level": "3",
+      "comments": "",
+      "contributors": "Wycliffe Associates",
+      "publish_date": "20160830",
+      "source_text": "en",
+      "source_text_version": "6",
+      "version": "6"
+    },
+    "terms": "http://localhost:8090/ts/txt/2/bible/en/terms.json",
+    "tw_cat": "http://localhost:8090/ts/txt/2/gen/en/tw_cat.json",
+    "usfm": "http://localhost:8090/ulb/txt/1/ulb-en/01-GEN.usfm"
+  },
+  {
+    "checking_questions": "http://localhost:8090/ts/txt/2/gen/en/questions.json",
+    "date_modified": "20160901",
+    "name": "Unlocked Dynamic Bible",
+    "notes": "http://localhost:8090/ts/txt/2/gen/en/notes.json",
+    "slug": "udb",
+    "source": "http://localhost:8090/ts/txt/2/gen/en/udb/source.json",
+    "status": {
+      "checking_entity": "Wycliffe Associates",
+      "checking_level": "3",
+      "comments": "",
+      "contributors": "Wycliffe Associates",
+      "publish_date": "20160830",
+      "source_text": "en",
+      "source_text_version": "6",
+      "version": "6"
+    },
+    "terms": "http://localhost:8090/ts/txt/2/bible/en/terms.json",
+    "tw_cat": "http://localhost:8090/ts/txt/2/gen/en/tw_cat.json",
+    "usfm": "http://localhost:8090/udb/txt/1/udb-en/01-GEN.usfm"
+  }
+]

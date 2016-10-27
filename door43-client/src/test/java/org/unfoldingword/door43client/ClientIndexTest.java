@@ -30,9 +30,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-/**
- * Created by joel on 9/19/16.
- */
 @RunWith(RobolectricTestRunner.class)
 public class ClientIndexTest {
     @Rule
@@ -80,19 +77,19 @@ public class ClientIndexTest {
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
                         .withBody(obsLangCatalog)));
-        String genLangCatalog = Util.loadResource(this.getClass().getClassLoader(), "gen/languages.json");
+        String genLangCatalog = Util.loadResource(this.getClass().getClassLoader(), "genesis/languages.json");
         stubFor(get(urlEqualTo("/ts/txt/2/gen/languages.json"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
                         .withBody(genLangCatalog)));
-        String genEnResCatalog = Util.loadResource(this.getClass().getClassLoader(), "gen/en/resources.json");
+        String genEnResCatalog = Util.loadResource(this.getClass().getClassLoader(), "genesis/en/resources.json");
         stubFor(get(urlEqualTo("/ts/txt/2/gen/en/resources.json"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
                         .withBody(genEnResCatalog)));
-        String genRuResCatalog = Util.loadResource(this.getClass().getClassLoader(), "gen/ru/resources.json");
+        String genRuResCatalog = Util.loadResource(this.getClass().getClassLoader(), "genesis/ru/resources.json");
         stubFor(get(urlEqualTo("/ts/txt/2/gen/ru/resources.json"))
                 .willReturn(aResponse()
                         .withStatus(200)
@@ -140,31 +137,31 @@ public class ClientIndexTest {
                         .withStatus(400)
                         .withHeader("Content-Type", "application/json")
                         .withBody("not found")));
-        String genEnUlbSource = Util.loadResource(this.getClass().getClassLoader(), "gen/en/ulb/source.json");
+        String genEnUlbSource = Util.loadResource(this.getClass().getClassLoader(), "genesis/en/ulb/source.json");
         stubFor(get(urlEqualTo("/ts/txt/2/gen/en/ulb/source.json"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
                         .withBody(genEnUlbSource)));
-        String genEnUlbNotes = Util.loadResource(this.getClass().getClassLoader(), "gen/en/ulb/notes.json");
+        String genEnUlbNotes = Util.loadResource(this.getClass().getClassLoader(), "genesis/en/ulb/notes.json");
         stubFor(get(urlEqualTo("/ts/txt/2/gen/en/notes.json"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
                         .withBody(genEnUlbNotes)));
-        String genEnUlbQuestions = Util.loadResource(this.getClass().getClassLoader(), "gen/en/ulb/questions.json");
+        String genEnUlbQuestions = Util.loadResource(this.getClass().getClassLoader(), "genesis/en/ulb/questions.json");
         stubFor(get(urlEqualTo("/ts/txt/2/gen/en/questions.json"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
                         .withBody(genEnUlbQuestions)));
-        String genEnUlbWords = Util.loadResource(this.getClass().getClassLoader(), "gen/en/ulb/words.json");
+        String genEnUlbWords = Util.loadResource(this.getClass().getClassLoader(), "genesis/en/ulb/words.json");
         stubFor(get(urlEqualTo("/ts/txt/2/bible/en/terms.json"))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
                         .withBody(genEnUlbWords)));
-        String genEnUlbAssignments = Util.loadResource(this.getClass().getClassLoader(), "gen/en/ulb/assignments.json");
+        String genEnUlbAssignments = Util.loadResource(this.getClass().getClassLoader(), "genesis/en/ulb/assignments.json");
         stubFor(get(urlEqualTo("/ts/txt/2/gen/en/tw_cat.json"))
                 .willReturn(aResponse()
                         .withStatus(200)
@@ -189,7 +186,7 @@ public class ClientIndexTest {
         assertEquals(10, client.index().getProjects("en").size());
         assertEquals(2, client.index().getProjects("es").size());
         assertEquals(1, client.index().getProjects("ru").size());
-        // TRIKCY: counts may also includes resources for helps
+        // TRICKY: counts may also includes resources for helps
         assertEquals(4, client.index().getResources("en", "gen").size());
         assertEquals(3, client.index().getResources("en", "obs").size());
         assertTrue(client.index().getTargetLanguages().size() > 0);
