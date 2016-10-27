@@ -3,8 +3,10 @@ package org.unfoldingword.door43client;
 import android.content.Context;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.unfoldingword.door43client.models.Catalog;
+import org.unfoldingword.door43client.models.Category;
 import org.unfoldingword.door43client.models.Question;
 import org.unfoldingword.door43client.models.Questionnaire;
 import org.unfoldingword.door43client.models.SourceLanguage;
@@ -18,6 +20,7 @@ import org.unfoldingword.tools.http.GetRequest;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -486,6 +489,60 @@ class API {
         ResourceContainer container = ContainerTools.convertResource(data, containerDir, properties);
         ResourceContainer.close(new File(containerDir.getPath()));
         return container;
+    }
+
+    /**
+     * Copies a valid resource container into the resource directory and adds an entry to the index.
+     * If the container already exists in the system it will be overwritten.
+     * Invalid containers will cause this method to return an error.
+     * The container *must* be open (uncompressed). This is in preparation for v0.2 of the rc spec.
+     * Containers imported in this manner will have a flag set to indicate it was manually imported.
+     *
+     * @param directory the path to the resource container directory that will be imported
+     * @return the imported resource container
+     */
+    public ResourceContainer importResourceContainer(File directory) throws Exception {
+        ResourceContainer rc = ResourceContainer.load(directory);
+        File destination = new File(resourceDir, rc.slug);
+
+        // delete the old container
+        deleteResourceContainer(rc.slug);
+
+        // copy new container
+        FileUtil.copyDirectory(directory, destination, null);
+
+        // add entry to the index
+        Exception indexError = null;
+        library.beginTransaction();
+        try {
+            long languageId = library.addSourceLanguage(new SourceLanguage(rc.language));
+
+            // build categories
+            List<Category> categories = new ArrayList<>();
+            try {
+                JSONArray catJson = rc.info.getJSONObject("project").getJSONArray("categories");
+                for(int i = 0; i < catJson.length(); i ++) {
+                    String catSlug = catJson.getString(i);
+                    // use known name if available
+                    Category existingCat = library.getCategory(catSlug, rc.language.slug);
+                    String catName = existingCat == null ? catSlug : existingCat.name;
+                    categories.add(new Category(catSlug, catName));
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+            long projectId = library.addProject(rc.project, categories, languageId);
+            Resource resource = rc.resource;
+            resource.addFormat(new Resource.Format(rc.info.getString("package_version"), resource.type, rc.modifiedAt, ""));
+            library.addResource(resource, projectId, true);
+        } catch (Exception e) {
+            indexError = e;
+        }
+        library.endTransaction(indexError == null);
+        if(indexError != null) throw indexError;
+
+        return openResourceContainer(rc.language.slug, rc.project.slug, rc.resource.slug);
     }
 
     /**

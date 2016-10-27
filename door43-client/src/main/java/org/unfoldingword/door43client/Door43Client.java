@@ -22,6 +22,10 @@ public class Door43Client {
 
     private final API api;
     private static String schema = null;
+    /**
+     * The (mostly) read only index
+     */
+    public final Index index;
 
     /**
      * Initializes a new Door43 client
@@ -44,6 +48,7 @@ public class Door43Client {
         }
 
         this.api = new API(context, this.schema, databasePath, resourceDir);
+        this.index = api.index();
     }
 
     /**
@@ -56,8 +61,9 @@ public class Door43Client {
 
     /**
      * Returns the read only index
-     * @return
+     * @return the index
      */
+    @Deprecated
     public Index index() {
         return api.index();
     }
@@ -135,6 +141,16 @@ public class Door43Client {
      */
     public ResourceContainer open(String containerSlug) throws Exception {
         return api.openResourceContainer(containerSlug);
+    }
+
+    /**
+     * Imports an external resource container into the client and indexes it for use.
+     * @param directory the directory of the resource container to be imported
+     * @return the imported resource container
+     * @throws Exception
+     */
+    public ResourceContainer importResourceContainer(File directory) throws Exception {
+        return api.importResourceContainer(directory);
     }
 
     /**

@@ -1,6 +1,7 @@
 package org.unfoldingword.door43client;
 
 import org.unfoldingword.door43client.models.Catalog;
+import org.unfoldingword.door43client.models.Category;
 import org.unfoldingword.door43client.models.CategoryEntry;
 import org.unfoldingword.door43client.models.ChunkMarker;
 import org.unfoldingword.door43client.models.Question;
@@ -261,4 +262,15 @@ public interface Index {
      * @return a list of questions
      */
     List<Question> getQuestions(long questionnaireTDId);
+
+    /**
+     * Returns the category with it's localized title.
+     * This will return null if there is no matching localized category.
+     * This does not necessarily mean the category does not exist.
+     *
+     * @param slug the category slug
+     * @param languageSlug the language slug in which the category title will be given
+     * @return the category or null
+     */
+    Category getCategory(String slug, String languageSlug);
 }

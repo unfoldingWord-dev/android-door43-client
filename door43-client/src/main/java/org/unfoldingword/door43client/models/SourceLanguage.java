@@ -20,9 +20,17 @@ public class SourceLanguage extends Language {
     }
 
     /**
+     * Creates a new source language from a language
+     * @param language the language
+     */
+    public SourceLanguage(Language language) {
+        super(language.slug, language.name, language.direction);
+    }
+
+    /**
      * Creates a source language from json
-     * @param json
-     * @return
+     * @param json the language json
+     * @return the new source language
      * @throws JSONException
      */
     public static SourceLanguage fromJSON(JSONObject json) throws JSONException {

@@ -391,12 +391,25 @@ class Library implements Index {
     /**
      * Inserts or updates a resource in the library.
      *
-     * @param resource
+     * @param resource the resource being indexed
      * @param projectId the parent project row id
      * @return the id of the resource row
      * @throws Exception
      */
     public long addResource(Resource resource, long projectId) throws Exception {
+        return addResource(resource, projectId, false);
+    }
+
+    /**
+     * Inserts or updates a resource in the library.
+     *
+     * @param resource the resource being indexed
+     * @param projectId the parent project row id
+     * @param imported indicates if the resource was manually imported from the device instead of downloaded from the api
+     * @return the id of the resource row
+     * @throws Exception
+     */
+    public long addResource(Resource resource, long projectId, boolean imported) throws Exception {
         validateNotEmpty(resource.slug);
         validateNotEmpty(resource.name);
         validateNotEmpty(resource.type);
@@ -1354,6 +1367,20 @@ class Library implements Index {
         }
         cursor.close();
         return questions;
+    }
+
+    public Category getCategory(String slug, String languageSlug) {
+        Cursor cursor = db.rawQuery("select * from category as c" +
+                " left join category_name as cn on cn.category_id=c.id" +
+                " left join source_language as sl on sl.id=cn.source_language_id" +
+                " where c.slug=? and sl.slug=?", new String[]{slug, languageSlug});
+        Category cat = null;
+        if(cursor.moveToFirst()) {
+            CursorReader reader = new CursorReader(cursor);
+            cat = new Category(reader.getString("slug"), reader.getString("name"));
+        }
+        cursor.close();
+        return cat;
     }
 
     /**

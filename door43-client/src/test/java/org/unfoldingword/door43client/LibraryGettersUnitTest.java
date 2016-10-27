@@ -317,16 +317,6 @@ public class LibraryGettersUnitTest {
         }
     }
 
-//    @Test
-//    public void getProjectsWithDefaultLanguage() throws Exception {
-//        List<Project> projects = library.getProjects("en1", true);
-//        assertTrue(projects.size() > 0);
-//        for(Project p:projects) {
-//            assertEquals("en1", p.languageSlug);
-//        }
-//    }
-
-
     @Test
     public void getProjectCategories() throws Exception {
         List<CategoryEntry> list = library.getProjectCategories(0, "en1", "all");
