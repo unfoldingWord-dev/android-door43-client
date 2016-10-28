@@ -271,4 +271,27 @@ public class LibrarySettersUnitTest {
         long updatedId = library.addQuestion(question, questionnaireId);
         assertEquals(updatedId, id);
     }
+
+    @Test
+    public void addQuestionWithNoDependency() throws Exception {
+        Map<String, Long> dataFields = new HashMap<>();
+        dataFields.put("ln", (long)1);
+        dataFields.put("ld", (long)2);
+        dataFields.put("lr", (long)3);
+        Questionnaire questionnaire = new Questionnaire("en", "English", "ltr", 1, dataFields);
+        long questionnaireId = library.addQuestionnaire(questionnaire);
+
+        Question question = new Question("My other question", "answer me!", true, Question.InputType.String, 0, -1, 2);
+        long id = library.addQuestion(question, questionnaireId);
+        assertTrue(id > 0);
+
+        List<Question> questions = library.getQuestions(questionnaireId);
+        for(Question q:questions) {
+            if(q.tdId == question.tdId) {
+                assertEquals(-1, q.dependsOn);
+                return;
+            }
+        }
+        throw new Exception("missing question");
+    }
 }

@@ -9,7 +9,13 @@ public class Question {
     public final boolean isRequired;
     public final InputType inputType;
     public final int sort;
+    /**
+     * The question this one depends on. If -1 there is no dependency
+     */
     public final long dependsOn;
+    /**
+     * This question's translation database id
+     */
     public final long tdId;
 
     /**
@@ -19,7 +25,7 @@ public class Question {
      * @param isRequired indicates if this question requires an answer
      * @param inputType the type of form input used to display this question e.g. input text, boolean
      * @param sort the sorting order of this question
-     * @param dependsOn the translation database id of the question that this question depends on.
+     * @param dependsOn the translation database id of the question that this question depends on. Set as -1 for no dependency
      * @param tdId the translation database id of this question (server side)
      */
     public Question(String text, String help, boolean isRequired, InputType inputType, int sort, long dependsOn, long tdId) {
