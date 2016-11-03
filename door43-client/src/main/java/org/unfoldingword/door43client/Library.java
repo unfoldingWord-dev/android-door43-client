@@ -783,6 +783,7 @@ class Library implements Index {
 
             TargetLanguage targetLanguage = new TargetLanguage(slug, name, anglicized, direction, region, isGateWay);
             targetLanguages.add(targetLanguage);
+            cursor.moveToNext();
         }
         cursor.close();
 
