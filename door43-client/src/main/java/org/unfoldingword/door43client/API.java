@@ -466,10 +466,10 @@ class API {
             }
             if(wordsData != null && request.getResponseCode() < 300) {
                 try {
-                    JSONArray words = new JSONArray(wordsData);
+                    JSONObject words = new JSONObject(wordsData);
                     JSONObject assignmentsJson = new JSONObject();
-                    for(int c = 0; c < words.length(); c ++) {
-                        JSONObject chapter = words.getJSONObject(c);
+                    for(int c = 0; c < words.getJSONArray("chapters").length(); c ++) {
+                        JSONObject chapter = words.getJSONArray("chapters").getJSONObject(c);
                         JSONObject chapterAssignment = new JSONObject();
                         for(int f = 0; f < chapter.getJSONArray("frames").length(); f ++) {
                             JSONObject frame = chapter.getJSONArray("frames").getJSONObject(f);
