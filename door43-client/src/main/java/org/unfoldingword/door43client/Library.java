@@ -692,7 +692,7 @@ class Library implements Index {
     }
 
     public List<SourceLanguage> getSourceLanguages() {
-        Cursor cursor = db.rawQuery("select * from source_language order by slug desc", null);
+        Cursor cursor = db.rawQuery("select * from source_language order by slug asc", null);
 
         List<SourceLanguage> sourceLanguages = new ArrayList<>();
         cursor.moveToFirst();
@@ -716,7 +716,7 @@ class Library implements Index {
                 " select source_language_id from project" +
                 " where slug=?" +
                 " group by source_language_id" +
-                ") order by slug desc", new String[]{projectSlug});
+                ") order by slug asc", new String[]{projectSlug});
 
         List<SourceLanguage> sourceLanguages = new ArrayList<>();
         cursor.moveToFirst();
@@ -768,7 +768,7 @@ class Library implements Index {
                 "  select slug, name, anglicized_name, direction, region, is_gateway_language from temp_target_language" +
                 "  where approved_target_language_slug is null" +
                 ") where lower(name) like ?" +
-                " order by slug asc, name desc", new String[]{"%" + namequery.toLowerCase() + "%"});
+                " order by slug asc, name asc", new String[]{"%" + namequery.toLowerCase() + "%"});
 
         cursor.moveToFirst();
         while(!cursor.isAfterLast()) {
@@ -818,7 +818,7 @@ class Library implements Index {
                 "  union" +
                 "  select slug, name, anglicized_name, direction, region, is_gateway_language from temp_target_language" +
                 "  where approved_target_language_slug is null" +
-                ") order by slug asc, name desc", null);
+                ") order by slug asc, name asc", null);
 
         List<TargetLanguage> languages = new ArrayList<>();
         cursor.moveToFirst();
@@ -1144,7 +1144,7 @@ class Library implements Index {
                     "  select id from project where slug=? and source_language_id in (" +
                     "   select id from source_language where slug=?)" +
                     " )" +
-                    " order by r.slug desc", new String[]{projectSlug, languageSlug});
+                    " order by r.slug asc", new String[]{projectSlug, languageSlug});
         } else {
             resourceCursor = db.rawQuery("select sl.slug as source_language_slug, r.*, lri.translation_words_assignments_url from resource as r" +
                     " left join legacy_resource_info as lri on lri.resource_id=r.id" +
