@@ -34,7 +34,7 @@ class LegacyTools {
      * @throws Exception
      */
     public static void injectGlobalCatalogs(Library library, String host) throws Exception {
-        host = host != null && !host.trim().isEmpty() ? host : "http://td.unfoldingword.org";
+        host = host != null && !host.trim().isEmpty() ? host : "https://td.unfoldingword.org";
 
         library.addCatalog(new Catalog("langnames", host + "/exports/langnames.json", 0));
         // TRICKY: the trailing / is required on these urls
