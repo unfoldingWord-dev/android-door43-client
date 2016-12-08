@@ -48,7 +48,9 @@ class LegacyTools {
         JSONArray projects = new JSONArray(data);
         for(int i = 0; i < projects.length(); i ++) {
             JSONObject pJson = projects.getJSONObject(i);
-            if(listener != null) listener.onProgress(pJson.getString("slug"), projects.length(), i + 1);
+            if(listener != null) {
+                if(!listener.onProgress(pJson.getString("slug"), projects.length(), i + 1)) break;
+            }
             downloadSourceLanguages(library, pJson, null);
             library.yieldSafely();
         }
@@ -76,7 +78,9 @@ class LegacyTools {
         };
         for(int i = 0; i < urls.length; i ++) {
             downloadTA(library, urls[i]);
-            if(listener != null) listener.onProgress("ta", urls.length, i + 1);
+            if(listener != null) {
+                if(!listener.onProgress("ta", urls.length, i + 1)) break;
+            }
             library.yieldSafely();
         }
     }
@@ -156,7 +160,9 @@ class LegacyTools {
         for(int i = 0; i < languages.length(); i ++) {
             JSONObject lJson = languages.getJSONObject(i);
 
-            if(listener != null) listener.onProgress(lJson.getJSONObject("language").getString("slug") + pJson.getString("slug"), languages.length(), i + 1);
+            if(listener != null) {
+                if(!listener.onProgress(lJson.getJSONObject("language").getString("slug") + pJson.getString("slug"), languages.length(), i + 1)) break;
+            }
 
             SourceLanguage sl = new SourceLanguage(lJson.getJSONObject("language").getString("slug"),
                     lJson.getJSONObject("language").getString("name"),
@@ -392,7 +398,9 @@ class LegacyTools {
         for(String key:markers.keySet()) {
             downloadChunks(library, markers.get(key), key);
             pos ++;
-            if(listener != null) listener.onProgress("chunk_markers", markers.size(), pos);
+            if(listener != null) {
+                if(!listener.onProgress("chunk_markers", markers.size(), pos)) break;
+            }
         }
     }
 }

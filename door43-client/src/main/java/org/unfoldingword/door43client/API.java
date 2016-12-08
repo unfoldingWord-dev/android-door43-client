@@ -233,7 +233,9 @@ class API {
             if(!library.addTargetLanguage(language)) {
                 logListener.onWarning("Failed to add the target language: " + language.slug);
             }
-            if(listener != null) listener.onProgress("langnames", languages.length(), i + 1);
+            if(listener != null) {
+                if(!listener.onProgress("langnames", languages.length(), i + 1)) break;
+            }
             library.yieldSafely();
         }
     }
@@ -278,13 +280,13 @@ class API {
 
                 // broadcast itemized progress if there is only one questionnaire
                 if(languages.length() == 1 && listener != null) {
-                    listener.onProgress("new-language-questions", qJson.getJSONArray("questions").length(), j + 1);
+                    if(!listener.onProgress("new-language-questions", qJson.getJSONArray("questions").length(), j + 1)) break;
                 }
                 library.yieldSafely();
             }
             // broadcast overall progress if there are multiple questionnaires.
             if(languages.length() > 1 && listener != null) {
-                listener.onProgress("new-language-questions", qJson.getJSONArray("questions").length(), i + 1);
+                if(!listener.onProgress("new-language-questions", qJson.getJSONArray("questions").length(), i + 1)) break;
             }
             library.yieldSafely();
         }
@@ -305,7 +307,9 @@ class API {
             if(!library.addTempTargetLanguage(language)) {
                 logListener.onWarning("Failed to add the temp target language: " + language.slug);
             }
-            if(listener != null) listener.onProgress("temp-langnames", languages.length(), i + 1);
+            if(listener != null) {
+                if(!listener.onProgress("temp-langnames", languages.length(), i + 1)) break;
+            }
             library.yieldSafely();
         }
     }
@@ -326,7 +330,9 @@ class API {
                     logListener.onWarning("Failed to approve the temp target language: " + key + " as " + l.getString(key));
                 }
             }
-            if(listener != null) listener.onProgress("approved-temp-langnames", languages.length(), i + 1);
+            if(listener != null) {
+                if(!listener.onProgress("approved-temp-langnames", languages.length(), i + 1)) break;
+            }
             library.yieldSafely();
         }
     }
