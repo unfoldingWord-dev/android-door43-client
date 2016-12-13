@@ -13,7 +13,7 @@ ext {
     siteUrl = 'https://github.com/unfoldingWord-dev/android-door43-client'
     gitUrl = 'https://github.com/unfoldingWord-dev/android-door43-client.git'
 
-    libraryVersion = '0.8.11'
+    libraryVersion = '0.9.0'
 
     developerId = 'neutrinog'
     developerName = 'Joel Lonbeck'
@@ -32,7 +32,7 @@ android {
         minSdkVersion 15
         targetSdkVersion 22
         versionCode 74
-        versionName "0.8.11"
+        versionName "0.9.0"
     }
     buildTypes {
         release {
