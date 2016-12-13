@@ -66,6 +66,8 @@ public class LibrarySettersUnitTest {
         SourceLanguage newLanguage = new SourceLanguage("en", "Updated English", "ltr");
         long updateId = library.addSourceLanguage(newLanguage);
         assertEquals(updateId, id);
+        SourceLanguage updatedLanguage = library.getSourceLanguage("en");
+        assertTrue(updatedLanguage.name.equals(newLanguage.name));
 
         // test missing args
         SourceLanguage invalidLanguage = new SourceLanguage("en", "English", null);
@@ -85,8 +87,11 @@ public class LibrarySettersUnitTest {
         assertTrue(success);
 
         // test updated
-        boolean updateSuccess = library.addTargetLanguage(language);
+        TargetLanguage newLanguage = new TargetLanguage("en", "Updated English", "American English Updated", "ltr", "United States", true);
+        boolean updateSuccess = library.addTargetLanguage(newLanguage);
         assertTrue(updateSuccess);
+        TargetLanguage updatedLanguage = library.getTargetLanguage("en");
+        assertTrue(updatedLanguage.name.equals(newLanguage.name));
 
         // test missing args
         TargetLanguage invalidLanguage = new TargetLanguage("en", null, "American English", "ltr", "United States", true);
@@ -101,16 +106,19 @@ public class LibrarySettersUnitTest {
     @Test
     public void addTempTargetLanguage() throws Exception {
         // test everything is good
-        TargetLanguage language = new TargetLanguage("en", "English", "American English", "ltr", "United States", true);
+        TargetLanguage language = new TargetLanguage("temp-en", "English", "American English", "ltr", "United States", true);
         boolean success = library.addTempTargetLanguage(language);
         assertTrue(success);
 
         // test updated
-        boolean updateSuccess = library.addTempTargetLanguage(language);
+        TargetLanguage newLanguage = new TargetLanguage("temp-en", "Updated English", "American English", "ltr", "United States", true);
+        boolean updateSuccess = library.addTempTargetLanguage(newLanguage);
         assertTrue(updateSuccess);
+        TargetLanguage updatedLanguage = library.getTargetLanguage("temp-en");
+        assertTrue(updatedLanguage.name.equals(newLanguage.name));
 
         // test missing args
-        TargetLanguage invalidLanguage = new TargetLanguage("en", null, "American English", "ltr", "United States", true);
+        TargetLanguage invalidLanguage = new TargetLanguage("temp-en", null, "American English", "ltr", "United States", true);
         try {
             boolean invalidSuccess = library.addTempTargetLanguage(invalidLanguage);
             assertFalse(invalidSuccess);
@@ -138,7 +146,6 @@ public class LibrarySettersUnitTest {
 
         // expect 1 language (they are now combined)
         assertEquals(library.getTargetLanguages().size(), 1);
-        assertNull(library.getTargetLanguage(tempLanguage.slug));
 
         // expect temp langauge no longer accessible
         assertNull(library.getTargetLanguage(tempLanguage.slug));
@@ -147,6 +154,7 @@ public class LibrarySettersUnitTest {
         TargetLanguage fetchedApprovedLanguage = library.getApprovedTargetLanguage(tempLanguage.slug);
         assertNotNull(fetchedApprovedLanguage);
         assertEquals(fetchedApprovedLanguage.slug, approvedLanguage.slug);
+        assertTrue(fetchedApprovedLanguage.name.equals(approvedLanguage.name));
     }
 
     @Test
@@ -161,8 +169,12 @@ public class LibrarySettersUnitTest {
         assertTrue(id > 0);
 
         // test update
-        long updatedId = library.addProject(project, categories, languageId);
+        Project newProject = new Project("gen", "Updated Genesis", 1);
+        newProject.description = project.description;
+        long updatedId = library.addProject(newProject, categories, languageId);
         assertEquals(updatedId, id);
+        Project updatedProject = library.getProject(language.slug, project.slug);
+        assertTrue(updatedProject.name.equals(newProject.name));
     }
 
     @Test

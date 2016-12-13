@@ -100,7 +100,7 @@ class Library implements Index {
     }
 
     /**
-     * Attepts to insert a row.
+     * Attempts to insert a row.
      *
      * There is a bug in the SQLiteDatabase API that prevents us from using insertWithOnConflict + CONFLICT_IGNORE
      * https://code.google.com/p/android/issues/detail?id=13045
@@ -109,11 +109,12 @@ class Library implements Index {
      * @param uniqueColumns
      * @return the id of the inserted row or the id of the existing row.
      */
-    synchronized private long insertOrIgnore(String table, ContentValues values, String[] uniqueColumns) {
+    synchronized private InsertResult insertOrIgnore(String table, ContentValues values, String[] uniqueColumns) {
         // try to insert
         Exception error = null;
         try {
-            return db.insertOrThrow(table, null, values);
+            long id = db.insertOrThrow(table, null, values);
+            return new InsertResult(id, true);
         } catch (SQLException e) {
             error = e;
         }
@@ -137,7 +138,7 @@ class Library implements Index {
 
         // TRICKY: print the insert stacktrace only if the select failed.
         if(error != null && id == -1) error.printStackTrace();
-        return id;
+        return new InsertResult(id, false);
     }
 
     /**
@@ -150,10 +151,10 @@ class Library implements Index {
      * @param uniqueColumns an array of unique columns on this table. This should be a subset of the values.
      * @return the id of the inserted/updated row
      */
-    synchronized private long insertOrUpdate(String table, ContentValues values, String[] uniqueColumns) throws Exception {
+    synchronized private InsertResult insertOrUpdate(String table, ContentValues values, String[] uniqueColumns) throws Exception {
         // insert
-        long id = insertOrIgnore(table, values, uniqueColumns);
-        if(id == -1) {
+        InsertResult result = insertOrIgnore(table, values, uniqueColumns);
+        if(!result.inserted) {
             WhereClause where = WhereClause.prepare(values, uniqueColumns);
 
             // clean values
@@ -169,15 +170,17 @@ class Library implements Index {
                 // retrieve updated row id
                 Cursor cursor = db.rawQuery("select id from " + table + " where " + where.statement, where.arguments);
                 if(cursor.moveToFirst()) {
-                    id = cursor.getLong(0);
+                    long id = cursor.getLong(0);
                     cursor.close();
+                    return new InsertResult(id, false);
                 } else {
                     cursor.close();
                     throw new Exception("Failed to find the row in " + table);
                 }
             }
+        } else {
+            return result;
         }
-        return id;
     }
 
     /**
@@ -197,7 +200,7 @@ class Library implements Index {
         values.put("name", language.name);
         values.put("direction", language.direction);
 
-        return insertOrUpdate("source_language", values, new String[]{"slug"});
+        return insertOrUpdate("source_language", values, new String[]{"slug"}).id;
     }
 
     /**
@@ -222,7 +225,7 @@ class Library implements Index {
         values.put("region", deNull(language.region));
         values.put("is_gateway_language", language.isGatewayLanguage ? 1: 0);
 
-        long id = insertOrUpdate("target_language", values, new String[]{"slug"});
+        long id = insertOrUpdate("target_language", values, new String[]{"slug"}).id;
         return id > 0;
     }
 
@@ -239,7 +242,7 @@ class Library implements Index {
         values.put("region", deNull(language.region));
         values.put("is_gateway_language", language.isGatewayLanguage ? 1 : 0);
 
-        long id = insertOrUpdate("temp_target_language", values, new String[]{"slug"});
+        long id = insertOrUpdate("temp_target_language", values, new String[]{"slug"}).id;
         return id > 0;
     }
 
@@ -287,7 +290,7 @@ class Library implements Index {
                 insertValues.put("slug", category.slug);
                 insertValues.put("parent_id", parentCategoryId);
 
-                long id = insertOrIgnore("category", insertValues, new String[]{"slug", "parent_id"});
+                long id = insertOrIgnore("category", insertValues, new String[]{"slug", "parent_id"}).id;
                 if(id > 0) {
                     parentCategoryId = id;
                 } else {
@@ -313,7 +316,7 @@ class Library implements Index {
         updateProject.put("source_language_id", sourceLanguageId);
         updateProject.put("category_id", parentCategoryId);
 
-        return insertOrUpdate("project", updateProject, new String[]{"slug", "source_language_id"});
+        return insertOrUpdate("project", updateProject, new String[]{"slug", "source_language_id"}).id;
     }
 
     /**
@@ -331,7 +334,7 @@ class Library implements Index {
         ContentValues values = new ContentValues();
         values.put("slug", versification.slug);
 
-        long versificationId = insertOrIgnore("versification", values, new String[]{"slug"});
+        long versificationId = insertOrIgnore("versification", values, new String[]{"slug"}).id;
         if(versificationId > 0) {
             ContentValues cv = new ContentValues();
             cv.put("source_language_id", sourceLanguageId);
@@ -364,7 +367,7 @@ class Library implements Index {
         chunkValues.put("project_slug", projectSlug);
         chunkValues.put("versification_id", versificationId);
 
-        long id = insertOrIgnore("chunk_marker", chunkValues, new String[]{"project_slug", "versification_id", "chapter", "verse"});
+        long id = insertOrIgnore("chunk_marker", chunkValues, new String[]{"project_slug", "versification_id", "chapter", "verse"}).id;
         if(id == -1) {
             throw new Exception("Invalid Chunk Marker");
         }
@@ -387,7 +390,7 @@ class Library implements Index {
         values.put("url", catalog.url);
         values.put("modified_at", catalog.modifiedAt);
 
-        return insertOrUpdate("catalog", values, new String[]{"slug"});
+        return insertOrUpdate("catalog", values, new String[]{"slug"}).id;
     }
 
     /**
@@ -432,7 +435,7 @@ class Library implements Index {
         values.put("version", resource.version);
         values.put("project_id", projectId);
 
-        long resourceId = insertOrUpdate("resource", values, new String[]{"slug", "project_id"});
+        long resourceId = insertOrUpdate("resource", values, new String[]{"slug", "project_id"}).id;
 
         // add formats
         for(Resource.Format format : resource.formats) {
@@ -477,7 +480,7 @@ class Library implements Index {
         values.put("language_direction", questionnaire.languageDirection);
         values.put("td_id", questionnaire.tdId);
 
-        long id = insertOrUpdate("questionnaire", values, new String[]{"td_id", "language_slug"});
+        long id = insertOrUpdate("questionnaire", values, new String[]{"td_id", "language_slug"}).id;
 
         // add data fields
         for(String field:questionnaire.dataFields.keySet()) {
@@ -513,7 +516,7 @@ class Library implements Index {
         values.put("td_id", question.tdId);
         values.put("questionnaire_id", questionnaireId);
 
-        return insertOrUpdate("question", values, new String[]{"td_id", "questionnaire_id"});
+        return insertOrUpdate("question", values, new String[]{"td_id", "questionnaire_id"}).id;
     }
 
     public List<HashMap> listSourceLanguagesLastModified() {
@@ -1461,6 +1464,24 @@ class Library implements Index {
         }
 
         return categories;
+    }
+
+    /**
+     * Represents the result from and insertOrIgnore or insertOrUpdate
+     */
+    private static class InsertResult {
+        public final boolean inserted;
+        public final long id;
+
+        /**
+         *
+         * @param id the id of the record
+         * @param inserted set to true if the record was a new insert and false if it is an existing one
+         */
+        public InsertResult(long id, boolean inserted) {
+            this.id = id;
+            this.inserted = inserted;
+        }
     }
 
     /**
