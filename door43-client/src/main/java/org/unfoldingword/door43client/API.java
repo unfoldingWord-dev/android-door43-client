@@ -197,15 +197,20 @@ class API {
         try {
             switch (catalog.slug) {
                 case "langnames":
+                    library.clearTargetLanguages();
                     indexTargetLanguageCatalog(data, listener);
                     break;
                 case "new-language-questions":
+                    library.clearNewLanguageQuestions();
                     indexNewLanguageQuestionsCatalog(data, listener);
                     break;
                 case "temp-langnames":
+                    // TRICKY: we do not truncate this table because
+                    // users can add data to it
                     indexTempLanguagesCatalog(data, listener);
                     break;
                 case "approved-temp-langnames":
+                    library.clearApprovedTempLanguages();
                     indexApprovedTempLanguagesCatalog(data, listener);
                     break;
                 default:

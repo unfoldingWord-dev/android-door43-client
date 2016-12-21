@@ -147,7 +147,7 @@ public class LibrarySettersUnitTest {
         // expect 1 language (they are now combined)
         assertEquals(library.getTargetLanguages().size(), 1);
 
-        // expect temp langauge no longer accessible
+        // expect temp language no longer accessible
         assertNull(library.getTargetLanguage(tempLanguage.slug));
 
         // expect approved language

@@ -1467,6 +1467,54 @@ class Library implements Index {
     }
 
     /**
+     * Removes all target langauge data
+     */
+    public void clearTargetLanguages() {
+        truncateTable("target_language");
+        vacuum();
+    }
+
+    /**
+     * Removes all questionnaire data
+     */
+    public void clearNewLanguageQuestions() {
+        truncateTable("questionnaire_data_field");
+        truncateTable("question");
+        truncateTable("questionnaire");
+        vacuum();
+    }
+
+    /**
+     * Clears out all assigned target languages.
+     * This does not actually truncate anything just sets all the approved slugs to null.
+     */
+    public void clearApprovedTempLanguages() {
+        db.rawQuery("update temp_target_language set approved_target_language_slug=null", null);
+    }
+
+    /**
+     * A tool to remove all data from a table.
+     * Use this with caution.
+     * @param table the table that will use all it's data.
+     */
+    protected void truncateTable(String table) {
+        db.rawQuery("delete from ?", new String[]{table});
+    }
+
+    /**
+     * Cleans the database.
+     * This eliminates free pages, aligns table data to be contiguous,
+     * and otherwise cleans up the database file structure.
+     */
+    protected void vacuum() {
+        try {
+            db.rawQuery("vacuum", null);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
      * Represents the result from and insertOrIgnore or insertOrUpdate
      */
     private static class InsertResult {
