@@ -1498,7 +1498,7 @@ class Library implements Index {
      * @param table the table that will use all it's data.
      */
     protected void truncateTable(String table) {
-        db.rawQuery("delete from ?", new String[]{table});
+        db.rawQuery("delete from ".concat(table), null);
     }
 
     /**
