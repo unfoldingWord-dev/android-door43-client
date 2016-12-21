@@ -1467,7 +1467,7 @@ class Library implements Index {
     }
 
     /**
-     * Removes all target langauge data
+     * Removes all target language data
      */
     public void clearTargetLanguages() {
         truncateTable("target_language");
@@ -1495,7 +1495,7 @@ class Library implements Index {
     /**
      * A tool to remove all data from a table.
      * Use this with caution.
-     * @param table the table that will use all it's data.
+     * @param table the table that will lose all it's data.
      */
     protected void truncateTable(String table) {
         db.rawQuery("delete from ".concat(table), null);
