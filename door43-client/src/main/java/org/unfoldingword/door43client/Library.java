@@ -1475,6 +1475,14 @@ class Library implements Index {
     }
 
     /**
+     * Removes all the temp target language data
+     */
+    public void clearTempLanguages() {
+        truncateTable("temp_target_language");
+        vacuum();
+    }
+
+    /**
      * Removes all questionnaire data
      */
     public void clearNewLanguageQuestions() {

@@ -205,8 +205,7 @@ class API {
                     indexNewLanguageQuestionsCatalog(data, listener);
                     break;
                 case "temp-langnames":
-                    // TRICKY: we do not truncate this table because
-                    // users can add data to it
+                    library.clearTempLanguages();
                     indexTempLanguagesCatalog(data, listener);
                     break;
                 case "approved-temp-langnames":
