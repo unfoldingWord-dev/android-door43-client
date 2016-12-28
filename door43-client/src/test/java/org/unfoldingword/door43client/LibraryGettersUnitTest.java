@@ -113,6 +113,15 @@ public class LibraryGettersUnitTest {
                 buildChunks(pSlug, versificationId);
             }
 
+            // project with resources marked as imported
+            if(l.slug.equals("en2")) {
+                Project importedP = new Project("imported-gen", "Imported Genesis", 1);
+                importedP.description = "The Book of Genesis";
+                long importedPID = library.addProject(importedP, new ArrayList() {}, sourceLanguageId);
+                buildResources(importedPID, true);
+                buildChunks("imported-gen", versificationId);
+            }
+
             // projects - level 1 category
             for(String pSlug:stringGenerator("proj-cat1-", GENERATOR_QTY)) {
                 Project p = new Project(pSlug, "Genesis", 1);
@@ -159,9 +168,13 @@ public class LibraryGettersUnitTest {
     }
 
     private static void buildResources(long projectId) throws Exception {
+        buildResources(projectId, false);
+    }
+
+    private static void buildResources(long projectId, boolean imported) throws Exception {
         for(String slug:stringGenerator("res", GENERATOR_QTY)) {
             Resource r = new Resource(slug, "Unlocked Literal Bible", "book", "all", "3", "4");
-            Resource.Format format = new Resource.Format(ResourceContainer.version, ResourceContainer.baseMimeType + "+book", 0, "some url");
+            Resource.Format format = new Resource.Format(ResourceContainer.version, ResourceContainer.baseMimeType + "+book", 0, "some url", imported);
             r.addFormat(format);
             library.addResource(r, projectId);
         }
@@ -321,6 +334,10 @@ public class LibraryGettersUnitTest {
     public void getProjectCategories() throws Exception {
         List<CategoryEntry> list = library.getProjectCategories(0, "en1", "all");
         assertTrue(list.size() > 0);
+
+        // imported should show regardless of translate mode
+        List<CategoryEntry> fullList = library.getProjectCategories(0, "en2", "gl");
+        assertTrue(fullList.size() > 0);
     }
 
     @Test

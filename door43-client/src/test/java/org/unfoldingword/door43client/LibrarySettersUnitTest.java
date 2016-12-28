@@ -227,7 +227,7 @@ public class LibrarySettersUnitTest {
         categories.add(new Category("bible-ot", "Old Testament"));
         long projectId = library.addProject(project, categories, languageId);
 
-        Resource.Format format = new Resource.Format(ResourceContainer.version, ResourceContainer.baseMimeType + "+book", 0, "some url");
+        Resource.Format format = new Resource.Format(ResourceContainer.version, ResourceContainer.baseMimeType + "+book", 0, "some url", false);
         Resource resource = new Resource("ulb", "Unlocked Literal Bible", "book", "all", "3", "4");
 
 

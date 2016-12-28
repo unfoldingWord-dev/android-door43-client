@@ -130,7 +130,7 @@ class LegacyTools {
         String packageVersion = ResourceContainer.version;
         String mimType = ContainerTools.typeToMime("man");
         int modifiedAt = ta.getJSONObject("meta").getInt("mod");
-        Resource.Format resourceFormat = new Resource.Format(packageVersion, mimType, modifiedAt, url);
+        Resource.Format resourceFormat = new Resource.Format(packageVersion, mimType, modifiedAt, url, false);
 
         resource.addFormat(resourceFormat);
         library.addResource(resource, projectId);
@@ -229,7 +229,7 @@ class LegacyTools {
             Resource resource = Resource.fromJSON(rJson);
             resource._legacyData.put(API.LEGACY_WORDS_ASSIGNMENTS_URL, rJson.getString("tw_cat"));
 
-            Resource.Format format = new Resource.Format(ResourceContainer.version, ContainerTools.typeToMime("book"), rJson.getInt("date_modified"), rJson.getString("source"));
+            Resource.Format format = new Resource.Format(ResourceContainer.version, ContainerTools.typeToMime("book"), rJson.getInt("date_modified"), rJson.getString("source"), false);
             resource.addFormat(format);
 
             long resourceId = library.addResource(resource, projectId);
@@ -249,7 +249,7 @@ class LegacyTools {
                 rJson.getJSONObject("status").put("source_translations", sourceTranslations);
 
                 Resource tnResource = (Resource) Resource.fromJSON(rJson);
-                Resource.Format tnFormat = new Resource.Format(ResourceContainer.version, ContainerTools.typeToMime("help"), rJson.getInt("date_modified"), rJson.getString("notes"));
+                Resource.Format tnFormat = new Resource.Format(ResourceContainer.version, ContainerTools.typeToMime("help"), rJson.getInt("date_modified"), rJson.getString("notes"), false);
                 tnResource.addFormat(tnFormat);
                 library.addResource(tnResource, projectId);
             }
@@ -270,7 +270,7 @@ class LegacyTools {
                 rJson.getJSONObject("status").put("source_translations", sourceTranslations);
 
                 Resource tqResource = (Resource) Resource.fromJSON(rJson);
-                Resource.Format tqFormat = new Resource.Format(ResourceContainer.version, ContainerTools.typeToMime("help"), rJson.getInt("date_modified"), rJson.getString("checking_questions"));
+                Resource.Format tqFormat = new Resource.Format(ResourceContainer.version, ContainerTools.typeToMime("help"), rJson.getInt("date_modified"), rJson.getString("checking_questions"), false);
                 tqResource.addFormat(tqFormat);
                 library.addResource(tqResource, projectId);
             }
@@ -298,7 +298,7 @@ class LegacyTools {
                 rJson.getJSONObject("status").put("source_translations", sourceTranslations);
 
                 Resource twResource = (Resource) Resource.fromJSON(rJson);
-                Resource.Format twFormat = new Resource.Format(ResourceContainer.version, ContainerTools.typeToMime("dict"), rJson.getInt("date_modified"), rJson.getString("terms"));
+                Resource.Format twFormat = new Resource.Format(ResourceContainer.version, ContainerTools.typeToMime("dict"), rJson.getInt("date_modified"), rJson.getString("terms"), false);
                 twResource.addFormat(twFormat);
                 library.addResource(twResource, wordsProjectId);
             }

@@ -553,7 +553,7 @@ class API {
 
             long projectId = library.addProject(rc.project, categories, languageId);
             Resource resource = rc.resource;
-            resource.addFormat(new Resource.Format(rc.info.getString("package_version"), resource.type, rc.modifiedAt, ""));
+            resource.addFormat(new Resource.Format(rc.info.getString("package_version"), resource.type, rc.modifiedAt, "", true));
             library.addResource(resource, projectId, true);
         } catch (Exception e) {
             indexError = e;

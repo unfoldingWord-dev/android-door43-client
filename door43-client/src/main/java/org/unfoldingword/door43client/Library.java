@@ -443,6 +443,7 @@ class Library implements Index {
             ContentValues formatValues = new ContentValues();
             formatValues.put("package_version", format.packageVersion);
             formatValues.put("mime_type", format.mimeType);
+            formatValues.put("imported", format.imported ? 1 : 0);
             formatValues.put("modified_at", format.modifiedAt);
             formatValues.put("url", deNull(format.url));
             formatValues.put("resource_id", resourceId);
@@ -664,8 +665,9 @@ class Library implements Index {
                 String mimeType = formatReader.getString("mime_type");
                 int modifiedAt = formatReader.getInt("modified_at");
                 String url = formatReader.getString("url");
+                boolean imported = formatReader.getBoolean("imported");
 
-                Resource.Format format = new Resource.Format(packageVersion, mimeType, modifiedAt, url);
+                Resource.Format format = new Resource.Format(packageVersion, mimeType, modifiedAt, url, imported);
                 r.addFormat(format);
                 formatCursor.moveToNext();
             }
@@ -1126,8 +1128,9 @@ class Library implements Index {
                 String mimeType = formatReader.getString("mime_type");
                 int modifiedAt = formatReader.getInt("modified_at");
                 String url = formatReader.getString("url");
+                boolean imported = formatReader.getBoolean("imported");
 
-                Resource.Format format = new Resource.Format(packageVersion, mimeType, modifiedAt, url);
+                Resource.Format format = new Resource.Format(packageVersion, mimeType, modifiedAt, url, imported);
                 resource.addFormat(format);
                 formatCursor.moveToNext();
             }
@@ -1198,8 +1201,9 @@ class Library implements Index {
                 String mimeType = formatReader.getString("mime_type");
                 int modifiedAt = formatReader.getInt("modified_at");
                 String url = formatReader.getString("url");
+                boolean imported = formatReader.getBoolean("imported");
 
-                Resource.Format format = new Resource.Format(packageVersion, mimeType, modifiedAt, url);
+                Resource.Format format = new Resource.Format(packageVersion, mimeType, modifiedAt, url, imported);
                 resource.addFormat(format);
                 formatCursor.moveToNext();
             }
