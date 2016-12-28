@@ -1004,7 +1004,11 @@ class Library implements Index {
                     " c.id, c.slug, c.parent_id, count(p.id) as num, max(p.sort) as csort from category as c" +
                     " left join (" +
                     "  select p.id, p.category_id, p.sort, count(r.id) as num from project as p" +
-                    "  left join resource as r on r.project_id=p.id and r.translate_mode like(?)" +
+                    "  left join (" +
+                    "   select r.*, count(rf.id) as num_imported from resource as r" +
+                    "   left join resource_format as rf on rf.resource_id=r.id and rf.imported='1'" +
+                    "   group by r.id" +
+                    "  ) as r on r.project_id=p.id and (r.translate_mode like (?) or r.num_imported > 0)" +
                     "  group by p.slug" +
                     " ) p on p.category_id=c.id and p.num > 0" +
                     " where parent_id=" + parentCategoryId + " and num > 0 " +
