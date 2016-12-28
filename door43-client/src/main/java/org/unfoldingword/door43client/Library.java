@@ -1052,7 +1052,11 @@ class Library implements Index {
         Cursor projectCursor = db.rawQuery("select * from (" +
                 " select \'project\' as type, \'\' as source_language_slug," +
                 " p.id, p.slug, p.sort, p.name, count(r.id) as num from project as p" +
-                " left join resource as r on r.project_id=p.id and r.translate_mode like (?)" +
+                " left join (" +
+                "  select r.*, count(rf.id) as num_imported from resource as r" +
+                "  left join resource_format as rf on rf.resource_id=r.id and rf.imported='1'" +
+                "  group by r.id" +
+                " ) as r on r.project_id=p.id and (r.translate_mode like (?) or r.num_imported > 0)" +
                 " where p.category_id=" + parentCategoryId + " group by p.slug" +
                 " order by p.sort asc)" + (!translateMode.isEmpty() ? " where num > 0" : ""),
                 new String[]{(!translateMode.isEmpty() ? translateMode : "%")});
