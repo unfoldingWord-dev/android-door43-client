@@ -1,0 +1,36 @@
+{
+  "package_version": "0.1",
+  "modified_at": 20161104,
+  "content_mime_type": "text/usx",
+  "language": {
+    "slug": "en",
+    "name": "English",
+    "direction": "ltr"
+  },
+  "project": {
+    "slug": "1th",
+    "name": "1 Thessalonians",
+    "desc": "",
+    "icon": "",
+    "sort": 53,
+    "chunks_url": "https://api.unfoldingword.org/bible/txt/1/1th/chunks.json",
+    "categories": [
+      "bible-nt"
+    ]
+  },
+  "resource": {
+    "slug": "cck",
+    "name": "Unlocked CCK Bible",
+    "type": "book",
+    "status": {
+      "translate_mode": "all",
+      "checking_level": "1",
+      "comments": "",
+      "pub_date": 20161003,
+      "license": "",
+      "version": "7"
+    },
+    "imported": true
+  },
+  "chunk_status": []
+}

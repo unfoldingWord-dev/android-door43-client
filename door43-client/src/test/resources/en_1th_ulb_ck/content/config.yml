@@ -1,0 +1,303 @@
+content:
+  '01':
+    '01':
+      words:
+        - //bible/tw/church
+        - //bible/tw/godthefather
+        - //bible/tw/grace
+        - //bible/tw/jesus
+        - //bible/tw/lordgod
+        - //bible/tw/paul
+        - //bible/tw/peace
+        - //bible/tw/silas
+        - //bible/tw/thessalonica
+        - //bible/tw/timothy
+    '02':
+      words:
+        - //bible/tw/faith
+        - //bible/tw/god
+        - //bible/tw/jesus
+        - //bible/tw/labor
+        - //bible/tw/lordgod
+        - //bible/tw/love
+        - //bible/tw/pray
+    '04':
+      words:
+        - //bible/tw/brother
+        - //bible/tw/call
+        - //bible/tw/god
+        - //bible/tw/goodnews
+        - //bible/tw/holyspirit
+        - //bible/tw/power
+    '06':
+      words:
+        - //bible/tw/believe
+        - //bible/tw/holyspirit
+        - //bible/tw/joy
+        - //bible/tw/lordgod
+        - //bible/tw/macedonia
+        - //bible/tw/receive
+        - //bible/tw/word
+    '08':
+      words:
+        - //bible/tw/faith
+        - //bible/tw/god
+        - //bible/tw/heaven
+        - //bible/tw/idol
+        - //bible/tw/jesus
+        - //bible/tw/macedonia
+        - //bible/tw/raise
+        - //bible/tw/serve
+        - //bible/tw/sonofgod
+        - //bible/tw/wordofgod
+        - //bible/tw/wrath
+  '02':
+    '10':
+      words:
+        - //bible/tw/believe
+        - //bible/tw/blameless
+        - //bible/tw/call
+        - //bible/tw/exhort
+        - //bible/tw/glory
+        - //bible/tw/god
+        - //bible/tw/holy
+        - //bible/tw/kingdom
+        - //bible/tw/righteous
+        - //bible/tw/testimony
+        - //bible/tw/walk
+        - //bible/tw/witness
+        - //bible/tw/worthy
+    '13':
+      words:
+        - //bible/tw/believe
+        - //bible/tw/god
+        - //bible/tw/receive
+        - //bible/tw/wordofgod
+        - //bible/tw/works
+    '14':
+      words:
+        - //bible/tw/brother
+        - //bible/tw/church
+        - //bible/tw/gentile
+        - //bible/tw/god
+        - //bible/tw/jesus
+        - //bible/tw/jew
+        - //bible/tw/judea
+        - //bible/tw/lordgod
+        - //bible/tw/prophet
+        - //bible/tw/save
+        - //bible/tw/sin
+        - //bible/tw/suffer
+        - //bible/tw/wrath
+    '17':
+      words:
+        - //bible/tw/brother
+        - //bible/tw/confidence
+        - //bible/tw/crown
+        - //bible/tw/face
+        - //bible/tw/glory
+        - //bible/tw/heart
+        - //bible/tw/jesus
+        - //bible/tw/joy
+        - //bible/tw/lordgod
+        - //bible/tw/paul
+        - //bible/tw/satan
+    '01':
+      words:
+        - //bible/tw/bold
+        - //bible/tw/brother
+        - //bible/tw/god
+        - //bible/tw/goodnews
+        - //bible/tw/philippi
+        - //bible/tw/suffer
+    '03':
+      words:
+        - //bible/tw/deceive
+        - //bible/tw/exhort
+        - //bible/tw/god
+        - //bible/tw/goodnews
+        - //bible/tw/heart
+        - //bible/tw/trust
+    '05':
+      words:
+        - //bible/tw/apostle
+        - //bible/tw/christ
+        - //bible/tw/glory
+        - //bible/tw/god
+        - //bible/tw/witness
+    '07':
+      words:
+        - //bible/tw/brother
+        - //bible/tw/god
+        - //bible/tw/goodnews
+        - //bible/tw/labor
+        - //bible/tw/preach
+  '03':
+    '11':
+      words:
+        - //bible/tw/blameless
+        - //bible/tw/god
+        - //bible/tw/godthefather
+        - //bible/tw/heart
+        - //bible/tw/holy
+        - //bible/tw/jesus
+        - //bible/tw/lordgod
+        - //bible/tw/love
+    '01':
+      words:
+        - //bible/tw/brother
+        - //bible/tw/christ
+        - //bible/tw/faith
+        - //bible/tw/god
+        - //bible/tw/good
+        - //bible/tw/goodnews
+        - //bible/tw/suffer
+        - //bible/tw/timothy
+    '04':
+      words:
+        - //bible/tw/afflict
+        - //bible/tw/amen
+        - //bible/tw/faith
+        - //bible/tw/labor
+        - //bible/tw/suffer
+        - //bible/tw/tempt
+    '06':
+      words:
+        - //bible/tw/afflict
+        - //bible/tw/brother
+        - //bible/tw/faith
+        - //bible/tw/love
+        - //bible/tw/timothy
+    '08':
+      words:
+        - //bible/tw/faith
+        - //bible/tw/god
+        - //bible/tw/joy
+        - //bible/tw/lordgod
+        - //bible/tw/pray
+  '04':
+    '13':
+      words:
+        - //bible/tw/believe
+        - //bible/tw/brother
+        - //bible/tw/god
+        - //bible/tw/jesus
+        - //bible/tw/sleep
+        - //bible/tw/wordofgod
+    '16':
+      words:
+        - //bible/tw/angel
+        - //bible/tw/christ
+        - //bible/tw/death
+        - //bible/tw/god
+        - //bible/tw/heaven
+        - //bible/tw/lordgod
+    '01':
+      words:
+        - //bible/tw/brother
+        - //bible/tw/exhort
+        - //bible/tw/god
+        - //bible/tw/jesus
+        - //bible/tw/lordgod
+        - //bible/tw/receive
+        - //bible/tw/walk
+    '03':
+      words:
+        - //bible/tw/fornication
+        - //bible/tw/gentile
+        - //bible/tw/god
+        - //bible/tw/holy
+        - //bible/tw/honor
+        - //bible/tw/lust
+        - //bible/tw/sanctify
+        - //bible/tw/transgression
+        - //bible/tw/willofgod
+    '07':
+      words:
+        - //bible/tw/call
+        - //bible/tw/god
+        - //bible/tw/holy
+        - //bible/tw/holyspirit
+        - //bible/tw/reject
+        - //bible/tw/unclean
+    '09':
+      words:
+        - //bible/tw/brother
+        - //bible/tw/exhort
+        - //bible/tw/faith
+        - //bible/tw/god
+        - //bible/tw/love
+        - //bible/tw/macedonia
+        - //bible/tw/walk
+  '05':
+    '12':
+      words:
+        - //bible/tw/brother
+        - //bible/tw/exhort
+        - //bible/tw/labor
+        - //bible/tw/lordgod
+        - //bible/tw/love
+        - //bible/tw/peace
+        - //bible/tw/works
+    '15':
+      words:
+        - //bible/tw/evil
+        - //bible/tw/good
+        - //bible/tw/jesus
+        - //bible/tw/pray
+        - //bible/tw/rejoice
+        - //bible/tw/willofgod
+    '19':
+      words:
+        - //bible/tw/evil
+        - //bible/tw/good
+        - //bible/tw/holyspirit
+        - //bible/tw/prophet
+        - //bible/tw/quench
+        - //bible/tw/test
+    '23':
+      words:
+        - //bible/tw/call
+        - //bible/tw/faithful
+        - //bible/tw/god
+        - //bible/tw/holy
+        - //bible/tw/jesus
+        - //bible/tw/lordgod
+        - //bible/tw/peace
+        - //bible/tw/spirit
+    '25':
+      words:
+        - //bible/tw/brother
+        - //bible/tw/grace
+        - //bible/tw/holy
+        - //bible/tw/jesus
+        - //bible/tw/kiss
+        - //bible/tw/letter
+        - //bible/tw/lordgod
+        - //bible/tw/pray
+    '01':
+      words:
+        - //bible/tw/brother
+        - //bible/tw/dayofthelord
+        - //bible/tw/peace
+    '04':
+      words:
+        - //bible/tw/brother
+        - //bible/tw/darkness
+        - //bible/tw/light
+        - //bible/tw/sleep
+        - //bible/tw/son
+        - //bible/tw/watch
+    '08':
+      words:
+        - //bible/tw/breastplate
+        - //bible/tw/comfort
+        - //bible/tw/destiny
+        - //bible/tw/faith
+        - //bible/tw/god
+        - //bible/tw/jesus
+        - //bible/tw/lordgod
+        - //bible/tw/love
+        - //bible/tw/salvation
+        - //bible/tw/son
+        - //bible/tw/wrath

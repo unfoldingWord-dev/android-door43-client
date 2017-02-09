@@ -43,12 +43,23 @@ public class ImportTest {
         DatabaseContext databaseContext = new DatabaseContext(context, resourceDir.getRoot(), "sqlite");
         SQLiteHelper helper = new SQLiteHelper(databaseContext, schema, "index");
         Library library = new Library(helper);
+
+        // tit
         long langId = library.addSourceLanguage(new SourceLanguage("en", "English", "ltr"));
         Project p = new Project("tit", "Titus", 0);
         long projId = library.addProject(p, new ArrayList<Category>(), langId);
         Resource r = new Resource("udb", "Unlocked Dynamic Bible", "book", "gl", "3", "3.0");
         r.addFormat(new Resource.Format(ResourceContainer.version, "text/usfm", 0, "", true));
         library.addResource(r, projId);
+
+        // 1th
+        langId = library.addSourceLanguage(new SourceLanguage("en", "English", "ltr"));
+        p = new Project("1th", "1 Thessalonians", 0);
+        projId = library.addProject(p, new ArrayList<Category>(), langId);
+        r = new Resource("udb", "Unlocked Dynamic Bible", "book", "gl", "3", "3.0");
+        r.addFormat(new Resource.Format(ResourceContainer.version, "text/usfm", 0, "", true));
+        library.addResource(r, projId);
+
         library.closeDatabase();
 
         // initialize client
@@ -81,6 +92,14 @@ public class ImportTest {
         } catch (Exception e) {
             assertEquals("Unsupported project", e.getMessage());
         }
+    }
+
+    @Test
+    public void ImportResourceContainerWithCustomResource() throws Exception {
+        ClassLoader classLoader = this.getClass().getClassLoader();
+        URL url = classLoader.getResource("en_1th_ulb_ck");
+        File dir = new File(url.getPath());
+        ResourceContainer rc = client.importResourceContainer(dir);
     }
 
     // we currently do not support importing new projects. If we do this test will check that
