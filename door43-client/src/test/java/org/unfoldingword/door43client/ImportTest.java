@@ -50,7 +50,7 @@ public class ImportTest {
         Project p = new Project("tit", "Titus", 0);
         long projId = library.addProject(p, new ArrayList<Category>(), langId);
         Resource r = new Resource("udb", "Unlocked Dynamic Bible", "book", "gl", "3", "3.0");
-        r.addFormat(new Resource.Format(ResourceContainer.version, "text/usfm", 0, "", true));
+        r.addFormat(new Resource.Format(ResourceContainer.version, "text/usfm", 0, "", false));
         library.addResource(r, projId);
 
         // 1th
@@ -58,7 +58,7 @@ public class ImportTest {
         p = new Project("1th", "1 Thessalonians", 0);
         projId = library.addProject(p, new ArrayList<Category>(), langId);
         r = new Resource("udb", "Unlocked Dynamic Bible", "book", "gl", "3", "3.0");
-        r.addFormat(new Resource.Format(ResourceContainer.version, "text/usfm", 0, "", true));
+        r.addFormat(new Resource.Format(ResourceContainer.version, "text/usfm", 0, "", false));
         library.addResource(r, projId);
 
         library.closeDatabase();
