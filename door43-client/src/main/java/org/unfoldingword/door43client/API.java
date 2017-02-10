@@ -539,13 +539,15 @@ class API {
             // build categories
             List<Category> categories = new ArrayList<>();
             try {
-                JSONArray catJson = rc.info.getJSONObject("project").getJSONArray("categories");
-                for(int i = 0; i < catJson.length(); i ++) {
-                    String catSlug = catJson.getString(i);
-                    // use known name if available
-                    Category existingCat = library.getCategory(rc.language.slug, catSlug);
-                    String catName = existingCat == null ? catSlug : existingCat.name;
-                    categories.add(new Category(catSlug, catName));
+                if(rc.info.has("project") && rc.info.getJSONObject("project").has("categories")) {
+                    JSONArray catJson = rc.info.getJSONObject("project").getJSONArray("categories");
+                    for (int i = 0; i < catJson.length(); i++) {
+                        String catSlug = catJson.getString(i);
+                        // use known name if available
+                        Category existingCat = library.getCategory(rc.language.slug, catSlug);
+                        String catName = existingCat == null ? catSlug : existingCat.name;
+                        categories.add(new Category(catSlug, catName));
+                    }
                 }
             } catch (JSONException e) {
                 e.printStackTrace();

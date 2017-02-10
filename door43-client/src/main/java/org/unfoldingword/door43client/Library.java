@@ -628,13 +628,23 @@ class Library implements Index {
                 " lri.translation_words_assignments_url" +
                 " from source_language as l" +
                 " left join project as p on p.source_language_id=l.id" +
-                " left join resource as r on r.project_id=p.id" +
+                " left join (" +
+                "   select r.*, count(rf.id) as num_imported from resource as r" +
+                "   left join resource_format as rf on rf.resource_id=r.id and rf.imported='1'" +
+                "   group by r.id" +
+                " ) as r on r.project_id=p.id" +
                 " left join legacy_resource_info as lri on lri.resource_id=r.id" +
                 " where l.slug like(?) and p.slug like(?) and r.slug like(?)" +
-                " and r.checking_level >= " + minCheckingLevel + "" +
-                conditionMaxChecking +
-                " and r.type like(?) and r.translate_mode like(?)",
-                new String[]{languageSlug, projectSlug, resourceSlug, resourceType, translateMode});
+                " and (" +
+                "   (" +
+                "     r.checking_level >= " + minCheckingLevel + "" +
+                      conditionMaxChecking +
+                "     and r.translate_mode like(?)" +
+                "   )" +
+                "   or r.num_imported > 0" +
+                " )" +
+                " and r.type like(?)",
+                new String[]{languageSlug, projectSlug, resourceSlug, translateMode, resourceType});
 
         cursor.moveToFirst();
         while(!cursor.isAfterLast()) {

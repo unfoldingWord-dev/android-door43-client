@@ -13,6 +13,7 @@ import org.robolectric.RuntimeEnvironment;
 import org.unfoldingword.door43client.models.Category;
 import org.unfoldingword.door43client.models.CategoryEntry;
 import org.unfoldingword.door43client.models.SourceLanguage;
+import org.unfoldingword.door43client.models.Translation;
 import org.unfoldingword.resourcecontainer.Project;
 import org.unfoldingword.resourcecontainer.Resource;
 import org.unfoldingword.resourcecontainer.ResourceContainer;
@@ -79,6 +80,18 @@ public class ImportTest {
         URL url = classLoader.getResource("en_tit_ulb");
         File dir = new File(url.getPath());
         ResourceContainer rc = client.importResourceContainer(dir);
+
+        // test checking level filter works.
+        List<Translation> translations = client.index().findTranslations(null, "tit", null, "book", null, 3, -1);
+        assertEquals(2, translations.size());
+        translations = client.index().findTranslations(null, "tit", null, "book", null, 99, -1);
+        assertEquals(1, translations.size());
+
+        // test translate mode filter works
+        translations = client.index().findTranslations(null, "tit", null, "book", "gl", 3, -1);
+        assertEquals(2, translations.size());
+        translations = client.index().findTranslations(null, "tit", null, "book", "all", 3, -1);
+        assertEquals(1, translations.size());
     }
 
     @Test
@@ -100,6 +113,25 @@ public class ImportTest {
         URL url = classLoader.getResource("en_1th_ulb_ck");
         File dir = new File(url.getPath());
         ResourceContainer rc = client.importResourceContainer(dir);
+
+        // TRICKY: manually imported containers are not bound by minimum and maximum checking levels
+        List<Translation> translations = client.index().findTranslations(null, "1th", null, "book", null, 3, -1);
+        assertEquals(2, translations.size());
+        int numUDB = 0;
+        int numCCK = 0;
+        int numOther = 0;
+        for(Translation t:translations) {
+            if(t.resource.slug.equals("udb")) {
+                numUDB ++;
+            } else if(t.resource.slug.equals("cck")) {
+                numCCK ++;
+            } else {
+                numOther ++;
+            }
+        }
+        assertEquals(1, numUDB);
+        assertEquals(1, numCCK);
+        assertEquals(0, numOther);
     }
 
     // we currently do not support importing new projects. If we do this test will check that
