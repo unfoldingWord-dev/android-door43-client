@@ -489,9 +489,9 @@ class API {
                                 String twProjSlug = projectSlug.equals("obs") ? "bible-obs" : "bible";
                                 frameAssignment.put("//" + twProjSlug + "/tw/" + word.getString("id"));
                             }
-                            chapterAssignment.put(frame.getString("id"), frameAssignment);
+                            chapterAssignment.put(LegacyTools.normalizeSlug(frame.getString("id")), frameAssignment);
                         }
-                        assignmentsJson.put(chapter.getString("id"), chapterAssignment);
+                        assignmentsJson.put(LegacyTools.normalizeSlug(chapter.getString("id")), chapterAssignment);
                     }
                     properties.put("tw_assignments", assignmentsJson);
                 } catch (Exception e) {
