@@ -6,6 +6,7 @@ import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.text.TextUtils;
 
+import org.jetbrains.annotations.Nullable;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.unfoldingword.door43client.models.Category;
@@ -1105,6 +1106,7 @@ class Library implements Index {
         return projectCategories;
     }
 
+    @Nullable
     public Resource getResource(String sourceLanguageSlug, String projectSlug, String resourceSlug) {
         Resource resource = null;
         Cursor cursor = db.rawQuery("select r.id, r.name, r.translate_mode, r.type, r.checking_level," +

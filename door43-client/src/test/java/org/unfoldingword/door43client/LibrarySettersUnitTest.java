@@ -32,13 +32,12 @@ import static org.junit.Assert.*;
  */
 @RunWith(RobolectricTestRunner.class)
 public class LibrarySettersUnitTest {
-    private Context context;
     private Library library;
 
 
     @Before
     public void initialize() throws Exception {
-        this.context = RuntimeEnvironment.application;
+        Context context = RuntimeEnvironment.application;
         String schema = Util.loadResource(this.getClass().getClassLoader(), "schema.sqlite");
 
         // clean up old index

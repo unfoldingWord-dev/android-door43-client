@@ -16,7 +16,6 @@ public class Util {
         URL resource = classLoader.getResource(path);
         File sqliteFile = new File(resource.getPath());
 
-        // read schema
         BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(sqliteFile)));
         StringBuilder sb = new StringBuilder();
         String line;
