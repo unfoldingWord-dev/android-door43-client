@@ -11,7 +11,7 @@ import java.io.File;
  * A SQLite database helper
  */
 class SQLiteHelper extends SQLiteOpenHelper {
-    private static final int DATABASE_VERSION = 1;
+    public static final int DATABASE_VERSION = 1;
     private final String schema;
 
     /**
@@ -66,8 +66,7 @@ class SQLiteHelper extends SQLiteOpenHelper {
 
     @Override
     public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        // TRICKY: if this is used to manage downgrades care must be taken to ensure the correct DATABASE_VERSION
-        // is set in the db that is packaged with an android app. Otherwise the packaged db may get overwritten.
+        onCreate(db);
     }
 
     @Override

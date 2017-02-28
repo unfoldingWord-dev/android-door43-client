@@ -25,6 +25,8 @@ import org.unfoldingword.resourcecontainer.Project;
 import org.unfoldingword.resourcecontainer.Resource;
 import org.unfoldingword.resourcecontainer.ResourceContainer;
 
+import java.io.IOError;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -45,9 +47,12 @@ class Library implements Index {
      * Instantiates a new library
      * @param sqliteHelper
      */
-    public Library(SQLiteHelper sqliteHelper) {
+    public Library(SQLiteHelper sqliteHelper) throws IOException {
         this.sqliteHelper = sqliteHelper;
         this.db = sqliteHelper.getWritableDatabase();
+        if(this.db.getVersion() == 0) throw new IOException("Invalid database version." +
+                "You probably manually generted the database and forgot to set the " +
+                "\"User Version\" to " + SQLiteHelper.DATABASE_VERSION);
     }
 
     /**
