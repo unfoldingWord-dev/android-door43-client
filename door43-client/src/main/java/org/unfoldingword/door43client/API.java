@@ -500,9 +500,7 @@ class API {
             }
         }
 
-        ResourceContainer container = ContainerTools.convertResource(data, containerDir, properties);
-        ResourceContainer.close(new File(containerDir.getPath()));
-        return container;
+        return ContainerTools.convertResource(data, containerDir, properties);
     }
 
     /**
