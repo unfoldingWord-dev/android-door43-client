@@ -359,7 +359,10 @@ class API {
 
         // migrate to resource container
         Resource r = library.getResource(sourceLanguageSlug, projectSlug, resourceSlug);
-        if(r == null) throw new Exception("Unknown resource");
+        if(r == null) {
+            FileUtil.deleteQuietly(path);
+            throw new Exception("Unknown resource");
+        }
         String data = FileUtil.readFileToString(path);
 
         // clean downloaded file
@@ -395,7 +398,12 @@ class API {
         destFile.getParentFile().mkdirs();
         if(containerFormat.url == null || containerFormat.url.isEmpty()) throw new Exception("Missing resource format url");
         GetRequest request = new GetRequest(new URL(containerFormat.url));
-        request.download(destFile);
+        try {
+            request.download(destFile);
+        } catch(Exception e) {
+            FileUtil.deleteQuietly(destFile);
+            throw e;
+        }
         if(request.getResponseCode() != 200) {
             FileUtil.deleteQuietly(destFile);
             throw new Exception(request.getResponseMessage());
