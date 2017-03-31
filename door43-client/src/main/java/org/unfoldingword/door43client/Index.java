@@ -73,6 +73,13 @@ public interface Index {
     List<Translation> findTranslations(String languageSlug, String projectSlug, String resourceSlug, String resourceType, String translateMode, int minCheckingLevel, int maxCheckingLevel);
 
     /**
+     * Returns a list of translations that have been manually imported by the user.
+     *
+     * @return a list of translations
+     */
+    List<Translation> getImportedTranslations();
+
+    /**
      * Returns a source language.
      *
      * @param sourceLanguageSlug

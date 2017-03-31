@@ -314,6 +314,12 @@ public class LibraryGettersUnitTest {
     }
 
     @Test
+    public void getImportedTranslations() throws Exception {
+        List<Translation> translations = library.getImportedTranslations();
+        assertEquals(GENERATOR_QTY, translations.size());
+    }
+
+    @Test
     public void getProjectWithDefaultLanguage() throws Exception {
         Project p1 = library.getProject("missing", "proj-no-cat-1", true);
 
