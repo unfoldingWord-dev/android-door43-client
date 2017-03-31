@@ -154,6 +154,17 @@ public class Door43Client {
     }
 
     /**
+     * Exports the closed resource container
+     * @param destFile the destination file
+     * @param languageSlug
+     * @param projectSlug
+     * @param resourceSlug
+     */
+    public void exportResourceContainer(File destFile, String languageSlug, String projectSlug, String resourceSlug) throws Exception {
+        api.exportResourceContainer(destFile, languageSlug, projectSlug, resourceSlug);
+    }
+
+    /**
      * Checks if a resource container has been downloaded
      * @param languageSlug
      * @param projectSlug

@@ -13,6 +13,7 @@ import org.unfoldingword.door43client.models.Versification;
 import org.unfoldingword.resourcecontainer.Project;
 import org.unfoldingword.resourcecontainer.Resource;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;

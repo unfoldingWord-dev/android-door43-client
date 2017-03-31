@@ -15,6 +15,7 @@ import org.unfoldingword.resourcecontainer.ContainerTools;
 import org.unfoldingword.resourcecontainer.Project;
 import org.unfoldingword.resourcecontainer.Resource;
 import org.unfoldingword.resourcecontainer.ResourceContainer;
+import org.unfoldingword.resourcecontainer.errors.MissingRCException;
 import org.unfoldingword.tools.http.GetRequest;
 
 import java.io.File;
@@ -570,6 +571,25 @@ class API {
         if(indexError != null) throw indexError;
 
         return openResourceContainer(rc.language.slug, rc.project.slug, rc.resource.slug);
+    }
+
+    /**
+     * Exports the closed resource container
+     * @param destFile the destination file
+     * @param languageSlug
+     * @param projectSlug
+     * @param resourceSlug
+     */
+    public void exportResourceContainer(File destFile, String languageSlug, String projectSlug, String resourceSlug) throws Exception {
+        String slug = ContainerTools.makeSlug(languageSlug, projectSlug, resourceSlug);
+        File srcDir = new File(resourceDir, slug);
+        File srcFile = new File(srcDir + "." + ResourceContainer.fileExtension);
+
+        // create closed rc
+        if(!srcFile.exists() && srcDir.isDirectory()) ResourceContainer.close(srcDir);
+        if(!srcFile.exists()) throw new MissingRCException("The resource container could not be found at " + srcFile);
+
+        FileUtil.copyFile(srcFile, destFile);
     }
 
     /**
