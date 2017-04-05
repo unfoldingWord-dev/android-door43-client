@@ -15,7 +15,9 @@ import org.unfoldingword.resourcecontainer.ContainerTools;
 import org.unfoldingword.resourcecontainer.Project;
 import org.unfoldingword.resourcecontainer.Resource;
 import org.unfoldingword.resourcecontainer.ResourceContainer;
+import org.unfoldingword.resourcecontainer.errors.InvalidRCException;
 import org.unfoldingword.resourcecontainer.errors.MissingRCException;
+import org.unfoldingword.resourcecontainer.errors.RCException;
 import org.unfoldingword.tools.http.GetRequest;
 
 import java.io.File;
@@ -529,7 +531,7 @@ class API {
         // validate project
         // TRICKY: we currently only support importing known projects. Only the language and resource can vary.
         JSONObject meta = library.getProjectMeta(rc.project.slug);
-        if(meta == null) throw new Exception("Unsupported project");
+        if(meta == null) throw new InvalidRCException("Unsupported project");
 
         // delete the old container
         deleteResourceContainer(rc.slug);
