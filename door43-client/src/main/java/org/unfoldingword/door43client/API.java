@@ -533,6 +533,8 @@ class API {
         JSONObject meta = library.getProjectMeta(rc.project.slug);
         if(meta == null) throw new InvalidRCException("Unsupported project");
 
+        if(!rc.info.has("project")) throw new InvalidRCException("Missing field: project");
+
         // delete the old container
         deleteResourceContainer(rc.slug);
 
